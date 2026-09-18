@@ -14,7 +14,7 @@ function gauge(pct) {
 }
 
 export default {
-  titulo: () => 'Oi, Bôdhi',
+  titulo: () => `Oi, ${store.nomeUsuario() || 'Bôdhi'}`,
   sub: () => 'Aqui está o resumo da operação de hoje.',
 
   render() {

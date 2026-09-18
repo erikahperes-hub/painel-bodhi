@@ -4,7 +4,7 @@ import { ic, flor } from './icons.js';
 import { esc, toast, debounce } from './util.js';
 import { alertas } from './calc.js';
 import { buscar, htmlResultados } from './search.js';
-import { temModal, fecharTopo } from './ui.js';
+import { temModal, fecharTopo, formulario } from './ui.js';
 
 import inicio from './views/inicio.js';
 import comercial from './views/comercial.js';
@@ -72,8 +72,21 @@ function telaErro(msg) {
 }
 
 /* ---------- Estrutura do painel ---------- */
+const inicialUsuario = () => (store.nomeUsuario() || store.emailUsuario() || 'B')[0].toUpperCase();
+
+function perguntarNome() {
+  formulario({
+    titulo: 'Como devemos te chamar?',
+    subtitulo: 'Seu nome aparece na saudação do painel. Você pode mudar depois em Configurações.',
+    campos: [{ nome: 'nome', rotulo: 'Seu nome', obrigatorio: true, cheio: true, placeholder: 'Milena' }],
+    valores: {},
+    salvarTexto: 'Salvar',
+    async aoSalvar(v) { await store.definirNome(v.nome); toast(`Prazer, ${v.nome}!`); },
+  });
+}
+
 function abrirApp() {
-  const inicial = (store.emailUsuario() || 'B')[0].toUpperCase();
+  const inicial = inicialUsuario();
   app.innerHTML = `<div class="shell">
     <div class="logo-cell"><a href="#/inicio" aria-label="Início">${logo('verde', '#F3EEE2')}</a></div>
     <header class="head">
@@ -97,7 +110,13 @@ function abrirApp() {
   ligarSino();
   atualizarSino();
   renderRota(true);
-  store.ouvir(() => { renderRota(false); atualizarSino(); });
+  store.ouvir(() => {
+    renderRota(false);
+    atualizarSino();
+    const av = document.querySelector('.avatar');
+    if (av) av.textContent = inicialUsuario();
+  });
+  if (store.modo === 'supabase' && !store.nomeUsuario()) perguntarNome();
 }
 
 function renderRota(rolar) {
@@ -106,7 +125,7 @@ function renderRota(rolar) {
   const view = document.getElementById('view');
   document.getElementById('t').textContent = v.titulo();
   document.getElementById('s').textContent = v.sub();
-  document.title = `${v.titulo() === 'Oi, Bôdhi' ? 'Início' : v.titulo()} · Painel Bôdhi`;
+  document.title = `${rotaAtual.rota === 'inicio' ? 'Início' : v.titulo()} · Painel Bôdhi`;
   const y = window.scrollY;
   view.innerHTML = v.render({ ref: rotaAtual.ref });
   v.montar?.(view);

@@ -49,8 +49,9 @@ export default {
       <div class="card c2">
         <h2>Conta</h2><p class="sub">${local ? 'Modo local: os dados ficam só neste navegador.' : 'Login com e-mail e senha. Os dados são compartilhados entre as sócias.'}</p>
         <dl class="kv" style="margin-top:0"><div><div class="k">${local ? 'Modo' : 'E-mail'}</div><div class="v">${local ? 'Local (teste)' : esc(store.emailUsuario())}</div></div>
-        <div><div class="k">Banco de dados</div><div class="v">${local ? 'Neste navegador' : 'Supabase conectado'}</div></div></dl>
-        ${local ? '' : `<div class="actions" style="margin-top:14px"><button class="btn sec sm" data-act="sair">${ic('logout')}Sair da conta</button></div>`}
+        <div><div class="k">Banco de dados</div><div class="v">${local ? 'Neste navegador' : 'Supabase conectado'}</div></div>
+        ${local ? '' : `<div><div class="k">Seu nome</div><div class="v">${esc(store.nomeUsuario() || 'Não definido')}</div></div>`}</dl>
+        ${local ? '' : `<div class="actions" style="margin-top:14px"><button class="btn sec sm" data-act="alterar-nome">${ic('edit')}Alterar meu nome</button><button class="btn sec sm" data-act="sair">${ic('logout')}Sair da conta</button></div>`}
       </div>
 
       <div class="card c2">
@@ -87,6 +88,12 @@ export default {
 
   acoes: {
     sair: () => store.sair(),
+    'alterar-nome': () => formulario({
+      titulo: 'Seu nome', subtitulo: 'Aparece na saudação do painel.',
+      campos: [{ nome: 'nome', rotulo: 'Como devemos te chamar?', obrigatorio: true, cheio: true }],
+      valores: { nome: store.nomeUsuario() },
+      async aoSalvar(v) { await store.definirNome(v.nome); toast('Nome atualizado'); },
+    }),
     exportar: () => { baixar(`backup-painel-bodhi-${hojeISO()}.json`, JSON.stringify(store.exportar(), null, 2)); toast('Backup baixado'); },
     importar: () => document.querySelector('[data-importar]')?.click(),
     'editar-modelo': editarModelo,

@@ -5,6 +5,7 @@ const KINDS = ['cliente', 'proposta', 'contrato', 'pendencia', 'config'];
 const LS_KEY = 'bodhi.painel.v1';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm';
 
+const NOMES_CONHECIDOS = { 'erikahperes@gmail.com': 'Érika' };
 const db = Object.fromEntries(KINDS.map((k) => [k, {}]));
 const ouvintes = new Set();
 let sb = null;
@@ -90,6 +91,20 @@ export const store = {
 
   supabase: () => sb,
   emailUsuario() { return this.usuario?.email || ''; },
+
+  nomeUsuario() {
+    if (this.modo === 'local') return '';
+    return this.usuario?.user_metadata?.nome || NOMES_CONHECIDOS[(this.usuario?.email || '').toLowerCase()] || '';
+  },
+
+  async definirNome(nome) {
+    const limpo = String(nome || '').trim().slice(0, 40);
+    if (!limpo || !sb) return;
+    const { data, error } = await sb.auth.updateUser({ data: { nome: limpo } });
+    if (error) throw new Error('Não foi possível salvar seu nome agora.');
+    this.usuario = data.user;
+    avisar();
+  },
 
   todos(kind) { return Object.values(db[kind] || {}); },
   obter(kind, id) { return db[kind]?.[id] || null; },
