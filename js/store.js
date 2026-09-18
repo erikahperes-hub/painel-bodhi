@@ -12,6 +12,17 @@ let sb = null;
 let assinatura = '';
 
 const avisar = () => ouvintes.forEach((fn) => fn());
+
+function erroAmigavel(error, acao) {
+  console.error('Erro do Supabase ao ' + acao, error);
+  const cod = error?.code || error?.status || '';
+  const msg = String(error?.message || '');
+  let dica = 'Confira a conexão e tente de novo.';
+  if (cod === '42501' || /row-level security|permission denied/i.test(msg)) dica = 'Seu e-mail não tem permissão para editar. Confira se ele está na lista de sócias do banco.';
+  else if (/jwt|token|expired|401/i.test(msg + cod)) dica = 'Sua sessão expirou. Saia e entre de novo.';
+  else if (/fetch|network|failed/i.test(msg)) dica = 'Sem conexão com o banco agora.';
+  return new Error(`Não foi possível ${acao}. ${dica} (código: ${cod || 'sem código'}${msg ? ', ' + msg.slice(0, 80) : ''})`);
+}
 const vazio = () => KINDS.every((k) => !Object.keys(db[k]).length);
 
 function limpar() { KINDS.forEach((k) => (db[k] = {})); }
@@ -113,7 +124,7 @@ export const store = {
     const item = { ...obj, id: obj.id || uid(kind[0]), atualizadoEm: new Date().toISOString() };
     if (sb) {
       const { error } = await sb.from('records').upsert({ kind, id: item.id, data: item, updated_by: this.emailUsuario() });
-      if (error) throw new Error('Não foi possível salvar agora. Confira a conexão e tente de novo.');
+      if (error) throw erroAmigavel(error, 'salvar');
     }
     db[kind][item.id] = item;
     assinatura = JSON.stringify(db);
@@ -125,7 +136,7 @@ export const store = {
   async remover(kind, id) {
     if (sb) {
       const { error } = await sb.from('records').delete().eq('kind', kind).eq('id', id);
-      if (error) throw new Error('Não foi possível excluir agora.');
+      if (error) throw erroAmigavel(error, 'excluir');
     }
     delete db[kind][id];
     assinatura = JSON.stringify(db);
