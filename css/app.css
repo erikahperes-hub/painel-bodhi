@@ -238,7 +238,7 @@ mark{background:var(--verde-s);color:inherit;border-radius:4px;padding:0 2px}
 .login{min-height:100vh;display:grid;grid-template-columns:1.05fr 1fr}
 .login-art{background:#BEEBDA url(../assets/img/xadrez-verde.png) center/cover;min-height:260px}
 .login-box{display:flex;flex-direction:column;justify-content:center;padding:48px min(8vw,96px);max-width:640px;width:100%;margin:0 auto}
-.login-box .logo-svg{width:150px;height:auto;margin-bottom:34px}
+.login-box .logo-svg{width:170px;height:auto;margin-bottom:40px}
 .login-box h1{font:700 34px/1.15 var(--display);margin-bottom:8px}
 .login-box p{color:var(--ink-2);margin-bottom:26px}
 .login-box .field{margin-bottom:14px}

@@ -35,7 +35,6 @@ function lerRota() {
 function telaLogin() {
   app.innerHTML = `<div class="login"><div class="login-art" role="img" aria-label="Padrão xadrez ondulado da Bôdhi"></div>
     <form class="login-box" novalidate>${logo('verde', '#FFFCF6')}
-      <h1>Oi, Bôdhi</h1><p>Entre para ver clientes, propostas, contratos e o financeiro em um só lugar.</p>
       <div class="field"><label for="le">E-mail</label><input id="le" type="email" autocomplete="username" required></div>
       <div class="field"><label for="ls">Senha</label><input id="ls" type="password" autocomplete="current-password" required></div>
       <div class="err-msg" role="alert" hidden></div>
