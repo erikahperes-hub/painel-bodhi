@@ -33,12 +33,12 @@ Abra http://localhost:5173. Nesse modo os dados vêm do arquivo `seed/seed.json`
 ## Passo 2: banco de dados e login (Supabase, plano gratuito)
 
 1. Crie uma conta em supabase.com e um novo projeto (região South America, São Paulo). Guarde a senha do banco.
-2. Menu **SQL Editor** > New query > cole o conteúdo de `supabase/schema.sql` > **Run**.
-3. Menu **Authentication** > **Sign In / Providers** > desligue **Allow new users to sign up** (assim ninguém de fora cria conta).
+2. Menu **Authentication** > **Sign In / Providers** > desligue **Allow new users to sign up** (assim ninguém de fora cria conta). Faça isto primeiro.
+3. Menu **SQL Editor** > New query > cole o conteúdo de `supabase/schema.sql` > **Run**. (Antes de rodar, na parte `insert into public.socias`, tire o `--` da linha da Milena e troque pelo e-mail dela. Só e-mails dessa lista enxergam os dados.)
 4. Menu **Authentication** > **Users** > **Add user** > **Create new user**: crie o acesso da Érika e da Milena (e-mail, senha e marque “Auto Confirm User”).
 5. Menu **Authentication** > **URL Configuration**: em Site URL coloque `https://painel.bodhi.marketing` (usado no “Esqueci minha senha”).
 6. Menu **Project Settings** > **API**: copie a **Project URL** e a chave **anon public**.
-7. Abra `js/config.js` e preencha `supabaseUrl` e `supabaseKey` com esses dois valores. (A chave anon é pública por desenho: quem protege os dados é o login.)
+7. Abra `js/config.js` e preencha `supabaseUrl` e `supabaseKey` com esses dois valores (já feito para o projeto atual). A chave anon é pública por desenho: quem protege os dados é o login mais a lista de sócias.
 8. Para importar os dados já validados: no computador rode `node tools/seed-para-sql.mjs`, abra `seed/seed.sql`, copie tudo, cole em um novo SQL Editor e clique em **Run**.
 
 ## Passo 3: colocar no ar (GitHub Pages + domínio)
