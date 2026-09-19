@@ -13,6 +13,46 @@ export function nomeCliente(c) {
   return c ? c.nome : '';
 }
 
+const mesDe = (iso) => String(iso || '').slice(0, 7);
+
+// Lançamentos (receitas e despesas) que valem para o mês "ym" (AAAA-MM).
+// Os que se repetem todo mês valem a partir do mês da data, até a data final (se houver).
+export function lancamentosDoMes(ym) {
+  return store.todos('lancamento').filter((l) => {
+    if (!l.data) return false;
+    if (l.recorrente) return mesDe(l.data) <= ym && (!l.ate || mesDe(l.ate) >= ym);
+    return mesDe(l.data) === ym;
+  });
+}
+
+export function resumoMes(ym) {
+  const hoje = mesDe(new Date().toISOString());
+  const clientes = store.todos('cliente');
+  // Meses futuros contam só clientes ativos; o mês atual e os passados incluem quem está encerrando.
+  const fixos = clientes.filter((c) => c.mensalidade && (c.status === 'ativo' || (c.status === 'encerrando' && ym <= hoje)));
+  const lancs = lancamentosDoMes(ym);
+  const receitasExtras = lancs.filter((l) => l.tipo === 'receita');
+  const despesas = lancs.filter((l) => l.tipo === 'despesa');
+  const receitaFixa = sum(fixos.map((c) => c.mensalidade));
+  const receita = receitaFixa + sum(receitasExtras.map((l) => l.valor));
+  const custos = sum(despesas.map((l) => l.valor));
+  const resultado = receita - custos;
+
+  const porCliente = fixos.map((c) => {
+    const rec = c.mensalidade + sum(receitasExtras.filter((l) => l.clienteId === c.id).map((l) => l.valor));
+    const custo = sum(despesas.filter((l) => l.clienteId === c.id).map((l) => l.valor));
+    return { cliente: c, receita: rec, custo, resultado: rec - custo, margem: rec ? Math.round(((rec - custo) / rec) * 100) : 0 };
+  }).sort((a, b) => b.receita - a.receita);
+
+  return {
+    ym, fixos, receitasExtras, despesas, receitaFixa, receita, custos, resultado,
+    margem: receita ? Math.round((resultado / receita) * 100) : 0,
+    fixas: sum(despesas.filter((l) => l.recorrente).map((l) => l.valor)),
+    variaveis: sum(despesas.filter((l) => !l.recorrente).map((l) => l.valor)),
+    porCliente,
+  };
+}
+
 export function metricas() {
   const clientes = store.todos('cliente');
   const ativos = clientes.filter((c) => c.status === 'ativo').sort((a, b) => b.mensalidade - a.mensalidade);

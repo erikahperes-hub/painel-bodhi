@@ -36,6 +36,11 @@ function indice() {
   });
   store.todos('pendencia').forEach((p) => it.push({ grupo: 'Pendências', icone: 'file', titulo: p.titulo, sub: p.texto || (p.feito ? 'Concluída' : 'Em aberto'), rota: 'comercial', ref: p.id, texto: `${p.titulo} ${p.texto || ''}` }));
 
+  store.todos('lancamento').forEach((l) => it.push({
+    grupo: 'Financeiro', icone: 'wallet', titulo: `${l.tipo === 'despesa' ? 'Despesa' : 'Receita'}: ${l.descricao}`, sub: [brl(l.valor), l.categoria, l.data ? dataBR(l.data) : ''].filter(Boolean).join(' · '),
+    rota: 'financeiro', ref: '', texto: [l.descricao, l.categoria, l.obs, l.tipo, l.valor].join(' '),
+  }));
+
   const com = store.cfg('comercial', {});
   (com.canais || []).forEach((x) => it.push({ grupo: 'Comercial', icone: 'bars', titulo: x, sub: 'Canal de chegada de clientes', rota: 'comercial', ref: '', texto: x }));
   (com.perfilAlvo || []).forEach((x) => it.push({ grupo: 'Comercial', icone: 'target', titulo: x, sub: 'Perfil-alvo', rota: 'comercial', ref: '', texto: x }));

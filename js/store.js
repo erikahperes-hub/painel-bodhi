@@ -1,7 +1,7 @@
 import { config } from './config.js';
 import { uid } from './util.js';
 
-const KINDS = ['cliente', 'proposta', 'contrato', 'pendencia', 'config'];
+const KINDS = ['cliente', 'proposta', 'contrato', 'pendencia', 'lancamento', 'config'];
 const LS_KEY = 'bodhi.painel.v1';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm';
 
@@ -43,7 +43,8 @@ function salvarLocal() {
 }
 
 export const store = {
-  modo: config.supabaseUrl && config.supabaseKey ? 'supabase' : 'local',
+  // Em localhost, adicionar ?local à URL usa os dados de teste do navegador em vez do Supabase.
+  modo: config.supabaseUrl && config.supabaseKey && !(location.hostname === 'localhost' && location.search.includes('local')) ? 'supabase' : 'local',
   usuario: null,
 
   ouvir(fn) { ouvintes.add(fn); return () => ouvintes.delete(fn); },
