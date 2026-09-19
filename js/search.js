@@ -1,8 +1,8 @@
-import { store } from './store.js';
-import { alertas } from './calc.js';
-import { esc, norm, brl, dataBR } from './util.js';
-import { ic } from './icons.js';
-import { listaProcessos } from './views/processo.js';
+import { store } from './store.js?v=13';
+import { alertas } from './calc.js?v=13';
+import { esc, norm, brl, dataBR } from './util.js?v=13';
+import { ic } from './icons.js?v=13';
+import { listaProcessos } from './views/processo.js?v=13';
 
 export const SECOES = [
   { rota: 'inicio', nome: 'Início', ic: 'home', extra: 'resumo visão geral' },

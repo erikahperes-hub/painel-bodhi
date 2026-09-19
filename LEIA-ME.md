@@ -55,7 +55,7 @@ git push -u origin main
 
 3. No repositório: **Settings** > **Pages** > Source: **Deploy from a branch** > Branch `main`, pasta `/ (root)` > Save.
 4. Ainda em Pages, em **Custom domain** confirme `painel.bodhi.marketing` (o arquivo `CNAME` já traz isso) e marque **Enforce HTTPS** quando a opção liberar (pode levar alguns minutos).
-5. Depois, cada mudança no código é publicada com `git push`. Mudanças de **dados** não precisam de push: são feitas no painel.
+5. Depois, cada mudança no código é publicada com `git push`. Antes de publicar, rode `node tools/versionar.mjs N` (N = próximo número): ele coloca a mesma versão em todos os arquivos, para o navegador nunca misturar arquivos velhos e novos. Mudanças de **dados** não precisam de push: são feitas no painel.
 
 ## Passo 4: conectar o Asaas
 

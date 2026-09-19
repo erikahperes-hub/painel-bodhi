@@ -1,9 +1,9 @@
-import { store } from '../store.js';
-import { metricas, faixaProposta } from '../calc.js';
-import { brl, esc, toast, urlSegura } from '../util.js';
-import { ic, flor } from '../icons.js';
-import { formulario, confirmar } from '../ui.js';
-import { gerarProposta } from '../docs/proposta.js';
+import { store } from '../store.js?v=13';
+import { metricas, faixaProposta } from '../calc.js?v=13';
+import { brl, esc, toast, urlSegura } from '../util.js?v=13';
+import { ic, flor } from '../icons.js?v=13';
+import { formulario, confirmar } from '../ui.js?v=13';
+import { gerarProposta } from '../docs/proposta.js?v=13';
 
 const STATUS = {
   rascunho: ['mute', 'Rascunho'],
@@ -41,7 +41,7 @@ export function abrirFormProposta(proposta = null, inicial = {}) {
     subtitulo: 'Salve como rascunho e gere o PDF quando estiver pronta.',
     campos, valores, largo: true,
     async aoSalvar(v) {
-      const cli = store.todos('cliente').find((c) => c.nome.toLowerCase() === v.clienteNome.toLowerCase());
+      const cli = store.todos('cliente').find((c) => String(c.nome || '').toLowerCase() === v.clienteNome.toLowerCase());
       const clienteId = cli?.id || proposta?.clienteId || inicial.clienteId || null;
       const salvo = await store.salvar('proposta', { ...(proposta || {}), ...v, clienteId });
       toast('Proposta salva');

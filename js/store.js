@@ -1,5 +1,5 @@
-import { config } from './config.js';
-import { uid } from './util.js';
+import { config } from './config.js?v=13';
+import { uid } from './util.js?v=13';
 
 const KINDS = ['cliente', 'proposta', 'contrato', 'pendencia', 'lancamento', 'processo', 'config'];
 const LS_KEY = 'bodhi.painel.v1';
@@ -25,12 +25,29 @@ function erroAmigavel(error, acao) {
 }
 const vazio = () => KINDS.every((k) => !Object.keys(db[k]).length);
 
+const vazioValor = (v) => v === undefined || v === null || v === '' || (Array.isArray(v) && !v.length);
+
+function unirDocumentos(a = [], b = []) {
+  const vistos = new Set();
+  return [...a, ...b].filter((d) => d.url && !vistos.has(d.url) && vistos.add(d.url));
+}
+
+// "preencher": só completa o que está vazio na ficha atual, sem trocar nada que já existe.
+function preencherDados(atual, novo) {
+  const out = { ...atual };
+  for (const [k, v] of Object.entries(novo)) {
+    if (k === 'documentos') continue;
+    if (vazioValor(out[k])) out[k] = v;
+    else if (out[k] && typeof out[k] === 'object' && !Array.isArray(out[k]) && v && typeof v === 'object' && !Array.isArray(v)) out[k] = preencherDados(out[k], v);
+  }
+  if (atual.documentos || novo.documentos) out.documentos = unirDocumentos(atual.documentos, novo.documentos);
+  return out;
+}
+
+// "mesclar": os campos do arquivo passam por cima, e os documentos são somados.
 function mesclarDados(atual, novo) {
   const out = { ...atual, ...novo };
-  if (atual.documentos || novo.documentos) {
-    const vistos = new Set();
-    out.documentos = [...(atual.documentos || []), ...(novo.documentos || [])].filter((d) => d.url && !vistos.has(d.url) && vistos.add(d.url));
-  }
+  if (atual.documentos || novo.documentos) out.documentos = unirDocumentos(atual.documentos, novo.documentos);
   return out;
 }
 
@@ -168,7 +185,8 @@ export const store = {
       if (!db[r.kind]) continue;
       const atual = db[r.kind][r.id];
       // "mesclar": acrescenta ao registro que já existe (e une os documentos por link) em vez de substituir.
-      await this.salvar(r.kind, { ...(r.mesclar && atual ? mesclarDados(atual, r.data) : r.data), id: r.id });
+      const dados = !r.mesclar || !atual ? r.data : r.mesclar === 'preencher' ? preencherDados(atual, r.data) : mesclarDados(atual, r.data);
+      await this.salvar(r.kind, { ...dados, id: r.id });
     }
   },
 

@@ -1,5 +1,5 @@
-import { esc, toast, reduzirImagem, urlSegura } from './util.js';
-import { ic } from './icons.js';
+import { esc, toast, reduzirImagem, urlSegura } from './util.js?v=13';
+import { ic } from './icons.js?v=13';
 
 let pilha = [];
 

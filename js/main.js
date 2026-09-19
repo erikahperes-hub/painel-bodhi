@@ -1,20 +1,20 @@
-import { store } from './store.js';
-import { logo } from './logo.js';
-import { ic, flor } from './icons.js';
-import { esc, toast, debounce } from './util.js';
-import { alertas } from './calc.js';
-import { buscar, htmlResultados } from './search.js';
-import { temModal, fecharTopo, formulario } from './ui.js';
+import { store } from './store.js?v=13';
+import { logo } from './logo.js?v=13';
+import { ic, flor } from './icons.js?v=13';
+import { esc, toast, debounce } from './util.js?v=13';
+import { alertas } from './calc.js?v=13';
+import { buscar, htmlResultados } from './search.js?v=13';
+import { temModal, fecharTopo, formulario } from './ui.js?v=13';
 
-import inicio from './views/inicio.js';
-import comercial from './views/comercial.js';
-import clientes from './views/clientes.js';
-import propostas from './views/propostas.js';
-import contratos from './views/contratos.js';
-import financeiro from './views/financeiro.js';
-import processo from './views/processo.js';
-import prospeccao from './views/prospeccao.js';
-import configuracoes from './views/configuracoes.js';
+import inicio from './views/inicio.js?v=13';
+import comercial from './views/comercial.js?v=13';
+import clientes from './views/clientes.js?v=13';
+import propostas from './views/propostas.js?v=13';
+import contratos from './views/contratos.js?v=13';
+import financeiro from './views/financeiro.js?v=13';
+import processo from './views/processo.js?v=13';
+import prospeccao from './views/prospeccao.js?v=13';
+import configuracoes from './views/configuracoes.js?v=13';
 
 const VIEWS = { inicio, comercial, clientes, propostas, contratos, financeiro, processo, prospeccao, configuracoes };
 const NAV = [
@@ -132,8 +132,13 @@ function renderRota(rolar) {
       <p>Você entrou como <b>${esc(store.emailUsuario())}</b>, mas não encontramos dados para este e-mail. Isso acontece quando ele ainda não foi incluído na lista de sócias do banco de dados. Peça para a Érika liberar este e-mail no Supabase.</p></div>`;
     return;
   }
-  view.innerHTML = v.render({ ref: rotaAtual.ref });
-  v.montar?.(view);
+  try {
+    view.innerHTML = v.render({ ref: rotaAtual.ref });
+    v.montar?.(view);
+  } catch (err) {
+    console.error('Erro ao montar a tela', rotaAtual.rota, err);
+    view.innerHTML = `<div class="card empty">${flor()}<h2>Esta tela não abriu</h2><p>Aconteceu um erro ao mostrar esta parte do painel. As outras seções continuam funcionando. Se puder, mande este texto para quem cuida do sistema:</p><p class="lbl" style="user-select:all">${esc(rotaAtual.rota + ': ' + (err?.message || err))}</p></div>`;
+  }
   document.querySelectorAll('.nb[data-rota]').forEach((b) => b.classList.toggle('on', b.dataset.rota === rotaAtual.rota));
   window.scrollTo(0, rolar ? 0 : y);
 }
@@ -224,6 +229,6 @@ window.addEventListener('hashchange', () => { if (document.getElementById('view'
     abrirApp();
   } catch (err) {
     console.error(err);
-    telaErro('Verifique sua conexão com a internet e tente novamente.');
+    telaErro(`Verifique sua conexão com a internet e tente novamente. Detalhe técnico: ${err?.message || err}`);
   }
 })();

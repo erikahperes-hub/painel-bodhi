@@ -1,7 +1,7 @@
-import { store } from '../store.js';
-import { brl, esc, iniciais, toast, dataBR, mesAno, mesesEntre, mesesTxt, urlSegura, norm } from '../util.js';
-import { ic, flor } from '../icons.js';
-import { formulario, confirmar } from '../ui.js';
+import { store } from '../store.js?v=13';
+import { brl, esc, iniciais, toast, dataBR, mesAno, mesesEntre, mesesTxt, urlSegura, norm } from '../util.js?v=13';
+import { ic, flor } from '../icons.js?v=13';
+import { formulario, confirmar } from '../ui.js?v=13';
 
 const STATUS = {
   ativo: ['ok', 'Ativo'],
@@ -94,7 +94,7 @@ function ordenar(lista) {
   const grupo = { ativo: 0, encerrando: 1, inativo: 2 };
   return [...lista].sort((a, b) => (grupo[a.status] ?? 2) - (grupo[b.status] ?? 2)
     || (a.status === 'inativo' ? (b.fim || '').localeCompare(a.fim || '') : 0)
-    || a.nome.localeCompare(b.nome));
+    || String(a.nome || '').localeCompare(String(b.nome || '')));
 }
 
 function estatisticas(lista) {
@@ -109,7 +109,7 @@ function estatisticas(lista) {
 
 function botao(c, sel) {
   const cls = c.status === 'inativo' ? 'ex' : '';
-  return `<button class="cbtn ${cls} ${c.id === sel ? 'on' : ''}" data-act="ir" data-rota="clientes" data-ref="${c.id}" data-nome="${esc(norm(c.nome))}">${'<i></i>'}${esc(c.nome)}</button>`;
+  return `<button class="cbtn ${cls} ${c.id === sel ? 'on' : ''}" data-act="ir" data-rota="clientes" data-ref="${c.id}" data-nome="${esc(norm(c.nome))}">${'<i></i>'}${esc(c.nome || '(sem nome)')}</button>`;
 }
 
 function docLink(d) {
@@ -138,7 +138,7 @@ export default {
     const aba = grupoDe(c);
     const nAtivos = lista.filter((x) => grupoDe(x) === 'ativos').length;
     const nEnc = lista.filter((x) => x.status === 'encerrando').length;
-    const nomes = lista.filter((x) => grupoDe(x) === aba).sort((a, b) => a.nome.localeCompare(b.nome));
+    const nomes = lista.filter((x) => grupoDe(x) === aba).sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || '')));
 
     const docs = (c.documentos || []).map(docLink).join('');
     const propLinks = propostas.map((p) => (urlSegura(p.arquivoUrl) ? docLink({ tipo: 'Proposta', titulo: `Proposta: ${p.titulo}`, url: p.arquivoUrl }) : '')).join('');
@@ -160,7 +160,7 @@ export default {
         <div class="card">
           <div class="cli-h">
             <div class="cli-id"><div class="cli-logo">${c.imagem ? `<img src="${esc(c.imagem)}" alt="">` : esc(iniciais(c.nome))}</div>
-              <div><h2>${esc(c.nome)}</h2><div class="actions" style="margin-top:6px"><span class="chip ${st[0]}">${st[1]}</span>${c.modelo === 'pontual' ? '<span class="chip info">Projeto pontual</span>' : ''}${c.fimEstimado ? '<span class="chip warn">Confirmar datas</span>' : ''}</div></div></div>
+              <div><h2>${esc(c.nome || '(sem nome)')}</h2><div class="actions" style="margin-top:6px"><span class="chip ${st[0]}">${st[1]}</span>${c.modelo === 'pontual' ? '<span class="chip info">Projeto pontual</span>' : ''}${c.fimEstimado ? '<span class="chip warn">Confirmar datas</span>' : ''}</div></div></div>
             <div class="money num">${c.mensalidade ? brl(c.mensalidade) : 'Sem valor'}<small>${c.modelo === 'pontual' ? 'no projeto' : 'por mês'}${c.status === 'inativo' ? ' (histórico)' : ''}</small></div>
           </div>
           ${c.resumo ? `<p style="margin-top:14px;color:var(--ink-2)">${esc(c.resumo)}</p>` : ''}
