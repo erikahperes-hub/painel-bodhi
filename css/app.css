@@ -77,6 +77,7 @@ mark{background:var(--verde-s);color:inherit;border-radius:4px;padding:0 2px}
 
 /* ---------- Cards e grade ---------- */
 .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .c2{grid-column:span 2}.c3{grid-column:span 3}.c4{grid-column:span 4}.r2{grid-row:span 2}
 .card{background:var(--card);border-radius:var(--r);padding:20px 22px;box-shadow:var(--sh);min-width:0}
 .card h2{font:700 18px/1.25 var(--ui);letter-spacing:-.005em}

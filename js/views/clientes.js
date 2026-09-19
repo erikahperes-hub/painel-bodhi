@@ -143,11 +143,10 @@ export default {
     const docs = (c.documentos || []).map(docLink).join('');
     const propLinks = propostas.map((p) => (urlSegura(p.arquivoUrl) ? docLink({ tipo: 'Proposta', titulo: `Proposta: ${p.titulo}`, url: p.arquivoUrl }) : '')).join('');
 
-    return `<div class="grid" style="margin-bottom:16px">
+    return `<div class="grid g3" style="margin-bottom:16px">
         <button class="card stat tone-verde clicavel ${aba === 'ativos' ? 'on' : ''}" data-act="aba-clientes" data-aba="ativos" aria-pressed="${aba === 'ativos'}"><div><div class="lbl">Clientes ativos</div><div class="big num">${nAtivos}</div><div class="hint">${nEnc ? `Inclui ${nEnc} em encerramento` : 'Hoje'}</div></div><span class="stat-ic">${ic('users')}</span></button>
         <button class="card stat clicavel ${aba === 'inativos' ? 'on' : ''}" data-act="aba-clientes" data-aba="inativos" aria-pressed="${aba === 'inativos'}"><div><div class="lbl">Inativos</div><div class="big num">${stt.enc}</div><div class="hint">${stt.pont ? `${stt.pont} foram projetos pontuais` : 'Histórico completo'}</div></div><span class="stat-ic" style="background:var(--graf-s);color:var(--ink-2)">${ic('file')}</span></button>
         <div class="card stat tone-creme"><div><div class="lbl">Permanência média</div><div class="big num">${stt.media !== null ? mesesTxt(stt.media) : '–'}</div><div class="hint">Clientes recorrentes que saíram</div></div><span class="stat-ic">${ic('calendar')}</span></div>
-        <div class="card stat tone-coral"><div><div class="lbl">Motivo de saída mais comum</div><div class="big" style="font-size:17px;line-height:1.25">${stt.top ? esc(stt.top.motivo) : '–'}</div><div class="hint">${stt.top ? `${stt.top.n} ${stt.top.n === 1 ? 'cliente' : 'clientes'}` : 'Preencha o motivo nas fichas'}</div></div><span class="stat-ic">${ic('alert')}</span></div>
       </div>
 
       <div class="grid">

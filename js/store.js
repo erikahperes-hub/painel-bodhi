@@ -25,6 +25,15 @@ function erroAmigavel(error, acao) {
 }
 const vazio = () => KINDS.every((k) => !Object.keys(db[k]).length);
 
+function mesclarDados(atual, novo) {
+  const out = { ...atual, ...novo };
+  if (atual.documentos || novo.documentos) {
+    const vistos = new Set();
+    out.documentos = [...(atual.documentos || []), ...(novo.documentos || [])].filter((d) => d.url && !vistos.has(d.url) && vistos.add(d.url));
+  }
+  return out;
+}
+
 function limpar() { KINDS.forEach((k) => (db[k] = {})); }
 
 function carregarRegistros(lista) {
@@ -155,7 +164,12 @@ export const store = {
   async importar(obj) {
     const lista = obj?.registros;
     if (!Array.isArray(lista)) throw new Error('Arquivo de backup inválido.');
-    for (const r of lista) if (db[r.kind]) await this.salvar(r.kind, { ...r.data, id: r.id });
+    for (const r of lista) {
+      if (!db[r.kind]) continue;
+      const atual = db[r.kind][r.id];
+      // "mesclar": acrescenta ao registro que já existe (e une os documentos por link) em vez de substituir.
+      await this.salvar(r.kind, { ...(r.mesclar && atual ? mesclarDados(atual, r.data) : r.data), id: r.id });
+    }
   },
 
   vazio,
