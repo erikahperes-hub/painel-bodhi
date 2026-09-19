@@ -12,13 +12,14 @@ import clientes from './views/clientes.js';
 import propostas from './views/propostas.js';
 import contratos from './views/contratos.js';
 import financeiro from './views/financeiro.js';
+import processo from './views/processo.js';
 import prospeccao from './views/prospeccao.js';
 import configuracoes from './views/configuracoes.js';
 
-const VIEWS = { inicio, comercial, clientes, propostas, contratos, financeiro, prospeccao, configuracoes };
+const VIEWS = { inicio, comercial, clientes, propostas, contratos, financeiro, processo, prospeccao, configuracoes };
 const NAV = [
   ['inicio', 'Início', 'home'], ['comercial', 'Comercial', 'bars'], ['clientes', 'Clientes', 'users'],
-  ['propostas', 'Propostas', 'send'], ['contratos', 'Contratos', 'doc'], ['financeiro', 'Financeiro', 'wallet'], ['prospeccao', 'Prospecção', 'target'],
+  ['propostas', 'Propostas', 'send'], ['contratos', 'Contratos', 'doc'], ['financeiro', 'Financeiro', 'wallet'], ['processo', 'Processo', 'flow'], ['prospeccao', 'Prospecção', 'target'],
 ];
 const ACOES = Object.assign({}, ...Object.values(VIEWS).map((v) => v.acoes || {}));
 ACOES.ir = (el) => { fecharPopovers(); location.hash = `#/${el.dataset.rota}${el.dataset.ref ? '/' + el.dataset.ref : ''}`; };
@@ -126,6 +127,11 @@ function renderRota(rolar) {
   document.getElementById('s').textContent = v.sub();
   document.title = `${rotaAtual.rota === 'inicio' ? 'Início' : v.titulo()} · Painel Bôdhi`;
   const y = window.scrollY;
+  if (store.modo === 'supabase' && store.vazio() && rotaAtual.rota !== 'configuracoes') {
+    view.innerHTML = `<div class="card empty">${flor()}<h2>Seu acesso ainda não foi liberado</h2>
+      <p>Você entrou como <b>${esc(store.emailUsuario())}</b>, mas não encontramos dados para este e-mail. Isso acontece quando ele ainda não foi incluído na lista de sócias do banco de dados. Peça para a Érika liberar este e-mail no Supabase.</p></div>`;
+    return;
+  }
   view.innerHTML = v.render({ ref: rotaAtual.ref });
   v.montar?.(view);
   document.querySelectorAll('.nb[data-rota]').forEach((b) => b.classList.toggle('on', b.dataset.rota === rotaAtual.rota));

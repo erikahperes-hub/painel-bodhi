@@ -25,6 +25,7 @@ const P = {
   image: '<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="m4 17 5-4.5 4 3.5 3-2.5 4 3.5"/>',
   refresh: '<path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.5 4.5v4h-4"/>',
   file: '<path d="M6.5 3.5h8l4 4v13h-12z"/><path d="M14 3.5v4h4"/>',
+  flow: '<circle cx="6" cy="5.5" r="2.4"/><circle cx="18" cy="18.5" r="2.4"/><path d="M8.4 5.5H14a3.5 3.5 0 0 1 0 7h-4a3.5 3.5 0 0 0 0 7h5.6"/>',
 };
 
 export const ic = (nome, extra = '') => `<svg class="ic ${extra}" viewBox="0 0 24 24" aria-hidden="true">${P[nome] || ''}</svg>`;

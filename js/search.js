@@ -2,6 +2,7 @@ import { store } from './store.js';
 import { alertas } from './calc.js';
 import { esc, norm, brl, dataBR } from './util.js';
 import { ic } from './icons.js';
+import { listaProcessos } from './views/processo.js';
 
 export const SECOES = [
   { rota: 'inicio', nome: 'Início', ic: 'home', extra: 'resumo visão geral' },
@@ -10,6 +11,7 @@ export const SECOES = [
   { rota: 'propostas', nome: 'Propostas', ic: 'send', extra: 'orçamentos pdf' },
   { rota: 'contratos', nome: 'Contratos', ic: 'doc', extra: 'vigência renovação foro' },
   { rota: 'financeiro', nome: 'Financeiro', ic: 'wallet', extra: 'receita asaas cobranças pagamentos' },
+  { rota: 'processo', nome: 'Processo', ic: 'flow', extra: 'fluxo etapas onboarding passo a passo estratégia briefing contrato fatura' },
   { rota: 'prospeccao', nome: 'Prospecção', ic: 'target', extra: 'funil leads' },
   { rota: 'configuracoes', nome: 'Configurações', ic: 'sliders', extra: 'backup modelo de contrato conta' },
 ];
@@ -40,6 +42,11 @@ function indice() {
     grupo: 'Financeiro', icone: 'wallet', titulo: `${l.tipo === 'despesa' ? 'Despesa' : 'Receita'}: ${l.descricao}`, sub: [brl(l.valor), l.categoria, l.data ? dataBR(l.data) : ''].filter(Boolean).join(' · '),
     rota: 'financeiro', ref: '', texto: [l.descricao, l.categoria, l.obs, l.tipo, l.valor].join(' '),
   }));
+
+  listaProcessos().forEach((pr) => (pr.etapas || []).forEach((e, i) => it.push({
+    grupo: 'Processo', icone: 'flow', titulo: `${pr.titulo}: ${e.titulo}`, sub: (e.passos || []).map((x) => x.titulo).join(' · '), rota: 'processo', ref: pr.id,
+    texto: [pr.titulo, e.titulo, e.descricao, ...(e.avisos || []), ...(e.passos || []).flatMap((x) => [x.titulo, ...(x.detalhes || [])])].join(' '),
+  })));
 
   const com = store.cfg('comercial', {});
   (com.canais || []).forEach((x) => it.push({ grupo: 'Comercial', icone: 'bars', titulo: x, sub: 'Canal de chegada de clientes', rota: 'comercial', ref: '', texto: x }));

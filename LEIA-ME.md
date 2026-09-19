@@ -64,6 +64,20 @@ git push -u origin main
 3. **Edge Functions** > **Secrets** > adicione `ASAAS_API_KEY` com a chave (e `ASAAS_ENV` com o valor `sandbox` se for teste; em produção não precisa criar).
 4. No painel, abra **Financeiro**: o cartão “Cobranças no Asaas” passa a mostrar pago, pendente e atrasado, e o botão **Nova cobrança** cria a cobrança direto no Asaas.
 
+## Liberar o acesso de mais uma pessoa (ou da Milena, se ela não conseguir editar)
+
+Quem está na lista de sócias tem exatamente os mesmos poderes: ver e editar tudo. Para liberar um e-mail, no Supabase abra **SQL Editor**, cole e clique em Run (troque pelo e-mail real, o mesmo do login):
+
+```sql
+insert into public.socias (email) values ('email-da-pessoa@exemplo.com') on conflict do nothing;
+```
+
+Para ver quem está liberado: `select * from public.socias;`
+
+## Processo
+
+A aba **Processo** (ícone de fluxo na lateral) guarda o passo a passo da Bôdhi Marketing, começando por “Fechei uma estratégia, e agora?”. Use **Editar** para mudar etapas e passos e **Novo processo** para documentar outros fluxos.
+
 ## Modelo de contrato
 
 O modelo padrão é uma **minuta em revisão**. Edite as cláusulas em **Configurações > Modelo de contrato** (permanência mínima, multa e reajuste só aparecem no contrato quando preenchidas). Recomenda-se revisão jurídica antes de usar com clientes.

@@ -1,7 +1,7 @@
 import { config } from './config.js';
 import { uid } from './util.js';
 
-const KINDS = ['cliente', 'proposta', 'contrato', 'pendencia', 'lancamento', 'config'];
+const KINDS = ['cliente', 'proposta', 'contrato', 'pendencia', 'lancamento', 'processo', 'config'];
 const LS_KEY = 'bodhi.painel.v1';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm';
 
