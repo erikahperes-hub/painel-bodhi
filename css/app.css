@@ -208,6 +208,12 @@ mark{background:var(--verde-s);color:inherit;border-radius:4px;padding:0 2px}
 .rs.fim{background:var(--verde);color:#0B3B2B;margin-bottom:0}
 @media (min-width:1241px){.sticky{position:sticky;top:20px}}
 
+/* Cartões que funcionam como botões */
+button.card.clicavel{border:0;font:inherit;color:inherit;text-align:left;width:100%;cursor:pointer;transition:box-shadow .15s,transform .1s}
+button.card.clicavel:hover{transform:translateY(-1px)}
+button.card.clicavel.on{box-shadow:0 0 0 2.5px var(--petroleo),var(--sh)}
+button.card.clicavel:focus-visible{outline:2px solid var(--verde);outline-offset:3px}
+
 /* Botões de clientes */
 .grp{font:700 12px var(--ui);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin:16px 0 8px;display:flex;justify-content:space-between}
 .grp:first-of-type{margin-top:10px}

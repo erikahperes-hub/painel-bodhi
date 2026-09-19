@@ -108,7 +108,7 @@ function estatisticas(lista) {
 }
 
 function botao(c, sel) {
-  const cls = c.status === 'encerrando' ? 'enc' : c.status === 'inativo' ? 'ex' : '';
+  const cls = c.status === 'inativo' ? 'ex' : '';
   return `<button class="cbtn ${cls} ${c.id === sel ? 'on' : ''}" data-act="ir" data-rota="clientes" data-ref="${c.id}" data-nome="${esc(norm(c.nome))}">${'<i></i>'}${esc(c.nome)}</button>`;
 }
 
@@ -134,29 +134,27 @@ export default {
     const emp = c.empresa || {};
     const falta = faltando(c);
     const stt = estatisticas(lista);
-    const ativos = lista.filter((x) => x.status === 'ativo').length;
-
-    const grupos = [['ativo', 'Ativos'], ['encerrando', 'Encerrando'], ['inativo', 'Encerrados']]
-      .map(([s, nome]) => {
-        const itens = lista.filter((x) => x.status === s);
-        return itens.length ? `<div class="grp"><span>${nome}</span><span>${itens.length}</span></div><div class="cbtns">${itens.map((x) => botao(x, c.id)).join('')}</div>` : '';
-      }).join('');
+    const grupoDe = (x) => (x.status === 'inativo' ? 'inativos' : 'ativos');
+    const aba = grupoDe(c);
+    const nAtivos = lista.filter((x) => grupoDe(x) === 'ativos').length;
+    const nEnc = lista.filter((x) => x.status === 'encerrando').length;
+    const nomes = lista.filter((x) => grupoDe(x) === aba).sort((a, b) => a.nome.localeCompare(b.nome));
 
     const docs = (c.documentos || []).map(docLink).join('');
     const propLinks = propostas.map((p) => (urlSegura(p.arquivoUrl) ? docLink({ tipo: 'Proposta', titulo: `Proposta: ${p.titulo}`, url: p.arquivoUrl }) : '')).join('');
 
     return `<div class="grid" style="margin-bottom:16px">
-        <div class="card stat tone-verde"><div><div class="lbl">Clientes ativos</div><div class="big num">${ativos}</div><div class="hint">Hoje</div></div><span class="stat-ic">${ic('users')}</span></div>
-        <div class="card stat"><div><div class="lbl">Ex-clientes</div><div class="big num">${stt.enc}</div><div class="hint">${stt.pont ? `${stt.pont} foram projetos pontuais` : 'Histórico completo'}</div></div><span class="stat-ic" style="background:var(--graf-s);color:var(--ink-2)">${ic('file')}</span></div>
+        <button class="card stat tone-verde clicavel ${aba === 'ativos' ? 'on' : ''}" data-act="aba-clientes" data-aba="ativos" aria-pressed="${aba === 'ativos'}"><div><div class="lbl">Clientes ativos</div><div class="big num">${nAtivos}</div><div class="hint">${nEnc ? `Inclui ${nEnc} em encerramento` : 'Hoje'}</div></div><span class="stat-ic">${ic('users')}</span></button>
+        <button class="card stat clicavel ${aba === 'inativos' ? 'on' : ''}" data-act="aba-clientes" data-aba="inativos" aria-pressed="${aba === 'inativos'}"><div><div class="lbl">Inativos</div><div class="big num">${stt.enc}</div><div class="hint">${stt.pont ? `${stt.pont} foram projetos pontuais` : 'Histórico completo'}</div></div><span class="stat-ic" style="background:var(--graf-s);color:var(--ink-2)">${ic('file')}</span></button>
         <div class="card stat tone-creme"><div><div class="lbl">Permanência média</div><div class="big num">${stt.media !== null ? mesesTxt(stt.media) : '–'}</div><div class="hint">Clientes recorrentes que saíram</div></div><span class="stat-ic">${ic('calendar')}</span></div>
         <div class="card stat tone-coral"><div><div class="lbl">Motivo de saída mais comum</div><div class="big" style="font-size:17px;line-height:1.25">${stt.top ? esc(stt.top.motivo) : '–'}</div><div class="hint">${stt.top ? `${stt.top.n} ${stt.top.n === 1 ? 'cliente' : 'clientes'}` : 'Preencha o motivo nas fichas'}</div></div><span class="stat-ic">${ic('alert')}</span></div>
       </div>
 
       <div class="grid">
       <div class="card namescard">
-        <div class="card-h" style="margin-bottom:4px"><div><h2>Clientes</h2></div><button class="btn pri sm" data-act="novo-cliente">${ic('plus')}Novo</button></div>
-        <input class="filtro" type="search" placeholder="Buscar pelo nome" aria-label="Filtrar clientes pelo nome" data-filtro>
-        <div data-nomes>${grupos}</div>
+        <div class="card-h" style="margin-bottom:8px"><div><h2>${aba === 'ativos' ? 'Clientes ativos' : 'Clientes inativos'}</h2><p class="sub" style="margin:2px 0 0">${nomes.length} ${nomes.length === 1 ? 'cliente' : 'clientes'}</p></div><button class="btn pri sm" data-act="novo-cliente">${ic('plus')}Novo</button></div>
+        ${aba === 'inativos' ? '<input class="filtro" type="search" placeholder="Buscar pelo nome" aria-label="Buscar cliente inativo pelo nome" data-filtro>' : ''}
+        <div class="cbtns" style="margin-top:12px" data-nomes>${nomes.map((x) => botao(x, c.id)).join('')}</div>
       </div>
 
       <div class="stack c3" id="ficha">
@@ -212,6 +210,11 @@ export default {
   },
 
   acoes: {
+    'aba-clientes': (el) => {
+      const inativos = el.dataset.aba === 'inativos';
+      const primeiro = ordenar(store.todos('cliente')).find((x) => (x.status === 'inativo') === inativos);
+      if (primeiro) location.hash = `#/clientes/${primeiro.id}`;
+    },
     'novo-cliente': () => abrirFormCliente(),
     'editar-cliente': (el) => abrirFormCliente(store.obter('cliente', el.dataset.id)),
   },
