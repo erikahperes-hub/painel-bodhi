@@ -1,4 +1,4 @@
-import { esc, toast, reduzirImagem } from './util.js';
+import { esc, toast, reduzirImagem, urlSegura } from './util.js';
 import { ic } from './icons.js';
 
 let pilha = [];
@@ -65,6 +65,17 @@ function pacoteLinha(p = {}) {
   </div>`;
 }
 
+export const TIPOS_DOC = ['Proposta', 'Contrato', 'Rescisão', 'Notas fiscais', 'Pasta no Drive', 'Briefing', 'Outro'];
+
+function docLinha(d = {}) {
+  return `<div class="rowdoc" data-doc>
+    <select data-d="tipo" aria-label="Tipo">${TIPOS_DOC.map((t) => `<option${t === (d.tipo || 'Proposta') ? ' selected' : ''}>${t}</option>`).join('')}</select>
+    <input data-d="titulo" placeholder="Nome (ex.: Proposta enviada)" value="${esc(d.titulo ?? '')}" aria-label="Nome do documento">
+    <input data-d="url" type="url" placeholder="Link (Canva, Drive, WhatsApp…)" value="${esc(d.url ?? '')}" aria-label="Link">
+    <button type="button" class="iconbtn" data-rm-doc style="width:40px;height:40px;font-size:16px;box-shadow:none;border:1px solid var(--line)" aria-label="Remover documento">${ic('trash')}</button>
+  </div>`;
+}
+
 function campoHTML(c, valor) {
   const id = 'f_' + c.nome.replace(/\W/g, '_');
   const cls = 'field' + (c.cheio ? ' full' : '');
@@ -93,6 +104,11 @@ function campoHTML(c, valor) {
       return `<div class="${cls}" data-pacotes="${c.nome}"><label>${esc(c.rotulo)}</label><div class="rows">${linhas}</div>
         <button type="button" class="btn sec sm" data-add-pacote style="align-self:flex-start;margin-top:4px">${ic('plus')}Adicionar pacote</button>${ajuda}</div>`;
     }
+    case 'docs': {
+      const linhas = (Array.isArray(valor) && valor.length ? valor : [{}]).map(docLinha).join('');
+      return `<div class="${cls}" data-docs="${c.nome}"><label>${esc(c.rotulo)}</label><div class="rows">${linhas}</div>
+        <button type="button" class="btn sec sm" data-add-doc style="align-self:flex-start;margin-top:4px">${ic('plus')}Adicionar documento</button>${ajuda}</div>`;
+    }
     case 'imagem':
       return `<div class="${cls}"><label>${esc(c.rotulo)}</label><div class="imgpick" data-imagem="${c.nome}">
         <div class="prev">${valor ? `<img src="${esc(valor)}" alt="">` : ic('image')}</div>
@@ -115,6 +131,15 @@ function coletar(form, campos) {
         preco: Number(l.querySelector('[data-p=preco]').value) || 0,
         desc: l.querySelector('[data-p=desc]').value.trim(),
       })).filter((p) => p.nome));
+      continue;
+    }
+    if (c.tipo === 'docs') {
+      const linhas = [...form.querySelectorAll(`[data-docs="${c.nome}"] [data-doc]`)];
+      set(out, c.nome, linhas.map((l) => ({
+        tipo: l.querySelector('[data-d=tipo]').value,
+        titulo: l.querySelector('[data-d=titulo]').value.trim(),
+        url: urlSegura(l.querySelector('[data-d=url]').value),
+      })).filter((d) => d.url));
       continue;
     }
     const el = form.elements[c.nome];
@@ -148,6 +173,13 @@ export function formulario({ titulo, subtitulo, campos, valores = {}, salvarText
     }
     const rm = e.target.closest('[data-rm]');
     if (rm) rm.closest('[data-pacote]').remove();
+    if (e.target.closest('[data-add-doc]')) {
+      const rows = e.target.closest('[data-docs]').querySelector('.rows');
+      rows.insertAdjacentHTML('beforeend', docLinha());
+      rows.lastElementChild.querySelector('[data-d=titulo]').focus();
+    }
+    const rmd = e.target.closest('[data-rm-doc]');
+    if (rmd) rmd.closest('[data-doc]').remove();
     const bloco = e.target.closest('[data-imagem]');
     if (bloco && e.target.closest('[data-escolher]')) bloco.querySelector('input[type=file]').click();
     if (bloco && e.target.closest('[data-tirar]')) {

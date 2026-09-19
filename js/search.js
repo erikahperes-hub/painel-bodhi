@@ -23,7 +23,7 @@ function indice() {
   store.todos('cliente').forEach((c) => it.push({
     grupo: 'Clientes', icone: 'users', titulo: c.nome, sub: [c.mensalidade ? brl(c.mensalidade) + '/mês' : '', c.contato, c.empresa?.razao].filter(Boolean).join(' · '),
     rota: 'clientes', ref: c.id,
-    texto: [c.nome, c.status, c.origem, c.resumo, c.contato, c.pagamento, c.formato, c.obs, c.empresa?.razao, c.empresa?.cnpj, c.empresa?.endereco, c.empresa?.representante, ...(c.escopo || [])].join(' '),
+    texto: [c.nome, c.status === 'inativo' ? 'encerrado ex-cliente antigo inativo' : c.status, c.motivoSaida, c.motivoDetalhe, ...(c.documentos || []).map((d) => `${d.tipo} ${d.titulo}`), c.origem, c.resumo, c.contato, c.pagamento, c.formato, c.obs, c.empresa?.razao, c.empresa?.cnpj, c.empresa?.endereco, c.empresa?.representante, ...(c.escopo || [])].join(' '),
   }));
   store.todos('proposta').forEach((p) => it.push({
     grupo: 'Propostas', icone: 'send', titulo: `${p.clienteNome}: ${p.titulo}`, sub: p.resumo || p.escopo || '', rota: 'propostas', ref: p.id,

@@ -74,6 +74,10 @@ insert into public.socias (email) values ('email-da-pessoa@exemplo.com') on conf
 
 Para ver quem está liberado: `select * from public.socias;`
 
+## Importar os clientes anteriores (ou qualquer lote de clientes)
+
+No painel: **Configurações > Restaurar de um backup** e escolha o arquivo `seed/clientes-inativos.json`. Ele só **acrescenta ou atualiza** os clientes daquele arquivo, sem mexer nos outros dados.
+
 ## Processo
 
 A aba **Processo** (ícone de fluxo na lateral) guarda o passo a passo da Bôdhi Marketing, começando por “Fechei uma estratégia, e agora?”. Use **Editar** para mudar etapas e passos e **Novo processo** para documentar outros fluxos.

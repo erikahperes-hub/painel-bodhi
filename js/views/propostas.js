@@ -1,6 +1,6 @@
 import { store } from '../store.js';
 import { metricas, faixaProposta } from '../calc.js';
-import { brl, esc, toast } from '../util.js';
+import { brl, esc, toast, urlSegura } from '../util.js';
 import { ic, flor } from '../icons.js';
 import { formulario, confirmar } from '../ui.js';
 import { gerarProposta } from '../docs/proposta.js';
@@ -23,6 +23,7 @@ const campos = [
   { nome: 'pacotes', rotulo: 'Valores', tipo: 'pacotes', cheio: true, ajuda: 'Preço aparece só na página de Investimento do PDF.' },
   { nome: 'escopo', rotulo: 'Nossa proposta, em poucas linhas', tipo: 'area', cheio: true, linhas: 3 },
   { nome: 'obs', rotulo: 'Observações e condições', tipo: 'area', cheio: true, linhas: 2 },
+  { nome: 'arquivoUrl', rotulo: 'Link do arquivo da proposta enviada', cheio: true, placeholder: 'Cole o link do Canva, do Drive…', ajuda: 'Para consultar depois o arquivo exato que foi enviado ao cliente. Se a proposta foi por WhatsApp, guarde o PDF no Drive e cole o link.' },
   { nome: '_pdf', rotulo: 'Conteúdo do PDF', tipo: 'secao' },
   { nome: 'contexto', rotulo: 'Contexto do cliente', tipo: 'area', cheio: true, linhas: 5, ajuda: 'Separe parágrafos com uma linha em branco.' },
   { nome: 'entregas', rotulo: 'O que está incluído', tipo: 'lista', cheio: true },
@@ -67,6 +68,7 @@ function bloco(p) {
     ${!p.obs && total && p.pacotesModo !== 'alternativas' && p.pacotes.length > 1 ? `<div class="hintbox">Investimento total: ${total}${p.tipo === 'recorrente' ? ' por mês' : ''}.</div>` : ''}
     ${p.obs ? `<div class="hintbox">${esc(p.obs)}</div>` : ''}
     <div class="actions" style="margin-top:14px">
+      ${urlSegura(p.arquivoUrl) ? `<a class="btn verde sm" href="${esc(urlSegura(p.arquivoUrl))}" target="_blank" rel="noopener noreferrer" style="text-decoration:none">${ic('file')}Ver proposta enviada</a>` : ''}
       <button class="btn pri sm" data-act="gerar-proposta" data-id="${p.id}">${ic('download')}Gerar PDF</button>
       <button class="btn sec sm" data-act="editar-proposta" data-id="${p.id}">${ic('edit')}Editar</button>
       ${p.status === 'rascunho' ? `<button class="btn sec sm" data-act="status-proposta" data-id="${p.id}" data-status="aguardando">Marcar como enviada</button>` : ''}

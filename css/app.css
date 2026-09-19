@@ -208,6 +208,28 @@ mark{background:var(--verde-s);color:inherit;border-radius:4px;padding:0 2px}
 .rs.fim{background:var(--verde);color:#0B3B2B;margin-bottom:0}
 @media (min-width:1241px){.sticky{position:sticky;top:20px}}
 
+/* Botões de clientes */
+.grp{font:700 12px var(--ui);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin:16px 0 8px;display:flex;justify-content:space-between}
+.grp:first-of-type{margin-top:10px}
+.cbtns{display:flex;flex-wrap:wrap;gap:8px}
+.cbtn{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:99px;border:1px solid var(--line);background:var(--card);font:700 13px var(--ui);color:var(--ink);text-align:left}
+.cbtn i{width:9px;height:9px;border-radius:50%;background:var(--verde);flex:none}
+.cbtn.enc i{background:var(--coral)}
+.cbtn.ex i{background:var(--ink-3)}
+.cbtn:hover{background:var(--canvas)}
+.cbtn.on{background:var(--petroleo);border-color:var(--petroleo);color:var(--creme)}
+.cbtn.on i{box-shadow:0 0 0 2px rgba(255,252,246,.55)}
+.namescard{max-height:calc(100vh - 40px);overflow:auto}
+.filtro{width:100%;border:1px solid var(--line);background:var(--creme);border-radius:99px;padding:10px 16px;font:400 14.5px var(--body);margin-top:6px}
+.stack{display:flex;flex-direction:column;gap:16px;min-width:0}
+@media (min-width:1241px){.namescard{position:sticky;top:20px;align-self:start}}
+@media (max-width:1240px){.namescard{grid-column:span 2;max-height:none}}
+.docbtns{display:flex;flex-wrap:wrap;gap:8px}
+.docbtns a{text-decoration:none}
+.miss{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:12px}
+.rowdoc{display:grid;grid-template-columns:140px 1fr 1.3fr 40px;gap:8px;align-items:start}
+@media (max-width:860px){.rowdoc{grid-template-columns:1fr 40px}.rowdoc select,.rowdoc input{grid-column:1/2}}
+
 /* Abas de cliente */
 .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
 .tab{border:0;background:var(--card);box-shadow:var(--sh);border-radius:99px;padding:10px 18px;font:700 13.5px var(--ui);color:var(--ink-2)}

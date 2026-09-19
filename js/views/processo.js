@@ -63,11 +63,6 @@ const PADRAO = {
       avisos: [],
     },
   ],
-  resumo: [
-    'Proposta aprovada', 'Dados cadastrais', 'Contrato e fatura', 'Contrato assinado e fatura paga', 'Grupo de WhatsApp',
-    'Briefing enviado', 'Briefing preenchido', 'Reunião de briefing', 'Desenvolvimento da estratégia', 'Estratégia 100% paga',
-    'Reunião de apresentação', 'Envio da estratégia para revisão', 'Estratégia revisada', 'Execução',
-  ],
 };
 
 export function listaProcessos() {
@@ -104,23 +99,22 @@ function deTexto(texto) {
 async function marcarIniciado() { await store.salvarCfg('processos', { iniciado: true }); }
 
 function abrirEditor(proc = null) {
-  const base = proc || { titulo: '', subtitulo: '', etapas: [{ titulo: 'Primeira etapa', descricao: '', passos: [p('Primeiro passo')], avisos: [] }], resumo: [] };
+  const base = proc || { titulo: '', subtitulo: '', etapas: [{ titulo: 'Primeira etapa', descricao: '', passos: [p('Primeiro passo')], avisos: [] }] };
   formulario({
     titulo: proc ? 'Editar processo' : 'Novo processo',
-    subtitulo: 'Escreva do jeito simples abaixo. O painel monta as etapas e o fluxo resumido.',
+    subtitulo: 'Escreva do jeito simples abaixo. O painel monta as etapas.',
     largo: true,
     campos: [
       { nome: 'titulo', rotulo: 'Nome do processo', obrigatorio: true, cheio: true },
       { nome: 'subtitulo', rotulo: 'Explicação curta', tipo: 'area', cheio: true, linhas: 2 },
       { nome: 'etapas', rotulo: 'Etapas e passos', tipo: 'area', cheio: true, linhas: 18,
         ajuda: 'Uma etapa por bloco, começando com ## e o nome. Depois, um passo por linha começando com “- ”. Detalhes de um passo vão na linha de baixo, com dois espaços no começo. Uma linha começando com “! ” vira um aviso em destaque. Texto solto logo abaixo do nome da etapa vira a descrição dela.' },
-      { nome: 'resumo', rotulo: 'Fluxo resumido', tipo: 'lista', cheio: true, linhas: 8, ajuda: 'Um item por linha, na ordem em que acontece.' },
     ],
-    valores: { titulo: base.titulo, subtitulo: base.subtitulo, etapas: paraTexto(base.etapas), resumo: base.resumo },
+    valores: { titulo: base.titulo, subtitulo: base.subtitulo, etapas: paraTexto(base.etapas) },
     async aoSalvar(v) {
       const etapas = deTexto(v.etapas);
       if (!etapas.length) throw new Error('Inclua pelo menos uma etapa, começando a linha com ## e o nome dela.');
-      const salvo = await store.salvar('processo', { ...(proc || {}), criadoEm: proc?.criadoEm || new Date().toISOString(), titulo: v.titulo, subtitulo: v.subtitulo, etapas, resumo: v.resumo });
+      const salvo = await store.salvar('processo', { ...(proc || {}), criadoEm: proc?.criadoEm || new Date().toISOString(), titulo: v.titulo, subtitulo: v.subtitulo, etapas });
       await marcarIniciado();
       toast('Processo salvo');
       location.hash = `#/processo/${salvo.id}`;
@@ -160,16 +154,13 @@ export default {
         ${(e.avisos || []).map((a) => `<div class="aviso">${ic('alert')}<span>${esc(a)}</span></div>`).join('')}
       </div></section>`).join('');
 
-    const resumo = (pr.resumo || []).map((x, i, arr) => `<div class="rs ${i === 0 ? 'ini' : ''} ${i === arr.length - 1 ? 'fim' : ''}">${esc(x)}</div>`).join('');
-
     return `${tabs}<div class="grid">
       <div class="card c4">
         <div class="card-h"><div><h2 style="font:700 24px/1.2 var(--display)">${esc(pr.titulo)}</h2>${pr.subtitulo ? `<p class="sub">${esc(pr.subtitulo)}</p>` : ''}</div>
           <div class="actions"><button class="btn sec sm" data-act="editar-processo" data-id="${pr.id}">${ic('edit')}Editar</button><button class="btn pri sm" data-act="novo-processo">${ic('plus')}Novo processo</button></div></div>
         <div class="indice" aria-label="Etapas">${etapas.map((e, i) => `<button data-act="rolar-etapa" data-i="${i}"><i>${i + 1}</i>${esc(e.titulo)}</button>`).join('')}</div>
       </div>
-      <div class="card c3">${blocos}</div>
-      ${resumo ? `<div class="card"><div class="sticky"><h2>Fluxo resumido</h2><p class="sub">Do aceite à execução</p><div class="resumo">${resumo}</div></div></div>` : ''}
+      <div class="card c4"><div style="max-width:880px">${blocos}</div></div>
     </div>`;
   },
 

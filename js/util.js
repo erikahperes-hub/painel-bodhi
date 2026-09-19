@@ -115,3 +115,23 @@ export function reduzirImagem(file, lado = 256) {
     img.src = url;
   });
 }
+
+// Só aceita links http(s): evita "javascript:" e similares em botões de documento.
+export const urlSegura = (u) => {
+  try { const x = new URL(String(u || '').trim()); return /^https?:$/.test(x.protocol) ? x.href : ''; } catch { return ''; }
+};
+
+const dataFlex = (iso) => {
+  const t = String(iso || '');
+  return parseData(t.length === 7 ? t + '-01' : t);
+};
+export function mesAno(iso) {
+  const d = dataFlex(iso);
+  return d && !isNaN(d) ? `${MESES[d.getMonth()].slice(0, 3)}/${d.getFullYear()}` : '';
+}
+export function mesesEntre(ini, fim) {
+  const a = dataFlex(ini), b = dataFlex(fim);
+  if (!a || !b || isNaN(a) || isNaN(b)) return null;
+  return Math.max(0, Math.round((b - a) / 2629800000));
+}
+export const mesesTxt = (n) => (n === null || n === undefined ? '' : n < 1 ? 'menos de 1 mês' : `${n} ${n === 1 ? 'mês' : 'meses'}`);
