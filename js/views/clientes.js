@@ -10,7 +10,7 @@ const STATUS = {
 };
 
 const MOTIVOS = {
-  financeiro: 'Financeiro do cliente',
+  financeiro: 'Problemas financeiros',
   internalizacao: 'Internalização da produção',
   reestruturacao: 'Reestruturação do negócio',
   desalinhamento: 'Desalinhamento de processo',

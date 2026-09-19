@@ -4,6 +4,8 @@ import { brl, esc, toast } from '../util.js';
 import { ic } from '../icons.js';
 import { formulario, confirmar } from '../ui.js';
 
+// Nome antigo do motivo, ainda salvo em alguns bancos, exibido com o termo novo.
+const titulo = (t) => (t === 'Financeiro do cliente' ? 'Problemas financeiros' : t);
 const NIVEL = { 'Mais comum': 'warn', Comum: 'info', Raro: 'mute' };
 
 function abrirPendencia(p = null) {
@@ -58,7 +60,7 @@ export default {
 
       <div class="card c4">
         <div class="card-h"><div><h2>Por que os clientes saem</h2><p class="sub">Padrão do histórico: não é qualidade de entrega, é o perfil financeiro do cliente</p></div><button class="btn ghost sm" data-act="editar-saidas" aria-label="Editar">${ic('edit')}</button></div>
-        <div class="list">${cfg.saidas.map((s) => `<div class="li" style="align-items:flex-start"><span class="chip ${NIVEL[s.nivel] || 'mute'}" style="margin-top:2px;min-width:92px;justify-content:center">${esc(s.nivel)}</span><div class="li-t"><b>${esc(s.titulo)}</b><span>${esc(s.texto)}</span></div></div>`).join('') || '<p class="lbl">Sem registros.</p>'}</div>
+        <div class="list">${cfg.saidas.map((s) => `<div class="li" style="align-items:flex-start"><span class="chip ${NIVEL[s.nivel] || 'mute'}" style="margin-top:2px;min-width:92px;justify-content:center">${esc(s.nivel)}</span><div class="li-t"><b>${esc(titulo(s.titulo))}</b><span>${esc(s.texto)}</span></div></div>`).join('') || '<p class="lbl">Sem registros.</p>'}</div>
         ${cfg.historico ? `<details style="margin-top:14px"><summary style="cursor:pointer;font:700 14px var(--ui);color:var(--petroleo)">Ver histórico completo de clientes anteriores</summary><p style="margin-top:10px;color:var(--ink-2)">${esc(cfg.historico)}</p></details>` : ''}
       </div>
     </div>`;
@@ -91,7 +93,7 @@ export default {
           { nome: 'saidas', rotulo: 'Motivos', tipo: 'lista', cheio: true, linhas: 8, ajuda: 'Um por linha, neste formato: Nível | Título | Texto. Níveis: Mais comum, Comum, Raro.' },
           { nome: 'historico', rotulo: 'Histórico de clientes anteriores', tipo: 'area', cheio: true, linhas: 5 },
         ],
-        valores: { saidas: (cfg.saidas || []).map((s) => `${s.nivel} | ${s.titulo} | ${s.texto}`), historico: cfg.historico },
+        valores: { saidas: (cfg.saidas || []).map((s) => `${s.nivel} | ${titulo(s.titulo)} | ${s.texto}`), historico: cfg.historico },
         async aoSalvar(v) {
           const saidas = v.saidas.map((l) => { const [nivel, titulo, ...resto] = l.split('|').map((x) => x.trim()); return { nivel: nivel || 'Comum', titulo: titulo || '', texto: resto.join(' | ') }; });
           await store.salvarCfg('comercial', { saidas, historico: v.historico });
