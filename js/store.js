@@ -1,5 +1,5 @@
-import { config } from './config.js?v=13';
-import { uid } from './util.js?v=13';
+import { config } from './config.js?v=14';
+import { uid } from './util.js?v=14';
 
 const KINDS = ['cliente', 'proposta', 'contrato', 'pendencia', 'lancamento', 'processo', 'config'];
 const LS_KEY = 'bodhi.painel.v1';
@@ -22,6 +22,18 @@ function erroAmigavel(error, acao) {
   else if (/jwt|token|expired|401/i.test(msg + cod)) dica = 'Sua sessão expirou. Saia e entre de novo.';
   else if (/fetch|network|failed/i.test(msg)) dica = 'Sem conexão com o banco agora.';
   return new Error(`Não foi possível ${acao}. ${dica} (código: ${cod || 'sem código'}${msg ? ', ' + msg.slice(0, 80) : ''})`);
+}
+function erroLogin(error) {
+  console.error('Erro de login', error);
+  const msg = String(error?.message || '');
+  const cod = String(error?.code || '');
+  const tec = ` (${[error?.status, cod, msg].filter(Boolean).join(', ').slice(0, 120)})`;
+  if (/invalid login|invalid_credentials/i.test(msg + cod)) return 'E-mail ou senha incorretos.';
+  if (/not confirmed|email_not_confirmed/i.test(msg + cod)) return 'Este e-mail ainda não foi confirmado. Abra o e-mail de confirmação do Supabase e clique no link.' + tec;
+  if (/rate limit|too many|over_request_rate_limit|429/i.test(msg + cod + error?.status)) return 'Muitas tentativas seguidas. Espere alguns minutos e tente de novo.' + tec;
+  if (/fetch|network|failed|load failed/i.test(msg)) return 'Sem conexão com o servidor agora. Confira a internet e tente de novo.' + tec;
+  if (/banned|disabled|not allowed/i.test(msg + cod)) return 'Este acesso está desativado no Supabase.' + tec;
+  return 'Não foi possível entrar.' + tec;
 }
 const vazio = () => KINDS.every((k) => !Object.keys(db[k]).length);
 
@@ -101,7 +113,7 @@ export const store = {
 
   async entrar(email, senha) {
     const { error } = await sb.auth.signInWithPassword({ email, password: senha });
-    if (error) throw new Error(error.message.includes('Invalid login') ? 'E-mail ou senha incorretos.' : 'Não foi possível entrar. Tente de novo.');
+    if (error) throw new Error(erroLogin(error));
     const { data } = await sb.auth.getUser();
     this.usuario = data.user;
     await this.recarregar(true);

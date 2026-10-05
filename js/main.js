@@ -1,20 +1,20 @@
-import { store } from './store.js?v=13';
-import { logo } from './logo.js?v=13';
-import { ic, flor } from './icons.js?v=13';
-import { esc, toast, debounce } from './util.js?v=13';
-import { alertas } from './calc.js?v=13';
-import { buscar, htmlResultados } from './search.js?v=13';
-import { temModal, fecharTopo, formulario } from './ui.js?v=13';
+import { store } from './store.js?v=14';
+import { logo } from './logo.js?v=14';
+import { ic, flor } from './icons.js?v=14';
+import { esc, toast, debounce } from './util.js?v=14';
+import { alertas } from './calc.js?v=14';
+import { buscar, htmlResultados } from './search.js?v=14';
+import { temModal, fecharTopo, formulario } from './ui.js?v=14';
 
-import inicio from './views/inicio.js?v=13';
-import comercial from './views/comercial.js?v=13';
-import clientes from './views/clientes.js?v=13';
-import propostas from './views/propostas.js?v=13';
-import contratos from './views/contratos.js?v=13';
-import financeiro from './views/financeiro.js?v=13';
-import processo from './views/processo.js?v=13';
-import prospeccao from './views/prospeccao.js?v=13';
-import configuracoes from './views/configuracoes.js?v=13';
+import inicio from './views/inicio.js?v=14';
+import comercial from './views/comercial.js?v=14';
+import clientes from './views/clientes.js?v=14';
+import propostas from './views/propostas.js?v=14';
+import contratos from './views/contratos.js?v=14';
+import financeiro from './views/financeiro.js?v=14';
+import processo from './views/processo.js?v=14';
+import prospeccao from './views/prospeccao.js?v=14';
+import configuracoes from './views/configuracoes.js?v=14';
 
 const VIEWS = { inicio, comercial, clientes, propostas, contratos, financeiro, processo, prospeccao, configuracoes };
 const NAV = [

@@ -1,7 +1,7 @@
-import { store } from '../store.js?v=13';
-import { brl, esc, iniciais, toast, dataBR, mesAno, mesesEntre, mesesTxt, urlSegura, norm } from '../util.js?v=13';
-import { ic, flor } from '../icons.js?v=13';
-import { formulario, confirmar } from '../ui.js?v=13';
+import { store } from '../store.js?v=14';
+import { brl, esc, iniciais, toast, dataBR, mesAno, mesesEntre, mesesTxt, urlSegura, norm } from '../util.js?v=14';
+import { ic, flor } from '../icons.js?v=14';
+import { formulario, confirmar } from '../ui.js?v=14';
 
 const STATUS = {
   ativo: ['ok', 'Ativo'],
