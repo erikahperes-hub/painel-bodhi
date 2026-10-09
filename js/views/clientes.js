@@ -1,7 +1,8 @@
-import { store } from '../store.js?v=14';
-import { brl, esc, iniciais, toast, dataBR, mesAno, mesesEntre, mesesTxt, urlSegura, norm } from '../util.js?v=14';
-import { ic, flor } from '../icons.js?v=14';
-import { formulario, confirmar } from '../ui.js?v=14';
+import { store } from '../store.js?v=15';
+import { brl, esc, iniciais, toast, dataBR, mesAno, mesesEntre, mesesTxt, urlSegura, norm } from '../util.js?v=15';
+import { ic, flor } from '../icons.js?v=15';
+import { formulario, confirmar } from '../ui.js?v=15';
+import { ETAPAS, pecasDoCliente } from '../conteudo.js?v=15';
 
 const STATUS = {
   ativo: ['ok', 'Ativo'],
@@ -140,6 +141,7 @@ export default {
     const nEnc = lista.filter((x) => x.status === 'encerrando').length;
     const nomes = lista.filter((x) => grupoDe(x) === aba).sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || '')));
 
+    const pecasCliente = pecasDoCliente(c.id);
     const docs = (c.documentos || []).map(docLink).join('');
     const propLinks = propostas.map((p) => (urlSegura(p.arquivoUrl) ? docLink({ tipo: 'Proposta', titulo: `Proposta: ${p.titulo}`, url: p.arquivoUrl }) : '')).join('');
 
@@ -178,6 +180,12 @@ export default {
             <button class="btn sec sm" data-act="editar-cliente" data-id="${c.id}">${ic('plus')}Adicionar link</button></div>
           ${docs || propLinks ? `<div class="docbtns">${docs}${propLinks}</div>` : '<p class="lbl">Nenhum documento ainda. Use “Adicionar link” para colar o link da proposta (Canva, Drive ou outro).</p>'}
         </div>
+
+        ${c.status !== 'inativo' ? `<div class="card">
+          <div class="card-h"><div><h2>Conteúdo</h2><p class="sub">Peças em andamento para este cliente</p></div>
+            <div class="actions"><button class="btn sec sm" data-act="nova-peca" data-cliente="${c.id}">${ic('plus')}Nova peça</button><button class="btn sec sm" data-act="ir" data-rota="conteudo" data-ref="${c.id}">Ver tudo</button></div></div>
+          ${pecasCliente.length ? `<div class="actions">${ETAPAS.map((e) => ({ e, n: pecasCliente.filter((x) => x.etapa === e.id).length })).filter((x) => x.n).map((x) => `<span class="chip ${x.e.chip}">${esc(x.e.nome)}: ${x.n}</span>`).join('')}</div>` : '<p class="lbl">Nenhuma peça cadastrada ainda.</p>'}
+        </div>` : ''}
 
         <div class="grid" style="grid-template-columns:repeat(2,minmax(0,1fr))">
           <div class="card">

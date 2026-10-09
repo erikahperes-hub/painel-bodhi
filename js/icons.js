@@ -26,9 +26,13 @@ const P = {
   refresh: '<path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.5 4.5v4h-4"/>',
   file: '<path d="M6.5 3.5h8l4 4v13h-12z"/><path d="M14 3.5v4h4"/>',
   flow: '<circle cx="6" cy="5.5" r="2.4"/><circle cx="18" cy="18.5" r="2.4"/><path d="M8.4 5.5H14a3.5 3.5 0 0 1 0 7h-4a3.5 3.5 0 0 0 0 7h5.6"/>',
+  grid: '<rect x="4" y="4" width="6.5" height="6.5" rx="1.4"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.4"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.4"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.4"/>',
+  layers: '<rect x="8" y="3.5" width="12.5" height="12.5" rx="2.4"/><path d="M5.2 8.2v9.3a3 3 0 0 0 3 3h9.3"/>',
+  play: '<rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="M10.2 8.8v6.4l5.2-3.2z"/>',
+  circle: '<circle cx="12" cy="12" r="8.2" stroke-dasharray="3.2 2.4"/><circle cx="12" cy="12" r="4.4"/>',
 };
 
-export const ic = (nome, extra = '') => `<svg class="ic ${extra}" viewBox="0 0 24 24" aria-hidden="true">${P[nome] || ''}</svg>`;
+export const ic =(nome, extra = '') => `<svg class="ic ${extra}" viewBox="0 0 24 24" aria-hidden="true">${P[nome] || ''}</svg>`;
 
 export const flor = (a = '#23BB84', b = '#E96A6A') =>
   `<svg class="flor" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="14" r="12" fill="${a}"/><circle cx="50" cy="32" r="12" fill="${b}"/><circle cx="32" cy="50" r="12" fill="${a}"/><circle cx="14" cy="32" r="12" fill="${b}"/><circle cx="32" cy="32" r="7" fill="#FFFCF6"/></svg>`;

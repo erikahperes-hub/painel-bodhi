@@ -1,5 +1,6 @@
-import { store } from './store.js?v=14';
-import { sum, diasAte, diasTxt, dataBR } from './util.js?v=14';
+import { store } from './store.js?v=15';
+import { sum, diasAte, diasTxt, dataBR } from './util.js?v=15';
+import { atrasada } from './conteudo.js?v=15';
 
 export function faixaProposta(p) {
   const valores = (p.pacotes || []).map((x) => Number(x.preco) || 0).filter((v) => v > 0);
@@ -105,6 +106,16 @@ export function alertas() {
   m.abertas.forEach((p) => {
     lista.push({ nivel: 2, tipo: 'info', tag: 'Aguardando retorno', icone: 'send', rota: 'propostas', ref: p.id,
       titulo: p.clienteNome, texto: `${p.titulo}: proposta enviada, aguardando resposta.` });
+  });
+  store.todos('conteudo').forEach((p) => {
+    const nome = cli(p.clienteId)?.nome || 'Cliente';
+    if (p.etapa === 'ajustes') {
+      lista.push({ nivel: 1, tipo: 'warn', tag: 'Ajuste pedido', icone: 'edit', rota: 'conteudo', ref: p.clienteId,
+        titulo: `${nome}: ${p.titulo}`, texto: p.ajuste ? `pediu ajuste: ${p.ajuste}` : 'o cliente pediu ajuste nesta peça.' });
+    } else if (atrasada(p)) {
+      lista.push({ nivel: 1, tipo: 'warn', tag: 'Peça atrasada', icone: 'calendar', rota: 'conteudo', ref: p.clienteId,
+        titulo: `${nome}: ${p.titulo}`, texto: `passou da data de publicação (${dataBR(p.publicar)}).` });
+    }
   });
   store.todos('pendencia').filter((x) => !x.feito && x.destaque).forEach((x) => {
     lista.push({ nivel: 3, tipo: 'mute', tag: 'Pendente', icone: 'file', rota: 'comercial', ref: x.id, titulo: x.titulo, texto: x.texto || '' });

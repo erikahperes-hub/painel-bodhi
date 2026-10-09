@@ -1,13 +1,15 @@
-import { store } from './store.js?v=14';
-import { alertas } from './calc.js?v=14';
-import { esc, norm, brl, dataBR } from './util.js?v=14';
-import { ic } from './icons.js?v=14';
-import { listaProcessos } from './views/processo.js?v=14';
+import { store } from './store.js?v=15';
+import { alertas } from './calc.js?v=15';
+import { esc, norm, brl, dataBR } from './util.js?v=15';
+import { ic } from './icons.js?v=15';
+import { listaProcessos } from './views/processo.js?v=15';
+import { FORMATOS, etapaDe } from './conteudo.js?v=15';
 
 export const SECOES = [
   { rota: 'inicio', nome: 'Início', ic: 'home', extra: 'resumo visão geral' },
   { rota: 'comercial', nome: 'Comercial', ic: 'bars', extra: 'prospecção canais saídas clientes saem' },
   { rota: 'clientes', nome: 'Clientes', ic: 'users', extra: 'fichas' },
+  { rota: 'conteudo', nome: 'Conteúdo', ic: 'grid', extra: 'posts feed carrossel reels story legenda aprovação criação demandas' },
   { rota: 'propostas', nome: 'Propostas', ic: 'send', extra: 'orçamentos pdf' },
   { rota: 'contratos', nome: 'Contratos', ic: 'doc', extra: 'vigência renovação foro' },
   { rota: 'financeiro', nome: 'Financeiro', ic: 'wallet', extra: 'receita asaas cobranças pagamentos' },
@@ -34,6 +36,13 @@ function indice() {
     it.push({
       grupo: 'Contratos', icone: 'doc', titulo: `Contrato ${nome}`, sub: [c.objeto, c.fim ? 'até ' + dataBR(c.fim) : ''].filter(Boolean).join(' · '), rota: 'contratos', ref: c.id,
       texto: [nome, c.objeto, c.contratanteRazao, c.contratanteCnpj, c.contratanteEndereco, c.contratanteRepresentante, c.foro, c.propriedade, c.formaPagamento, ...(c.escopo || [])].join(' '),
+    });
+  });
+  store.todos('conteudo').forEach((p) => {
+    const cli = store.obter('cliente', p.clienteId)?.nome || '';
+    it.push({
+      grupo: 'Conteúdo', icone: FORMATOS[p.formato]?.icone || 'grid', titulo: `${cli}: ${p.titulo}`, sub: [FORMATOS[p.formato]?.nome, etapaDe(p).nome, p.publicar ? dataBR(p.publicar) : ''].filter(Boolean).join(' · '),
+      rota: 'conteudo', ref: p.clienteId, texto: [cli, p.titulo, FORMATOS[p.formato]?.nome, etapaDe(p).nome, p.legenda, p.ajuste, p.briefing, p.responsavel].join(' '),
     });
   });
   store.todos('pendencia').forEach((p) => it.push({ grupo: 'Pendências', icone: 'file', titulo: p.titulo, sub: p.texto || (p.feito ? 'Concluída' : 'Em aberto'), rota: 'comercial', ref: p.id, texto: `${p.titulo} ${p.texto || ''}` }));

@@ -1,24 +1,25 @@
-import { store } from './store.js?v=14';
-import { logo } from './logo.js?v=14';
-import { ic, flor } from './icons.js?v=14';
-import { esc, toast, debounce } from './util.js?v=14';
-import { alertas } from './calc.js?v=14';
-import { buscar, htmlResultados } from './search.js?v=14';
-import { temModal, fecharTopo, formulario } from './ui.js?v=14';
+import { store } from './store.js?v=15';
+import { logo } from './logo.js?v=15';
+import { ic, flor } from './icons.js?v=15';
+import { esc, toast, debounce } from './util.js?v=15';
+import { alertas } from './calc.js?v=15';
+import { buscar, htmlResultados } from './search.js?v=15';
+import { temModal, fecharTopo, formulario } from './ui.js?v=15';
 
-import inicio from './views/inicio.js?v=14';
-import comercial from './views/comercial.js?v=14';
-import clientes from './views/clientes.js?v=14';
-import propostas from './views/propostas.js?v=14';
-import contratos from './views/contratos.js?v=14';
-import financeiro from './views/financeiro.js?v=14';
-import processo from './views/processo.js?v=14';
-import prospeccao from './views/prospeccao.js?v=14';
-import configuracoes from './views/configuracoes.js?v=14';
+import inicio from './views/inicio.js?v=15';
+import comercial from './views/comercial.js?v=15';
+import clientes from './views/clientes.js?v=15';
+import conteudo from './views/conteudo.js?v=15';
+import propostas from './views/propostas.js?v=15';
+import contratos from './views/contratos.js?v=15';
+import financeiro from './views/financeiro.js?v=15';
+import processo from './views/processo.js?v=15';
+import prospeccao from './views/prospeccao.js?v=15';
+import configuracoes from './views/configuracoes.js?v=15';
 
-const VIEWS = { inicio, comercial, clientes, propostas, contratos, financeiro, processo, prospeccao, configuracoes };
+const VIEWS = { inicio, comercial, clientes, conteudo, propostas, contratos, financeiro, processo, prospeccao, configuracoes };
 const NAV = [
-  ['inicio', 'Início', 'home'], ['comercial', 'Comercial', 'bars'], ['clientes', 'Clientes', 'users'],
+  ['inicio', 'Início', 'home'], ['comercial', 'Comercial', 'bars'], ['clientes', 'Clientes', 'users'], ['conteudo', 'Conteúdo', 'grid'],
   ['propostas', 'Propostas', 'send'], ['contratos', 'Contratos', 'doc'], ['financeiro', 'Financeiro', 'wallet'], ['processo', 'Processo', 'flow'], ['prospeccao', 'Prospecção', 'target'],
 ];
 const ACOES = Object.assign({}, ...Object.values(VIEWS).map((v) => v.acoes || {}));
