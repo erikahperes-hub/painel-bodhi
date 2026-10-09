@@ -373,7 +373,45 @@ a.chip{text-decoration:none}
 .ig-erro{color:var(--coral-ink);font:700 13px var(--ui);margin-top:10px}
 /* No celular, o calendário em grade encolhe para caber na tela: cada dia mostra miniaturas pequenas e a lista do mês fica logo abaixo. */
 @media (max-width:620px){.ig-cal{min-width:0;gap:3px}.ig .dow{font-size:10px;padding:2px 0;text-align:center;letter-spacing:0}.ig-dia{min-height:76px;padding:3px;border-radius:8px}.ig-dia>span{font-size:10.5px;display:block;text-align:center}.ig-dia>div{gap:3px;margin-top:3px}.ig-dia .ig-tile.mini{width:100%;height:auto;aspect-ratio:4/5;border-radius:5px}.ig-dia .ig-tile.mini .ig-st{width:8px;height:8px;left:2px;bottom:2px}.ig-li{flex-wrap:wrap;row-gap:6px}.ig-li-t{flex:1 1 150px}.ig-li-t b{white-space:normal}.ig-li .chip{margin-left:56px}}
+/* Visual da página do cliente: bordas bem arredondadas e quadradinhos separados, na identidade da Bôdhi */
+.ig-grade{gap:10px}
+.ig-grade .ig-tile{border-radius:20px;box-shadow:0 1px 2px rgba(41,43,45,.06),0 6px 16px rgba(41,43,45,.07)}
+.ig-grade .ig-tile::after{border-radius:20px}
+.ig-tile.mini{border-radius:8px}
+.ig-num{top:12px;left:14px}
+.ig-fmt{top:12px;right:12px}
+.ig-st{left:12px;bottom:12px}
+.ig-post{border-radius:30px;padding-bottom:4px}
+.ig-ph{padding:14px 16px 10px}
+.ig-media{border-radius:22px;overflow:hidden;margin:0 12px}
+.ig-media.v{width:min(calc(100% - 24px),calc(66vh*9/16));margin:0 auto}
+.ig-acts{padding:12px 18px 4px}
+.ig-leg{padding:4px 18px}
+.ig-data{padding:2px 18px 12px}
+.ig-ap{margin:8px 12px 10px;border:0;border-radius:22px;background:var(--creme)}
+.ig-pl,.ig-pl-item{border-radius:18px}
+.ig-pl-r{border-radius:14px}
+.ig-dia{border-radius:14px}
+.ig .tabs .tab{box-shadow:var(--sh)}
 /* Planejamento: ideias que o cliente aprova antes da produção */
+.ig-plgrid{display:grid;grid-template-columns:minmax(250px,320px) minmax(0,1fr);gap:16px;align-items:start}
+.ig-pl-lado{display:flex;flex-direction:column;gap:10px;position:sticky;top:12px;max-height:calc(100vh - 32px);overflow:auto;padding-right:2px}
+.ig-pl-res{display:flex;flex-wrap:wrap;gap:6px}
+.ig-pl-itens{display:flex;flex-direction:column;gap:6px}
+.ig-pl-item{display:flex;align-items:center;gap:10px;width:100%;border:0;background:var(--canvas);border-radius:12px;padding:8px 10px;text-align:left;cursor:pointer}
+.ig-pl-item:hover{background:#ECE6D6}
+.ig-pl-it{flex:1;min-width:0}
+.ig-pl-it b{display:block;font:700 13.5px/1.25 var(--ui)}
+.ig-pl-it small{font:400 12px var(--ui);color:var(--ink-2)}
+.ig-pl-chip{display:flex;align-items:center;gap:5px;width:100%;border:0;border-radius:7px;padding:4px 6px;font:700 11px/1.2 var(--ui);text-align:left;cursor:pointer;margin-top:3px}
+.ig-pl-chip i{width:7px;height:7px;border-radius:50%;flex:none}
+.ig-pl-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.ig-pl-chip.s-creme{background:#F3E9D3;color:#7A5B1E}.ig-pl-chip.s-creme i{background:#E8B94A}
+.ig-pl-chip.s-warn{background:var(--coral-s);color:var(--coral-ink)}.ig-pl-chip.s-warn i{background:var(--coral)}
+.ig-pl-chip.s-ok{background:var(--verde-s);color:var(--verde-ink)}.ig-pl-chip.s-ok i{background:var(--verde)}
+.ig-pl-modal{width:min(560px,100%)}
+@media (max-width:900px){.ig-plgrid{grid-template-columns:minmax(0,1fr)}.ig-pl-lado{position:static;max-height:none}.ig-pl-calwrap{order:-1}}
+@media (max-width:620px){.ig-pl-chip{display:inline-block;width:10px;height:10px;padding:0;border-radius:50%;margin:2px 1px 0 0}.ig-pl-chip span{display:none}.ig-pl-chip i{display:none}.ig-pl-chip.s-creme{background:#E8B94A}.ig-pl-chip.s-warn{background:var(--coral)}.ig-pl-chip.s-ok{background:var(--verde)}}
 .ig-pl-topo{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;font:700 13.5px var(--ui);color:var(--ink-2)}
 .ig-pl-lista{display:flex;flex-direction:column;gap:10px}
 .ig-pl{background:var(--canvas);border-radius:16px;padding:14px 16px}

@@ -1,9 +1,9 @@
-import { store } from './store.js?v=36';
-import { diasAte } from './util.js?v=36';
+import { store } from './store.js?v=38';
+import { diasAte } from './util.js?v=38';
 
 // Etapas do caminho de cada peça de conteúdo, na ordem em que acontecem.
 export const ETAPAS = [
-  { id: 'briefing', nome: 'Briefing', chip: 'mute', cor: 'mute' },
+  { id: 'briefing', nome: 'Planejamento', chip: 'mute', cor: 'mute' },
   { id: 'criacao', nome: 'Em criação', chip: 'info', cor: 'info' },
   { id: 'aprovacao', nome: 'Aguardando aprovação', chip: 'info', cor: 'creme' },
   { id: 'ajustes', nome: 'Ajustes', chip: 'warn', cor: 'warn' },

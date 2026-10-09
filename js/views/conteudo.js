@@ -1,9 +1,9 @@
-import { store } from '../store.js?v=36';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=36';
-import { ic, flor } from '../icons.js?v=36';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=36';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=36';
-import { idDrive, urlAbrir } from '../drive.js?v=36';
+import { store } from '../store.js?v=38';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=38';
+import { ic, flor } from '../icons.js?v=38';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=38';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=38';
+import { idDrive, urlAbrir } from '../drive.js?v=38';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a peça ser produzida.
@@ -61,7 +61,7 @@ function abrirPeca(p = null, padrao = {}) {
       { nome: 'capa', rotulo: 'Capa (imagem)', cheio: true, placeholder: 'Link da imagem de capa no Drive', ajuda: 'Aparece na grade do feed e antes de o vídeo tocar. Se vazio, usa a primeira imagem.' },
       { nome: 'link', rotulo: 'Link do arquivo editável (uso interno)', cheio: true, placeholder: 'Canva, Drive ou onde estiver', ajuda: 'Só vocês veem. Não aparece para o cliente.' },
       { nome: 'ajuste', rotulo: 'Pedido de ajuste do cliente', tipo: 'area', cheio: true, linhas: 3, ajuda: 'O que o cliente pediu para mudar. Aparece em destaque no cartão enquanto estiver em Ajustes.' },
-      { nome: 'briefing', rotulo: 'Briefing e observações internas', tipo: 'area', cheio: true, linhas: 3 },
+      { nome: 'briefing', rotulo: 'Observações internas', tipo: 'area', cheio: true, linhas: 3 },
     ],
     valores: p ? { ...p, ...padrao, capa: p.capa ? urlAbrir(p.capa) : '' } : { etapa: 'briefing', formato: 'feed', ...padrao },
     async aoSalvar(v) {
@@ -132,7 +132,8 @@ async function adicionarEmLote(arquivo) {
     const titulo = String(p.titulo || '').trim() || '(sem título)';
     const publicar = DATA_ISO.test(p.publicar || '') ? p.publicar : '';
     const formato = FORMATOS[p.formato] ? p.formato : 'feed';
-    const etapaExplicita = ETAPAS.some((e) => e.id === p.etapa);
+    const etapaIn = p.etapa === 'planejamento' ? 'briefing' : p.etapa;
+    const etapaExplicita = ETAPAS.some((e) => e.id === etapaIn);
     const existente = p.id && store.obter('conteudo', String(p.id)) ? store.obter('conteudo', String(p.id)) : (p.id ? null : acharExistente(c.id, titulo, publicar, formato));
     const id = String(p.id || existente?.id || `lote-${c.id}-${publicar || 'sem-data'}-${slug(titulo)}`);
     if (existente) usados.add(existente.id);
@@ -141,7 +142,7 @@ async function adicionarEmLote(arquivo) {
       clienteId: c.id,
       titulo,
       formato,
-      etapa: etapaExplicita ? p.etapa : 'criacao',
+      etapa: etapaExplicita ? etapaIn : 'criacao',
       publicar,
       roteiro: String(p.roteiro || ''),
       funil: ['topo', 'meio', 'fundo'].includes(p.funil) ? p.funil : '',
@@ -169,7 +170,7 @@ async function adicionarEmLote(arquivo) {
     semCliente.size ? `Ignoradas por cliente não encontrado: ${[...semCliente].join(', ')}.` : '',
   ].filter(Boolean).join(' ');
   if (!(await confirmar(aviso, 'Adicionar'))) return;
-  // Peça que estava só no planejamento (Briefing) e agora chegou com arquivos sai do Briefing sozinha.
+  // Peça que estava só no Planejamento e agora chegou com arquivos sai do Planejamento sozinha.
   const rank = (e) => ETAPAS.findIndex((x) => x.id === e);
   const avancos = validas.map((d) => {
     const antes = store.obter('conteudo', d.id);
@@ -362,7 +363,7 @@ export default {
     }).join('');
 
     return abas + `<div class="grid" style="margin-bottom:16px">
-        <div class="card stat tone-verde"><div><div class="lbl">Em produção</div><div class="big num">${em('briefing', 'criacao').length}</div><div class="hint">Briefing e criação</div></div><span class="stat-ic">${ic('grid')}</span></div>
+        <div class="card stat tone-verde"><div><div class="lbl">Em produção</div><div class="big num">${em('briefing', 'criacao').length}</div><div class="hint">Planejamento e criação</div></div><span class="stat-ic">${ic('grid')}</span></div>
         <div class="card stat tone-creme"><div><div class="lbl">Aguardando aprovação</div><div class="big num">${em('aprovacao').length}</div><div class="hint">Com o cliente</div></div><span class="stat-ic">${ic('send')}</span></div>
         <div class="card stat tone-coral"><div><div class="lbl">Pedidos de ajuste</div><div class="big num">${em('ajustes').length}</div><div class="hint">Para refazer</div></div><span class="stat-ic">${ic('edit')}</span></div>
         <div class="card stat tone-coral"><div><div class="lbl">Atrasadas</div><div class="big num">${lista.filter(atrasada).length}</div><div class="hint">Passaram da data de publicação</div></div><span class="stat-ic">${ic('calendar')}</span></div>
@@ -391,9 +392,10 @@ export default {
       const c = store.obter('cliente', el.dataset.cliente);
       if (!c) return;
       const prontas = pecas().filter((p) => p.clienteId === c.id && p.etapa === 'briefing' && !p.planejamento);
-      if (!prontas.length) { toast('Não há ideias novas no Briefing para enviar.', true); return; }
+      if (!prontas.length) { toast('Não há ideias novas no Planejamento para enviar.', true); return; }
       const sem = prontas.filter((p) => !String(p.roteiro || '').trim()).length;
-      const aviso = `Enviar ${prontas.length} ${prontas.length === 1 ? 'ideia' : 'ideias'} para ${c.nome} aprovar? Elas aparecem na aba Planejamento do link de aprovação dele, com data, formato, título e o texto de “Ideia e roteiro”.${sem ? ` ${sem} ${sem === 1 ? 'não tem' : 'não têm'} roteiro escrito.` : ''}`;
+      const jaEnviadas = pecas().filter((p) => p.clienteId === c.id && p.planejamento).length;
+      const aviso = `Enviar ${prontas.length} ${prontas.length === 1 ? 'ideia nova' : 'ideias novas'} (as que estão no Planejamento e ainda não foram enviadas${jaEnviadas ? `; ${jaEnviadas} já foram enviadas antes` : ''}) para ${c.nome} aprovar? Elas aparecem na aba Planejamento do link de aprovação dele, com data, formato, título e o texto de “Ideia e roteiro”.${sem ? ` ${sem} ${sem === 1 ? 'não tem' : 'não têm'} roteiro escrito.` : ''}`;
       if (!(await confirmar(aviso, 'Enviar'))) return;
       for (const p of prontas) await store.salvar('conteudo', { ...p, planejamento: 'aprovacao' });
       toast(`${prontas.length} ${prontas.length === 1 ? 'ideia enviada' : 'ideias enviadas'} para aprovação`);

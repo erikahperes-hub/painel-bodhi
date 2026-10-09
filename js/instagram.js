@@ -1,7 +1,7 @@
-import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=36';
-import { ic } from './icons.js?v=36';
-import { urlImagem, urlPlayer } from './drive.js?v=36';
-import { config } from './config.js?v=36';
+import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=38';
+import { ic } from './icons.js?v=38';
+import { urlImagem, urlPlayer } from './drive.js?v=38';
+import { config } from './config.js?v=38';
 
 // Visual de Instagram usado na prévia do painel e na página de aprovação do cliente.
 // Recebe os dados prontos, então funciona com ou sem login.
@@ -95,7 +95,7 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
       <div class="ig-mes"><button class="iconbtn" data-ig-mes="-1" aria-label="Mês anterior"><span style="display:grid;transform:scaleX(-1)">${ic('chev')}</span></button>
         <h3>${esc(rotuloMes(estado.mes))}</h3>
         <button class="iconbtn" data-ig-mes="1" aria-label="Próximo mês">${ic('chev')}</button></div>
-      <p class="ig-dica">${estado.aba === 'plano' ? 'Confira a ideia e o roteiro de cada dia. Aprove ou peça alteração antes de a gente começar a produzir.' : 'Toque em qualquer post para ver o conteúdo completo. Carrosséis deslizam e reels tocam o vídeo. Tudo como vai ao ar.'}</p>`;
+      <p class="ig-dica">${estado.aba === 'plano' ? 'Veja no calendário o dia de cada ideia e, na lista, o que já foi aprovado e o que ainda não. Toque em uma ideia para ler o roteiro e aprovar ou pedir alteração.' : 'Toque em qualquer post para ver o conteúdo completo. Carrosséis deslizam e reels tocam o vídeo. Tudo como vai ao ar.'}</p>`;
   }
 
   function grade(itens, stories = false) {
@@ -152,19 +152,104 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
     </article>`;
   }
 
+  // Aba Planejamento: calendário do mês à direita e, à esquerda, a lista que mostra o que já foi aprovado e o que não.
+  let planoOv = null;
+  const PLANO_CURTO = { aprovacao: 'Aguardando', ajustes: 'Alteração', aprovado: 'Aprovada' };
+  const ddmm = (iso) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+  const diaSemana = (iso) => { const [a, m, d] = iso.slice(0, 10).split('-').map(Number); return DIAS[new Date(a, m - 1, d).getDay()]; };
+  const funilTxt = (p) => (FUNIL_CLIENTE[p.funil] ? FUNIL_CLIENTE[p.funil][1] : '');
+
+  function itemPlano(p) {
+    const st = PLANO_ST[p.planejamento];
+    const f = fmt(p);
+    const quando = p.publicar ? `<span class="ig-pl-d"><b>${esc(ddmm(p.publicar))}</b><small>${esc(diaSemana(p.publicar))}</small></span>` : '<span class="ig-pl-d"><b>?</b><small>sem data</small></span>';
+    return `<button class="ig-pl-item" data-ig-pl-abrir="${esc(p.id)}">${quando}<span class="ig-pl-it"><b>${esc(p.titulo || 'Peça')}</b><small>${esc([f.nome, funilTxt(p)].filter(Boolean).join(' · '))}</small></span><span class="chip cor-${st[0]}">${esc(PLANO_CURTO[p.planejamento])}</span></button>`;
+  }
+
+  function calendarioPlano(itens) {
+    const hoje = hojeISO();
+    const [a, m] = estado.mes.split('-').map(Number);
+    const primeiro = new Date(a, m - 1, 1).getDay();
+    const semanas = Math.ceil((primeiro + new Date(a, m, 0).getDate()) / 7);
+    const dias = {};
+    itens.forEach((p) => (dias[p.publicar.slice(0, 10)] ||= []).push(p));
+    const celulas = Array.from({ length: semanas * 7 }, (_, i) => {
+      const d = new Date(a, m - 1, 1 - primeiro + i);
+      const iso = isoDia(d);
+      const chips = (dias[iso] || []).map((p) => {
+        const st = PLANO_ST[p.planejamento];
+        return `<button class="ig-pl-chip s-${st[0]}" data-ig-pl-abrir="${esc(p.id)}" title="${esc(`${p.titulo || 'Peça'} · ${st[1]}`)}"><i></i><span>${esc(p.titulo || 'Peça')}</span></button>`;
+      }).join('');
+      return `<div class="ig-dia${d.getMonth() !== m - 1 ? ' fora' : ''}${iso === hoje ? ' hoje' : ''}"><span>${d.getDate()}</span><div>${chips}</div></div>`;
+    }).join('');
+    return `<div class="calbox"><div class="ig-cal">${DIAS.map((d) => `<div class="dow">${d}</div>`).join('')}${celulas}</div></div>`;
+  }
+
   function planoHTML() {
     const doMesP = porDataAsc(plano.filter((p) => doMes(p, estado.mes)));
     const semDataP = plano.filter((p) => !p.publicar);
-    const pend = doMesP.filter((p) => p.planejamento === 'aprovacao').length;
-    const topo = `<div class="ig-pl-topo"><span>${doMesP.length} ${doMesP.length === 1 ? 'ideia' : 'ideias'} neste mês${pend ? ` · ${pend} aguardando sua aprovação` : ''}</span>${pend ? `<button class="btn verde sm" data-ig-pl-todas>${ic('check')}Aprovar tudo deste mês</button>` : ''}</div>`;
-    const cards = [...doMesP, ...semDataP].map(cardPlano).join('');
-    return `${topo}<p class="ig-erro" data-ig-pl-erro hidden></p>${cards ? `<div class="ig-pl-lista">${cards}</div>` : '<div class="ig-nada"><p>Nenhuma ideia neste mês. Use as setas para ver outros meses.</p></div>'}`;
+    const cont = (s) => doMesP.filter((p) => p.planejamento === s).length;
+    const pend = cont('aprovacao');
+    const resumo = `<div class="ig-pl-res"><span class="chip cor-ok">Aprovadas ${cont('aprovado')}</span><span class="chip cor-creme">Aguardando ${pend}</span><span class="chip cor-warn">Com alteração ${cont('ajustes')}</span></div>`;
+    const tudo = pend ? `<button class="btn verde sm" data-ig-pl-todas>${ic('check')}Aprovar tudo deste mês</button>` : '';
+    const itens = [...doMesP, ...semDataP].map(itemPlano).join('') || '<div class="ig-nada"><p>Nenhuma ideia neste mês. Use as setas para ver outros meses.</p></div>';
+    return `<div class="ig-plgrid">
+      <aside class="ig-pl-lado"><h4 class="ig-sub" style="margin:0">Ideias do mês</h4>${resumo}${tudo}<p class="ig-erro" data-ig-pl-erro hidden></p><div class="ig-pl-itens">${itens}</div></aside>
+      <div class="ig-pl-calwrap">${calendarioPlano(doMesP)}</div></div>`;
+  }
+
+  function abrirPlano(id) {
+    const p = plano.find((x) => x.id === id);
+    if (!p) return;
+    fecharPlano();
+    planoOv = document.createElement('div');
+    planoOv.className = 'overlay ig-ov';
+    planoOv.innerHTML = `<div class="ig-post ig-pl-modal" role="dialog" aria-modal="true" aria-label="${esc(p.titulo || 'Ideia')}"><header class="ig-ph"><b style="font:700 15px var(--ui)">Ideia do dia</b><button class="iconbtn" data-ig-pl-fechar aria-label="Fechar" style="width:40px;height:40px;font-size:18px;box-shadow:none;margin-left:auto">${ic('x')}</button></header><div style="padding:0 14px 14px">${cardPlano(p)}</div></div>`;
+    document.body.appendChild(planoOv);
+    document.body.style.overflow = 'hidden';
+    planoOv.addEventListener('mousedown', (e) => { if (e.target === planoOv) fecharPlano(); });
+    planoOv.addEventListener('click', clicarPlano);
+    planoOv.addEventListener('submit', enviarPlano);
+  }
+
+  function fecharPlano() {
+    planoOv?.remove();
+    planoOv = null;
+    if (!overlay) document.body.style.overflow = '';
+  }
+
+  // Cliques da aba Planejamento (valem na tela e dentro da janela da ideia). Devolve true se tratou o clique.
+  function clicarPlano(e) {
+    const alvo = e.target;
+    const aprovar = alvo.closest('[data-ig-pl-aprovar]');
+    if (aprovar) { responderPlano(aprovar.dataset.igPlAprovar, 'plano_aprovar'); return true; }
+    const ajustar = alvo.closest('[data-ig-pl-ajustar]');
+    if (ajustar) {
+      const f = (planoOv || raiz).querySelector(`[data-ig-pl-form="${CSS.escape(ajustar.dataset.igPlAjustar)}"]`);
+      if (f) { f.hidden = false; f.querySelector('textarea').focus(); }
+      return true;
+    }
+    const cancelar = alvo.closest('[data-ig-pl-cancelar]');
+    if (cancelar) { cancelar.closest('[data-ig-pl-form]').hidden = true; return true; }
+    if (alvo.closest('[data-ig-pl-fechar]')) { fecharPlano(); return true; }
+    if (alvo.closest('[data-ig-pl-todas]')) { aprovarTudoDoMes(); return true; }
+    return false;
+  }
+
+  function enviarPlano(e) {
+    const f = e.target.closest('[data-ig-pl-form]');
+    if (!f) return;
+    e.preventDefault();
+    const t = f.querySelector('textarea').value.trim();
+    const erroEl = f.closest('[data-ig-pl]')?.querySelector('.ig-erro');
+    if (!t) { if (erroEl) { erroEl.textContent = 'Escreva o que você gostaria de mudar.'; erroEl.hidden = false; } return; }
+    responderPlano(f.dataset.igPlForm, 'plano_ajustar', t);
   }
 
   async function responderPlano(id, acao, comentario = '', agrupado = false) {
     const p = plano.find((x) => x.id === id);
     if (!p) return false;
-    const card = raiz.querySelector(`[data-ig-pl="${CSS.escape(id)}"]`);
+    const card = (planoOv || raiz).querySelector(`[data-ig-pl="${CSS.escape(id)}"]`);
     const erroEl = card?.querySelector('.ig-erro');
     const erroTexto = (t) => { if (erroEl) { erroEl.textContent = t; erroEl.hidden = !t; } };
     if (!aoResponder) { erroTexto('Na prévia os botões não enviam nada. O cliente os usa na página de aprovação.'); return false; }
@@ -173,7 +258,7 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
       await aoResponder(p, acao, comentario);
       p.planejamento = acao === 'plano_aprovar' ? 'aprovado' : 'ajustes';
       if (acao === 'plano_ajustar') p.ajustePlano = comentario;
-      if (!agrupado) desenhar();
+      if (!agrupado) { fecharPlano(); desenhar(); }
       return true;
     } catch (err) {
       card?.querySelectorAll('button').forEach((b) => { b.disabled = false; });
@@ -359,22 +444,11 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
   }
 
   raiz.addEventListener('error', retentar, true);
-  raiz.addEventListener('submit', (e) => {
-    const f = e.target.closest('[data-ig-pl-form]');
-    if (!f) return;
-    e.preventDefault();
-    const t = f.querySelector('textarea').value.trim();
-    const erroEl = f.closest('[data-ig-pl]')?.querySelector('.ig-erro');
-    if (!t) { if (erroEl) { erroEl.textContent = 'Escreva o que você gostaria de mudar.'; erroEl.hidden = false; } return; }
-    responderPlano(f.dataset.igPlForm, 'plano_ajustar', t);
-  });
+  raiz.addEventListener('submit', enviarPlano);
   raiz.addEventListener('click', (e) => {
-    const plAprovar = e.target.closest('[data-ig-pl-aprovar]');
-    if (plAprovar) return void responderPlano(plAprovar.dataset.igPlAprovar, 'plano_aprovar');
-    const plAjustar = e.target.closest('[data-ig-pl-ajustar]');
-    if (plAjustar) { const f = raiz.querySelector(`[data-ig-pl-form="${CSS.escape(plAjustar.dataset.igPlAjustar)}"]`); f.hidden = false; f.querySelector('textarea').focus(); return; }
-    if (e.target.closest('[data-ig-pl-cancelar]')) { e.target.closest('[data-ig-pl-form]').hidden = true; return; }
-    if (e.target.closest('[data-ig-pl-todas]')) return void aprovarTudoDoMes();
+    if (clicarPlano(e)) return;
+    const plAbrir = e.target.closest('[data-ig-pl-abrir]');
+    if (plAbrir) return abrirPlano(plAbrir.dataset.igPlAbrir);
     const abrirBtn = e.target.closest('[data-ig-abrir]');
     if (abrirBtn) return abrir(abrirBtn.dataset.igAbrir);
     const aba = e.target.closest('[data-ig-aba]');
@@ -389,7 +463,7 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
   });
 
   fecharAberto?.();
-  fecharAberto = () => fechar();
+  fecharAberto = () => { fechar(); fecharPlano(); };
   desenhar();
 }
 
