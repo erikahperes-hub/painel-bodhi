@@ -1,9 +1,9 @@
-import { store } from '../store.js?v=30';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=30';
-import { ic, flor } from '../icons.js?v=30';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=30';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=30';
-import { idDrive, urlAbrir } from '../drive.js?v=30';
+import { store } from '../store.js?v=32';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=32';
+import { ic, flor } from '../icons.js?v=32';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=32';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=32';
+import { idDrive, urlAbrir } from '../drive.js?v=32';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 const PUBLICADAS_VISIVEIS = 10;
@@ -37,6 +37,7 @@ function abrirPeca(p = null, padrao = {}) {
       { nome: 'etapa', rotulo: 'Etapa', tipo: 'select', opcoes: ETAPAS.map((e) => ({ v: e.id, t: e.nome })) },
       { nome: 'publicar', rotulo: 'Data de publicação', tipo: 'data' },
       { nome: 'responsavel', rotulo: 'Responsável', tipo: 'select', opcoes: [{ v: '', t: 'Sem responsável' }, ...RESPONSAVEIS.map((r) => ({ v: r, t: r }))] },
+      { nome: 'roteiro', rotulo: 'Ideia e roteiro', tipo: 'area', cheio: true, linhas: 7, ajuda: 'Só vocês veem. Pode colar a ideia do post ou o roteiro inteiro.' },
       { nome: 'legenda', rotulo: 'Legenda', tipo: 'area', cheio: true, linhas: 6, ajuda: 'É o texto que o cliente vai ver junto com a arte na hora de aprovar.' },
       { nome: 'secao', tipo: 'secao', rotulo: 'Arquivos para o cliente aprovar' },
       { nome: 'midias', rotulo: 'Arquivos da peça', tipo: 'midias', cheio: true, ajuda: 'Cole o link de cada arquivo da pasta de aprovação no Drive. Carrossel: uma imagem por linha, na ordem dos slides. Reels e story em vídeo: escolha “Vídeo”.' },
@@ -72,6 +73,9 @@ const DATA_ISO = /^\d{4}-\d{2}-\d{2}$/;
 // O arquivo pode trazer o cliente pelo nome ("clienteNome": "TRE Clinic") ou pelo código. Aceita
 // { "pecas": [ ... ] } ou o formato de backup { "registros": [ { "kind": "conteudo", ... } ] }.
 // Só entram campos de peça conhecidos, e o que já existe só tem campos vazios preenchidos (nada que vocês editaram é apagado).
+const palavrasDe = (t) => new Set(norm(t).split(/[^a-z0-9]+/).filter((w) => w.length > 3));
+const palavrasEmComum = (a, b) => { const B = palavrasDe(b); return [...palavrasDe(a)].filter((w) => B.has(w)).length; };
+
 async function adicionarEmLote(arquivo) {
   const brutas = [
     ...(Array.isArray(arquivo?.registros) ? arquivo.registros.filter((r) => r?.kind === 'conteudo' && r.data).map((r) => ({ ...r.data, id: r.id || r.data.id })) : []),
@@ -87,6 +91,22 @@ async function adicionarEmLote(arquivo) {
     const iguais = nome ? clientes.filter((c) => norm(c.nome) === nome) : [];
     return iguais.length === 1 ? iguais[0] : null;
   };
+  const existentes = store.todos('conteudo');
+  const usados = new Set();
+  // Liga a peça do arquivo a uma peça que já existe: mesma data e formato, ou mesmo título.
+  // Assim o planejamento (ideia e roteiro) e a versão completa (arquivos e legenda) viram uma peça só.
+  const acharExistente = (clienteId, titulo, publicar, formato) => {
+    const livres = existentes.filter((x) => x.clienteId === clienteId && !usados.has(x.id));
+    const mesmaData = publicar ? livres.filter((x) => x.publicar === publicar && x.formato === formato) : [];
+    if (mesmaData.length === 1) return mesmaData[0];
+    if (mesmaData.length > 1) {
+      // Vários no mesmo dia e formato: escolhe o de título mais parecido (palavras em comum), se houver um claramente melhor.
+      const pont = mesmaData.map((x) => [x, palavrasEmComum(x.titulo, titulo)]).sort((m, n) => n[1] - m[1]);
+      if (pont[0][1] > 0 && pont[0][1] > pont[1][1]) return pont[0][0];
+    }
+    const t = norm(titulo);
+    return mesmaData.find((x) => norm(x.titulo) === t) || livres.find((x) => norm(x.titulo) === t && (!publicar || !x.publicar || x.publicar === publicar)) || null;
+  };
   const semCliente = new Set();
   const validas = [];
   for (const p of brutas) {
@@ -94,13 +114,19 @@ async function adicionarEmLote(arquivo) {
     if (!c) { semCliente.add(String(p.clienteNome || p.clienteId || '(sem cliente)')); continue; }
     const titulo = String(p.titulo || '').trim() || '(sem título)';
     const publicar = DATA_ISO.test(p.publicar || '') ? p.publicar : '';
+    const formato = FORMATOS[p.formato] ? p.formato : 'feed';
+    const etapaExplicita = ETAPAS.some((e) => e.id === p.etapa);
+    const existente = p.id && store.obter('conteudo', String(p.id)) ? store.obter('conteudo', String(p.id)) : (p.id ? null : acharExistente(c.id, titulo, publicar, formato));
+    const id = String(p.id || existente?.id || `lote-${c.id}-${publicar || 'sem-data'}-${slug(titulo)}`);
+    if (existente) usados.add(existente.id);
     validas.push({
-      id: String(p.id || `lote-${c.id}-${publicar || 'sem-data'}-${slug(titulo)}`),
+      id,
       clienteId: c.id,
       titulo,
-      formato: FORMATOS[p.formato] ? p.formato : 'feed',
-      etapa: ETAPAS.some((e) => e.id === p.etapa) ? p.etapa : 'criacao',
+      formato,
+      etapa: etapaExplicita ? p.etapa : 'criacao',
       publicar,
+      roteiro: String(p.roteiro || ''),
       legenda: String(p.legenda || ''),
       midias: (Array.isArray(p.midias) ? p.midias : []).map((m) => ({ tipo: m?.tipo === 'video' ? 'video' : 'imagem', id: idDrive(m?.id || m?.url) })).filter((m) => m.id),
       capa: idDrive(p.capa),
@@ -109,6 +135,7 @@ async function adicionarEmLote(arquivo) {
       responsavel: RESPONSAVEIS.includes(p.responsavel) ? p.responsavel : '',
       link: urlSegura(p.link),
       criadoEm: new Date().toISOString(),
+      _etapaExplicita: etapaExplicita,
     });
   }
   if (!validas.length) throw new Error(`Nenhuma peça tem cliente cadastrado no painel (${[...semCliente].join(', ')}). Confira o nome do cliente no arquivo.`);
@@ -118,12 +145,29 @@ async function adicionarEmLote(arquivo) {
   const plural = (n, s, p) => `${n} ${n === 1 ? s : p}`;
   const aviso = [
     `Adicionar ${plural(novas, 'peça nova', 'peças novas')}?`,
-    jaExistem ? `${plural(jaExistem, 'já existe', 'já existem')}: só campos vazios serão preenchidos, sem apagar o que vocês editaram.` : '',
+    jaExistem ? `${plural(jaExistem, 'já existe', 'já existem')} (mesma data e formato, ou mesmo título): só os campos vazios serão completados, sem apagar o que vocês editaram.` : '',
     semCliente.size ? `Ignoradas por cliente não encontrado: ${[...semCliente].join(', ')}.` : '',
   ].filter(Boolean).join(' ');
   if (!(await confirmar(aviso, 'Adicionar'))) return;
-  await store.importar({ registros: validas.map((d) => ({ kind: 'conteudo', id: d.id, data: d, mesclar: 'preencher' })) });
-  toast(novas ? `${plural(novas, 'peça adicionada', 'peças adicionadas')}` : 'Nada novo para adicionar');
+  // Peça que estava só no planejamento (Briefing) e agora chegou com arquivos sai do Briefing sozinha.
+  const rank = (e) => ETAPAS.findIndex((x) => x.id === e);
+  const avancos = validas.map((d) => {
+    const antes = store.obter('conteudo', d.id);
+    const alvo = d._etapaExplicita ? d.etapa : (d.midias.length ? 'criacao' : antes?.etapa);
+    return antes && antes.etapa === 'briefing' && d.midias.length && alvo && rank(alvo) > rank('briefing') ? { id: d.id, etapa: alvo } : null;
+  }).filter(Boolean);
+  await store.importar({ registros: validas.map(({ _etapaExplicita, ...d }) => ({ kind: 'conteudo', id: d.id, data: d, mesclar: 'preencher' })) });
+  for (const a of avancos) await store.salvar('conteudo', { ...store.obter('conteudo', a.id), etapa: a.etapa });
+  toast(novas ? `${plural(novas, 'peça adicionada', 'peças adicionadas')}` : (jaExistem ? 'Peças completadas' : 'Nada novo para adicionar'));
+}
+
+// O que ainda falta na peça: mostra o que precisa ser completado depois do planejamento.
+function faltas(p) {
+  const chips = [];
+  if (p.roteiro) chips.push('<span class="chip info">Roteiro</span>');
+  if (!(p.midias || []).length) chips.push('<span class="chip mute">Sem arte</span>');
+  if (!String(p.legenda || '').trim()) chips.push('<span class="chip mute">Sem legenda</span>');
+  return chips.length ? `<div class="actions" style="gap:5px">${chips.join('')}</div>` : '';
 }
 
 function cartao(p, mostrarCliente) {
@@ -136,6 +180,7 @@ function cartao(p, mostrarCliente) {
     <div class="actions" style="gap:6px"><span class="chip info">${ic(f.icone)}${esc(f.nome)}</span>${atras ? '<span class="chip warn">Atrasada</span>' : ''}${p.link && urlSegura(p.link) ? `<a class="chip mute" href="${esc(urlSegura(p.link))}" target="_blank" rel="noopener noreferrer" title="Abrir a arte">${ic('file')}Arte</a>` : ''}</div>
     <button class="peca-t" data-act="editar-peca" data-id="${p.id}">${esc(p.titulo || '(sem título)')}</button>
     <div class="peca-m">${esc(meta)}</div>
+    ${faltas(p)}
     ${p.etapa === 'ajustes' && p.ajuste ? `<div class="peca-aj">${esc(p.ajuste)}</div>` : ''}
     ${botoes ? `<div class="peca-a">${botoes}</div>` : ''}
   </div>`;

@@ -1,9 +1,9 @@
-import { store } from './store.js?v=30';
-import { alertas } from './calc.js?v=30';
-import { esc, norm, brl, dataBR } from './util.js?v=30';
-import { ic } from './icons.js?v=30';
-import { listaProcessos } from './views/processo.js?v=30';
-import { FORMATOS, etapaDe } from './conteudo.js?v=30';
+import { store } from './store.js?v=32';
+import { alertas } from './calc.js?v=32';
+import { esc, norm, brl, dataBR } from './util.js?v=32';
+import { ic } from './icons.js?v=32';
+import { listaProcessos } from './views/processo.js?v=32';
+import { FORMATOS, etapaDe } from './conteudo.js?v=32';
 
 export const SECOES = [
   { rota: 'inicio', nome: 'Início', ic: 'home', extra: 'resumo visão geral' },
@@ -42,7 +42,7 @@ function indice() {
     const cli = store.obter('cliente', p.clienteId)?.nome || '';
     it.push({
       grupo: 'Conteúdo', icone: FORMATOS[p.formato]?.icone || 'grid', titulo: `${cli}: ${p.titulo}`, sub: [FORMATOS[p.formato]?.nome, etapaDe(p).nome, p.publicar ? dataBR(p.publicar) : ''].filter(Boolean).join(' · '),
-      rota: 'conteudo', ref: p.clienteId, texto: [cli, p.titulo, FORMATOS[p.formato]?.nome, etapaDe(p).nome, p.legenda, p.ajuste, p.briefing, p.responsavel].join(' '),
+      rota: 'conteudo', ref: p.clienteId, texto: [cli, p.titulo, FORMATOS[p.formato]?.nome, etapaDe(p).nome, p.legenda, p.roteiro, p.ajuste, p.briefing, p.responsavel].join(' '),
     });
   });
   store.todos('pendencia').forEach((p) => it.push({ grupo: 'Pendências', icone: 'file', titulo: p.titulo, sub: p.texto || (p.feito ? 'Concluída' : 'Em aberto'), rota: 'comercial', ref: p.id, texto: `${p.titulo} ${p.texto || ''}` }));
