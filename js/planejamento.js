@@ -88,6 +88,21 @@ export function dataDe(t, hoje = new Date()) {
   return `${a}-${String(mes).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 }
 
+// Tabela copiada da tela do chat: uma célula com quebra de linha (o <br> do roteiro) vira várias linhas de texto, sem aspas.
+// Uma linha só começa uma peça nova se a primeira célula for uma data; as outras continuam a célula anterior até completar as colunas.
+const ehInicio = (r) => /^\s*(\d{1,2}[/.-]\d{1,2}|\d{4}-\d{2}-\d{2})/.test(r[0] || '');
+function juntarLinhas(linhas, colunas) {
+  const saida = [];
+  let atual = null;
+  for (const r of linhas) {
+    if (atual && atual.length < colunas && !ehInicio(r)) {
+      atual[atual.length - 1] = [atual[atual.length - 1], r[0]].filter((x) => x !== '').join('\n');
+      atual.push(...r.slice(1));
+    } else { atual = [...r]; saida.push(atual); }
+  }
+  return saida;
+}
+
 // Devolve { pecas, ignoradas } (ignoradas = textos das linhas que não viraram peça).
 export function lerTabela(texto, { clienteNome = '', hoje = new Date() } = {}) {
   const bruto = String(texto || '').replace(/\r/g, '');
@@ -100,7 +115,7 @@ export function lerTabela(texto, { clienteNome = '', hoje = new Date() } = {}) {
   let dados = tabela;
   if (iCab >= 0) {
     ordem = tabela[iCab].map(colunaDe);
-    dados = tabela.slice(iCab + 1);
+    dados = juntarLinhas(tabela.slice(iCab + 1), ordem.length);
   }
   const pecas = [];
   const ignoradas = [];

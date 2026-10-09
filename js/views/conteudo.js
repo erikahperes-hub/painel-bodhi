@@ -1,12 +1,12 @@
-import { store } from '../store.js?v=63';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=63';
-import { ic, flor } from '../icons.js?v=63';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=63';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=63';
-import { idDrive, urlAbrir } from '../drive.js?v=63';
-import { lerPasta } from '../drive-pasta.js?v=63';
-import { lerTabela } from '../planejamento.js?v=63';
-import { config } from '../config.js?v=63';
+import { store } from '../store.js?v=64';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=64';
+import { ic, flor } from '../icons.js?v=64';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=64';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=64';
+import { idDrive, urlAbrir } from '../drive.js?v=64';
+import { lerPasta } from '../drive-pasta.js?v=64';
+import { lerTabela } from '../planejamento.js?v=64';
+import { config } from '../config.js?v=64';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a peça ser produzida.
