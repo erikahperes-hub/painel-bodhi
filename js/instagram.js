@@ -1,6 +1,7 @@
-import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=23';
-import { ic } from './icons.js?v=23';
-import { urlImagem, urlPlayer } from './drive.js?v=23';
+import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=25';
+import { ic } from './icons.js?v=25';
+import { urlImagem, urlPlayer } from './drive.js?v=25';
+import { config } from './config.js?v=25';
 
 // Visual de Instagram usado na prévia do painel e na página de aprovação do cliente.
 // Recebe os dados prontos, então funciona com ou sem login.
@@ -257,7 +258,14 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
     }
     const tocar = q('[data-ig-tocar]');
     if (tocar) {
-      tocar.closest('.ig-slide').innerHTML = `<iframe src="${esc(urlPlayer(tocar.dataset.igTocar))}" allow="autoplay; fullscreen" allowfullscreen title="Vídeo"></iframe>`;
+      const alvo = tocar.closest('.ig-slide');
+      const id = tocar.dataset.igTocar;
+      const doDrive = () => { alvo.innerHTML = `<iframe src="${esc(urlPlayer(id))}" allow="autoplay; fullscreen" allowfullscreen title="Vídeo"></iframe>`; };
+      if (!config.midiaProxy) return doDrive();
+      // Player próprio (Worker do Cloudflare). Se o vídeo não carregar por lá, cai no player do Drive.
+      const fonte = `${config.midiaProxy.replace(/\/+$/, '')}/?id=${encodeURIComponent(id)}`;
+      alvo.innerHTML = `<video controls autoplay playsinline preload="auto" poster="${esc(tocar.querySelector('img')?.src || '')}" src="${esc(fonte)}"></video>`;
+      alvo.querySelector('video').addEventListener('error', doDrive, { once: true });
       return;
     }
     if (q('[data-ig-aprovar]')) return responder('aprovar');

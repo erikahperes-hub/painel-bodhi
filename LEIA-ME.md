@@ -97,6 +97,8 @@ A aba **Conteúdo** tem duas visões: **Status** (quadro por etapa) e **Calendá
 
 **Inserir dados automáticos:** em Conteúdo, o botão ao lado de **Nova peça** importa um arquivo de peças (preparado pelo Claude a partir da pasta do Drive e das legendas). Cria só o que ainda não existe e não apaga o que vocês editaram.
 
+**Vídeos com player próprio (opcional, gratuito):** por padrão os vídeos tocam no player do Drive, que às vezes mostra faixa preta, qualidade baixa e um botão que abre o Drive. Para tocar com um player de verdade: crie uma conta gratuita no Cloudflare (dash.cloudflare.com), vá em **Workers & Pages > Create > Create Worker**, dê o nome bodhi-midia e clique em Deploy; depois **Edit code**, cole o conteúdo de `cloudflare/worker-midia.js` e clique em Deploy. Copie o endereço que termina em `.workers.dev` e coloque em `js/config.js`, no campo `midiaProxy`. Se o Worker falhar, a página volta sozinha para o player do Drive.
+
 **Ativar uma vez (Supabase):** abra o SQL Editor, cole o conteúdo de `supabase/aprovacao.sql` e clique em Run. Sem isso, o botão “Link de aprovação” avisa que falta ativar.
 
 **Observações:** o título da peça aparece para o cliente na lista do calendário, então use nomes que ele possa ler. Os vídeos tocam no player do Drive. O Google às vezes demora ou recusa uma imagem; a página tenta de novo sozinha.

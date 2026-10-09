@@ -1,9 +1,9 @@
-import { store } from '../store.js?v=23';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome } from '../util.js?v=23';
-import { ic, flor } from '../icons.js?v=23';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=23';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=23';
-import { idDrive, urlAbrir } from '../drive.js?v=23';
+import { store } from '../store.js?v=25';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome } from '../util.js?v=25';
+import { ic, flor } from '../icons.js?v=25';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=25';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=25';
+import { idDrive, urlAbrir } from '../drive.js?v=25';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 const PUBLICADAS_VISIVEIS = 10;
