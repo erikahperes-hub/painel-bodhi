@@ -1,8 +1,8 @@
-import { store } from '../store.js?v=15';
-import { esc, toast, dataBR, urlSegura } from '../util.js?v=15';
-import { ic, flor } from '../icons.js?v=15';
-import { formulario, confirmar } from '../ui.js?v=15';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=15';
+import { store } from '../store.js?v=16';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome } from '../util.js?v=16';
+import { ic, flor } from '../icons.js?v=16';
+import { formulario, confirmar } from '../ui.js?v=16';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=16';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 const PUBLICADAS_VISIVEIS = 10;
@@ -68,6 +68,57 @@ function cartao(p, mostrarCliente) {
   </div>`;
 }
 
+// Visão escolhida (Status ou Calendário) e mês mostrado no calendário; valem até recarregar a página.
+let aba = 'status';
+let mesCal = null;
+const recarregarTela = () => window.dispatchEvent(new HashChangeEvent('hashchange'));
+
+const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+const isoDia = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+function blocoPeca(p, mostrarCliente) {
+  const f = FORMATOS[p.formato] || FORMATOS.feed;
+  const e = etapaDe(p);
+  const cli = store.obter('cliente', p.clienteId)?.nome || '';
+  return `<button class="cal-p cor-${e.cor}${atrasada(p) ? ' atras' : ''}" data-act="editar-peca" data-id="${p.id}" title="${esc([p.titulo, cli, f.nome, e.nome].filter(Boolean).join(' · '))}">
+    ${ic(f.icone)}<span><b>${esc(p.titulo || '(sem título)')}</b>${mostrarCliente && cli ? `<small>${esc(cli)}</small>` : ''}</span></button>`;
+}
+
+function calendario({ filtro, lista, chipsClientes }) {
+  const hoje = hojeISO();
+  const ym = mesCal || hoje.slice(0, 7);
+  const [a, m] = ym.split('-').map(Number);
+  const nomeMes = mesNome(m - 1);
+  const primeiroDia = new Date(a, m - 1, 1).getDay();
+  const semanas = Math.ceil((primeiroDia + new Date(a, m, 0).getDate()) / 7);
+  const porDia = {};
+  lista.forEach((p) => { if (p.publicar) (porDia[p.publicar.slice(0, 10)] ||= []).push(p); });
+  const semData = lista.filter((p) => !p.publicar && p.etapa !== 'publicado');
+
+  const celulas = Array.from({ length: semanas * 7 }, (_, i) => {
+    const d = new Date(a, m - 1, 1 - primeiroDia + i);
+    const iso = isoDia(d);
+    const pecasDia = porDia[iso] || [];
+    return `<div class="dia${d.getMonth() !== m - 1 ? ' fora' : ''}${iso === hoje ? ' hoje' : ''}">
+      <div class="dia-h"><b>${d.getDate()}</b><button class="dia-add" data-act="nova-peca" data-data="${iso}" data-cliente="${esc(filtro)}" aria-label="Nova peça em ${dataBR(iso)}" title="Nova peça neste dia">+</button></div>
+      ${pecasDia.map((p) => blocoPeca(p, !filtro)).join('')}</div>`;
+  }).join('');
+
+  return `<div class="card">
+    <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2><p class="sub">Cada peça aparece no dia da publicação. Clique em uma peça para abrir ou no + de um dia para criar.</p></div>
+      <button class="btn pri sm" data-act="nova-peca" data-cliente="${esc(filtro)}">${ic('plus')}Nova peça</button></div>
+    <div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>
+    <div class="toolbar" style="margin-bottom:12px">
+      <div class="mes"><button class="iconbtn" data-act="cal-mes" data-passo="-1" aria-label="Mês anterior"><span style="display:grid;transform:scaleX(-1)">${ic('chev')}</span></button>
+        <b>${nomeMes[0].toUpperCase()}${nomeMes.slice(1)} de ${a}</b><button class="iconbtn" data-act="cal-mes" data-passo="1" aria-label="Próximo mês">${ic('chev')}</button>
+        ${ym !== hoje.slice(0, 7) ? '<button class="btn ghost sm" data-act="cal-mes" data-passo="0">Mês atual</button>' : ''}</div>
+      <div class="legenda">${ETAPAS.filter((e) => e.id !== 'publicado').map((e) => `<span class="chip cor-${e.cor}">${esc(e.nome)}</span>`).join('')}<span class="chip cor-mute">Publicado</span></div>
+    </div>
+    <div class="calbox"><div class="calgrid">${DIAS_SEMANA.map((d) => `<div class="dow">${d}</div>`).join('')}${celulas}</div></div>
+    ${semData.length ? `<div class="semdata"><h3>Sem data de publicação</h3><p class="lbl">Abra a peça e escolha a data para ela aparecer no calendário.</p><div class="semdata-l">${semData.map((p) => blocoPeca(p, !filtro)).join('')}</div></div>` : ''}
+  </div>`;
+}
+
 function ordenarPecas(lista, recentesPrimeiro = false) {
   const dir = recentesPrimeiro ? -1 : 1;
   return [...lista].sort((a, b) => {
@@ -95,6 +146,11 @@ export default {
     const chipsClientes = [`<button class="cbtn ${filtro ? '' : 'on'}" data-act="ir" data-rota="conteudo">Todos · ${todas.length}</button>`,
       ...clientes.map((c) => `<button class="cbtn ${c.id === filtro ? 'on' : ''}" data-act="ir" data-rota="conteudo" data-ref="${c.id}"><i></i>${esc(c.nome || '(sem nome)')} · ${todas.filter((p) => p.clienteId === c.id).length}</button>`)].join('');
 
+    const abas = `<div class="tabs" role="tablist" aria-label="Visões de conteúdo">
+      <button class="tab ${aba === 'status' ? 'on' : ''}" role="tab" aria-selected="${aba === 'status'}" data-act="aba-conteudo" data-aba="status">${ic('grid')}Status</button>
+      <button class="tab ${aba === 'calendario' ? 'on' : ''}" role="tab" aria-selected="${aba === 'calendario'}" data-act="aba-conteudo" data-aba="calendario">${ic('calendar')}Calendário</button></div>`;
+    if (aba === 'calendario') return abas + calendario({ filtro, lista, chipsClientes });
+
     const colunas = ETAPAS.map((e) => {
       let itens = e.id === 'publicado' ? ordenarPecas(em(e.id), true) : ordenarPecas(em(e.id));
       const total = itens.length;
@@ -106,7 +162,7 @@ export default {
       </section>`;
     }).join('');
 
-    return `<div class="grid" style="margin-bottom:16px">
+    return abas + `<div class="grid" style="margin-bottom:16px">
         <div class="card stat tone-verde"><div><div class="lbl">Em produção</div><div class="big num">${em('briefing', 'criacao').length}</div><div class="hint">Briefing e criação</div></div><span class="stat-ic">${ic('grid')}</span></div>
         <div class="card stat tone-creme"><div><div class="lbl">Aguardando aprovação</div><div class="big num">${em('aprovacao').length}</div><div class="hint">Com o cliente</div></div><span class="stat-ic">${ic('send')}</span></div>
         <div class="card stat tone-coral"><div><div class="lbl">Pedidos de ajuste</div><div class="big num">${em('ajustes').length}</div><div class="hint">Para refazer</div></div><span class="stat-ic">${ic('edit')}</span></div>
@@ -122,7 +178,18 @@ export default {
   },
 
   acoes: {
-    'nova-peca': (el) => abrirPeca(null, el.dataset.cliente ? { clienteId: el.dataset.cliente } : {}),
+    'aba-conteudo': (el) => { aba = el.dataset.aba === 'calendario' ? 'calendario' : 'status'; recarregarTela(); },
+    'cal-mes': (el) => {
+      const passo = Number(el.dataset.passo);
+      if (!passo) mesCal = null;
+      else {
+        const [a, m] = (mesCal || hojeISO().slice(0, 7)).split('-').map(Number);
+        const d = new Date(a, m - 1 + passo, 1);
+        mesCal = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      }
+      recarregarTela();
+    },
+    'nova-peca': (el) => abrirPeca(null, { ...(el.dataset.cliente ? { clienteId: el.dataset.cliente } : {}), ...(el.dataset.data ? { publicar: el.dataset.data } : {}) }),
     'editar-peca': (el) => abrirPeca(store.obter('conteudo', el.dataset.id)),
     'mover-peca': async (el) => {
       const p = store.obter('conteudo', el.dataset.id);

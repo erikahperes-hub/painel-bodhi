@@ -1,14 +1,14 @@
-import { store } from './store.js?v=15';
-import { diasAte } from './util.js?v=15';
+import { store } from './store.js?v=16';
+import { diasAte } from './util.js?v=16';
 
 // Etapas do caminho de cada peça de conteúdo, na ordem em que acontecem.
 export const ETAPAS = [
-  { id: 'briefing', nome: 'Briefing', chip: 'mute' },
-  { id: 'criacao', nome: 'Em criação', chip: 'info' },
-  { id: 'aprovacao', nome: 'Aguardando aprovação', chip: 'info' },
-  { id: 'ajustes', nome: 'Ajustes', chip: 'warn' },
-  { id: 'aprovado', nome: 'Aprovado', chip: 'ok' },
-  { id: 'publicado', nome: 'Publicado', chip: 'mute' },
+  { id: 'briefing', nome: 'Briefing', chip: 'mute', cor: 'mute' },
+  { id: 'criacao', nome: 'Em criação', chip: 'info', cor: 'info' },
+  { id: 'aprovacao', nome: 'Aguardando aprovação', chip: 'info', cor: 'creme' },
+  { id: 'ajustes', nome: 'Ajustes', chip: 'warn', cor: 'warn' },
+  { id: 'aprovado', nome: 'Aprovado', chip: 'ok', cor: 'ok' },
+  { id: 'publicado', nome: 'Publicado', chip: 'mute', cor: 'mute' },
 ];
 
 export const FORMATOS = {
