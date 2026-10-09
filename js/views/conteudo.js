@@ -1,9 +1,9 @@
-import { store } from '../store.js?v=39';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=39';
-import { ic, flor } from '../icons.js?v=39';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=39';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=39';
-import { idDrive, urlAbrir } from '../drive.js?v=39';
+import { store } from '../store.js?v=40';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=40';
+import { ic, flor } from '../icons.js?v=40';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=40';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=40';
+import { idDrive, urlAbrir } from '../drive.js?v=40';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a peça ser produzida.
@@ -360,7 +360,7 @@ export default {
       if (e.id === 'publicado') itens = itens.slice(0, PUBLICADAS_VISIVEIS);
       return `<section class="kol" data-etapa="${e.id}" aria-label="${esc(e.nome)}">
         <div class="kol-h"><span>${esc(e.nome)}</span><b class="chip ${e.chip}">${total}</b></div>
-        ${e.id === 'briefing' ? '<div class="kol-dica"><i></i>Cinza-azulado: já enviado ao cliente</div>' : ''}
+        ${e.id === 'briefing' ? '<div class="kol-dica"><i></i>Já enviado ao cliente</div>' : ''}
         ${itens.map((p) => cartao(p, !filtro)).join('') || '<div class="kol-vazio">Nada aqui</div>'}
         ${total > itens.length ? `<div class="kol-vazio">E mais ${total - itens.length} publicadas</div>` : ''}
       </section>`;
