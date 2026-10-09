@@ -82,6 +82,21 @@ No painel: **Configurações > Restaurar de um backup** e escolha o arquivo `see
 
 A aba **Processo** (ícone de fluxo na lateral) guarda o passo a passo da Bôdhi Marketing, começando por “Fechei uma estratégia, e agora?”. Use **Editar** para mudar etapas e passos e **Novo processo** para documentar outros fluxos.
 
+## Conteúdo e aprovação do cliente
+
+A aba **Conteúdo** tem duas visões: **Status** (quadro por etapa) e **Calendário** (mês com as peças nas datas de publicação).
+
+**Como as artes chegam ao cliente:**
+1. As artes, carrosséis e vídeos ficam numa **pasta do Google Drive** compartilhada como **“Qualquer pessoa com o link”** (leitor). O espaço usado é o do Drive, não o do Supabase.
+2. Na peça (Conteúdo > Nova peça), cole o link de cada arquivo em **Arquivos da peça** (imagem ou vídeo) e o link da **capa**. O painel guarda só o código do arquivo.
+3. Coloque a peça na etapa **Aguardando aprovação**. Só as peças dessa etapa em diante aparecem para o cliente.
+4. Em Conteúdo, escolha o cliente e use **Prévia do cliente** para ver como ele enxerga, e **Link de aprovação** para copiar o link dele. O link abre sem senha e mostra só as peças daquele cliente. **Gerar novo link** desativa o antigo.
+5. O cliente aprova ou pede alteração no próprio link. A peça muda sozinha para **Aprovado** ou **Ajustes** no painel (o pedido aparece no cartão e no sino).
+
+**Ativar uma vez (Supabase):** abra o SQL Editor, cole o conteúdo de `supabase/aprovacao.sql` e clique em Run. Sem isso, o botão “Link de aprovação” avisa que falta ativar.
+
+**Observações:** o título da peça aparece para o cliente na lista do calendário, então use nomes que ele possa ler. Os vídeos tocam no player do Drive. O Google às vezes demora ou recusa uma imagem; a página tenta de novo sozinha.
+
 ## Modelo de contrato
 
 O modelo padrão é uma **minuta em revisão**. Edite as cláusulas em **Configurações > Modelo de contrato** (permanência mínima, multa e reajuste só aparecem no contrato quando preenchidas). Recomenda-se revisão jurídica antes de usar com clientes.
@@ -93,7 +108,8 @@ O modelo padrão é uma **minuta em revisão**. Edite as cláusulas em **Configu
 ## Estrutura da pasta
 
 ```
-index.html           entrada do site
+index.html           entrada do painel (com login)
+aprovar.html         página pública de aprovação do cliente (sem login, só com o link)
 css/app.css          visual (paleta, fontes e formas da marca)
 js/                  telas, busca, geração de PDF, ligação com Supabase e Asaas
 assets/              fontes e logo oficiais da Bôdhi

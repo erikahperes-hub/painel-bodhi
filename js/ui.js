@@ -1,5 +1,6 @@
-import { esc, toast, reduzirImagem, urlSegura } from './util.js?v=16';
-import { ic } from './icons.js?v=16';
+import { esc, toast, reduzirImagem, urlSegura } from './util.js?v=22';
+import { ic } from './icons.js?v=22';
+import { idDrive, urlAbrir } from './drive.js?v=22';
 
 let pilha = [];
 
@@ -76,6 +77,14 @@ function docLinha(d = {}) {
   </div>`;
 }
 
+function midiaLinha(m = {}) {
+  return `<div class="rowmid" data-midia>
+    <select data-m="tipo" aria-label="Tipo de arquivo"><option value="imagem"${m.tipo !== 'video' ? ' selected' : ''}>Imagem</option><option value="video"${m.tipo === 'video' ? ' selected' : ''}>Vídeo</option></select>
+    <input data-m="url" placeholder="Link do arquivo no Drive" value="${esc(m.id ? urlAbrir(m.id) : '')}" aria-label="Link do arquivo no Drive">
+    <button type="button" class="iconbtn" data-rm-midia style="width:40px;height:40px;font-size:16px;box-shadow:none;border:1px solid var(--line)" aria-label="Remover arquivo">${ic('trash')}</button>
+  </div>`;
+}
+
 function campoHTML(c, valor) {
   const id = 'f_' + c.nome.replace(/\W/g, '_');
   const cls = 'field' + (c.cheio ? ' full' : '');
@@ -109,6 +118,11 @@ function campoHTML(c, valor) {
       return `<div class="${cls}" data-docs="${c.nome}"><label>${esc(c.rotulo)}</label><div class="rows">${linhas}</div>
         <button type="button" class="btn sec sm" data-add-doc style="align-self:flex-start;margin-top:4px">${ic('plus')}Adicionar documento</button>${ajuda}</div>`;
     }
+    case 'midias': {
+      const linhas = (Array.isArray(valor) && valor.length ? valor : [{}]).map(midiaLinha).join('');
+      return `<div class="${cls}" data-midias="${c.nome}"><label>${esc(c.rotulo)}</label><div class="rows">${linhas}</div>
+        <button type="button" class="btn sec sm" data-add-midia style="align-self:flex-start;margin-top:4px">${ic('plus')}Adicionar arquivo</button>${ajuda}</div>`;
+    }
     case 'imagem':
       return `<div class="${cls}"><label>${esc(c.rotulo)}</label><div class="imgpick" data-imagem="${c.nome}">
         <div class="prev">${valor ? `<img src="${esc(valor)}" alt="">` : ic('image')}</div>
@@ -140,6 +154,14 @@ function coletar(form, campos) {
         titulo: l.querySelector('[data-d=titulo]').value.trim(),
         url: urlSegura(l.querySelector('[data-d=url]').value),
       })).filter((d) => d.url));
+      continue;
+    }
+    if (c.tipo === 'midias') {
+      const linhas = [...form.querySelectorAll(`[data-midias="${c.nome}"] [data-midia]`)];
+      const lidas = linhas.map((l) => ({ tipo: l.querySelector('[data-m=tipo]').value, texto: l.querySelector('[data-m=url]').value.trim() })).filter((m) => m.texto);
+      const lista = lidas.map((m) => ({ tipo: m.tipo, id: idDrive(m.texto) }));
+      if (lista.some((m) => !m.id)) throw new Error('Um dos arquivos não tem um link válido do Google Drive. Copie o link do arquivo no Drive (Compartilhar > Copiar link).');
+      set(out, c.nome, lista);
       continue;
     }
     const el = form.elements[c.nome];
@@ -180,6 +202,13 @@ export function formulario({ titulo, subtitulo, campos, valores = {}, salvarText
     }
     const rmd = e.target.closest('[data-rm-doc]');
     if (rmd) rmd.closest('[data-doc]').remove();
+    if (e.target.closest('[data-add-midia]')) {
+      const rows = e.target.closest('[data-midias]').querySelector('.rows');
+      rows.insertAdjacentHTML('beforeend', midiaLinha());
+      rows.lastElementChild.querySelector('[data-m=url]').focus();
+    }
+    const rmm = e.target.closest('[data-rm-midia]');
+    if (rmm) rmm.closest('[data-midia]').remove();
     const bloco = e.target.closest('[data-imagem]');
     if (bloco && e.target.closest('[data-escolher]')) bloco.querySelector('input[type=file]').click();
     if (bloco && e.target.closest('[data-tirar]')) {

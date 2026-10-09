@@ -1,5 +1,5 @@
-import { config } from './config.js?v=16';
-import { uid } from './util.js?v=16';
+import { config } from './config.js?v=22';
+import { uid } from './util.js?v=22';
 
 const KINDS = ['cliente', 'proposta', 'contrato', 'pendencia', 'lancamento', 'processo', 'conteudo', 'config'];
 const LS_KEY = 'bodhi.painel.v1';
@@ -137,6 +137,27 @@ export const store = {
     const antes = assinatura;
     carregarRegistros(data);
     if (assinatura !== antes) avisar();
+  },
+
+  // Link de aprovação do cliente: um código longo e sem relação com o cliente, que só abre as peças dele.
+  async linkAprovacao(clienteId, renovar = false) {
+    if (!sb) throw new Error('O link de aprovação funciona só no painel publicado, conectado ao Supabase.');
+    const falha = (error) => {
+      if (/aprovacao_links|42P01|PGRST205/i.test(`${error.code} ${error.message}`)) return new Error('Falta ativar a aprovação no Supabase: rode o arquivo supabase/aprovacao.sql no SQL Editor (passo no LEIA-ME).');
+      return erroAmigavel(error, 'gerar o link de aprovação');
+    };
+    if (renovar) {
+      const { error } = await sb.from('aprovacao_links').update({ ativo: false }).eq('cliente_id', clienteId);
+      if (error) throw falha(error);
+    } else {
+      const { data, error } = await sb.from('aprovacao_links').select('token').eq('cliente_id', clienteId).eq('ativo', true).limit(1);
+      if (error) throw falha(error);
+      if (data?.length) return data[0].token;
+    }
+    const token = [...crypto.getRandomValues(new Uint8Array(24))].map((b) => b.toString(16).padStart(2, '0')).join('');
+    const { error } = await sb.from('aprovacao_links').insert({ token, cliente_id: clienteId });
+    if (error) throw falha(error);
+    return token;
   },
 
   supabase: () => sb,

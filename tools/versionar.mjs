@@ -23,6 +23,8 @@ for (const arq of await arquivosJs(join(raiz, 'js'))) {
     .replace(/(\bimport\(\s*['"])(\.{1,2}\/[^'"?]+\.js)(\?v=\d+)?(['"])/g, `$1$2?v=${versao}$4`);
   if (depois !== antes) { await writeFile(arq, depois, 'utf8'); alterados += 1; }
 }
-const html = join(raiz, 'index.html');
-await writeFile(html, (await readFile(html, 'utf8')).replace(/(css\/app\.css|js\/main\.js)(\?v=\d+)?/g, `$1?v=${versao}`), 'utf8');
-console.log(`Versão ${versao} aplicada (${alterados} arquivos de código e o index.html).`);
+for (const pagina of ['index.html', 'aprovar.html']) {
+  const html = join(raiz, pagina);
+  await writeFile(html, (await readFile(html, 'utf8')).replace(/(css\/app\.css|js\/main\.js|js\/aprovar\.js)(\?v=\d+)?/g, `$1?v=${versao}`), 'utf8');
+}
+console.log(`Versão ${versao} aplicada (${alterados} arquivos de código, index.html e aprovar.html).`);

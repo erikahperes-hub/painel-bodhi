@@ -1,23 +1,24 @@
-import { store } from './store.js?v=16';
-import { logo } from './logo.js?v=16';
-import { ic, flor } from './icons.js?v=16';
-import { esc, toast, debounce } from './util.js?v=16';
-import { alertas } from './calc.js?v=16';
-import { buscar, htmlResultados } from './search.js?v=16';
-import { temModal, fecharTopo, formulario } from './ui.js?v=16';
+import { store } from './store.js?v=22';
+import { logo } from './logo.js?v=22';
+import { ic, flor } from './icons.js?v=22';
+import { esc, toast, debounce } from './util.js?v=22';
+import { alertas } from './calc.js?v=22';
+import { buscar, htmlResultados } from './search.js?v=22';
+import { temModal, fecharTopo, formulario } from './ui.js?v=22';
 
-import inicio from './views/inicio.js?v=16';
-import comercial from './views/comercial.js?v=16';
-import clientes from './views/clientes.js?v=16';
-import conteudo from './views/conteudo.js?v=16';
-import propostas from './views/propostas.js?v=16';
-import contratos from './views/contratos.js?v=16';
-import financeiro from './views/financeiro.js?v=16';
-import processo from './views/processo.js?v=16';
-import prospeccao from './views/prospeccao.js?v=16';
-import configuracoes from './views/configuracoes.js?v=16';
+import inicio from './views/inicio.js?v=22';
+import comercial from './views/comercial.js?v=22';
+import clientes from './views/clientes.js?v=22';
+import conteudo from './views/conteudo.js?v=22';
+import previa from './views/previa.js?v=22';
+import propostas from './views/propostas.js?v=22';
+import contratos from './views/contratos.js?v=22';
+import financeiro from './views/financeiro.js?v=22';
+import processo from './views/processo.js?v=22';
+import prospeccao from './views/prospeccao.js?v=22';
+import configuracoes from './views/configuracoes.js?v=22';
 
-const VIEWS = { inicio, comercial, clientes, conteudo, propostas, contratos, financeiro, processo, prospeccao, configuracoes };
+const VIEWS = { inicio, comercial, clientes, conteudo, previa, propostas, contratos, financeiro, processo, prospeccao, configuracoes };
 const NAV = [
   ['inicio', 'Início', 'home'], ['comercial', 'Comercial', 'bars'], ['clientes', 'Clientes', 'users'], ['conteudo', 'Conteúdo', 'grid'],
   ['propostas', 'Propostas', 'send'], ['contratos', 'Contratos', 'doc'], ['financeiro', 'Financeiro', 'wallet'], ['processo', 'Processo', 'flow'], ['prospeccao', 'Prospecção', 'target'],

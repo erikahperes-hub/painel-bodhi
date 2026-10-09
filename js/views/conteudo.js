@@ -1,8 +1,9 @@
-import { store } from '../store.js?v=16';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome } from '../util.js?v=16';
-import { ic, flor } from '../icons.js?v=16';
-import { formulario, confirmar } from '../ui.js?v=16';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=16';
+import { store } from '../store.js?v=22';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome } from '../util.js?v=22';
+import { ic, flor } from '../icons.js?v=22';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=22';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=22';
+import { idDrive, urlAbrir } from '../drive.js?v=22';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 const PUBLICADAS_VISIVEIS = 10;
@@ -37,14 +38,18 @@ function abrirPeca(p = null, padrao = {}) {
       { nome: 'publicar', rotulo: 'Data de publicação', tipo: 'data' },
       { nome: 'responsavel', rotulo: 'Responsável', tipo: 'select', opcoes: [{ v: '', t: 'Sem responsável' }, ...RESPONSAVEIS.map((r) => ({ v: r, t: r }))] },
       { nome: 'legenda', rotulo: 'Legenda', tipo: 'area', cheio: true, linhas: 6, ajuda: 'É o texto que o cliente vai ver junto com a arte na hora de aprovar.' },
-      { nome: 'link', rotulo: 'Link da arte ou do vídeo', cheio: true, placeholder: 'Cole o link do Canva, do Drive ou de onde estiver', ajuda: 'Quem estiver no painel abre o arquivo por aqui.' },
+      { nome: 'secao', tipo: 'secao', rotulo: 'Arquivos para o cliente aprovar' },
+      { nome: 'midias', rotulo: 'Arquivos da peça', tipo: 'midias', cheio: true, ajuda: 'Cole o link de cada arquivo da pasta de aprovação no Drive. Carrossel: uma imagem por linha, na ordem dos slides. Reels e story em vídeo: escolha “Vídeo”.' },
+      { nome: 'capa', rotulo: 'Capa (imagem)', cheio: true, placeholder: 'Link da imagem de capa no Drive', ajuda: 'Aparece na grade do feed e antes de o vídeo tocar. Se vazio, usa a primeira imagem.' },
+      { nome: 'link', rotulo: 'Link do arquivo editável (uso interno)', cheio: true, placeholder: 'Canva, Drive ou onde estiver', ajuda: 'Só vocês veem. Não aparece para o cliente.' },
       { nome: 'ajuste', rotulo: 'Pedido de ajuste do cliente', tipo: 'area', cheio: true, linhas: 3, ajuda: 'O que o cliente pediu para mudar. Aparece em destaque no cartão enquanto estiver em Ajustes.' },
       { nome: 'briefing', rotulo: 'Briefing e observações internas', tipo: 'area', cheio: true, linhas: 3 },
     ],
-    valores: p ? { ...p, ...padrao } : { etapa: 'briefing', formato: 'feed', ...padrao },
+    valores: p ? { ...p, ...padrao, capa: p.capa ? urlAbrir(p.capa) : '' } : { etapa: 'briefing', formato: 'feed', ...padrao },
     async aoSalvar(v) {
       if (v.link && !urlSegura(v.link)) { toast('O link precisa começar com http:// ou https://', true); return false; }
-      await store.salvar('conteudo', { ...(p || { criadoEm: new Date().toISOString() }), ...v, link: urlSegura(v.link) });
+      if (v.capa && !idDrive(v.capa)) { toast('A capa precisa ser um link de arquivo do Google Drive.', true); return false; }
+      await store.salvar('conteudo', { ...(p || { criadoEm: new Date().toISOString() }), ...v, link: urlSegura(v.link), capa: idDrive(v.capa) });
       toast('Peça salva');
     },
     aoExcluir: p ? async (m) => {
@@ -171,13 +176,39 @@ export default {
 
       <div class="card">
         <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2><p class="sub">${lista.length} ${lista.length === 1 ? 'peça' : 'peças'} no total</p></div>
-          <button class="btn pri sm" data-act="nova-peca" data-cliente="${esc(filtro)}">${ic('plus')}Nova peça</button></div>
+          <div class="actions">${filtro ? `<button class="btn sec sm" data-act="ir" data-rota="previa" data-ref="${esc(filtro)}">${ic('image')}Prévia do cliente</button><button class="btn sec sm" data-act="link-aprovacao" data-cliente="${esc(filtro)}">${ic('link')}Link de aprovação</button>` : ''}
+            <button class="btn pri sm" data-act="nova-peca" data-cliente="${esc(filtro)}">${ic('plus')}Nova peça</button></div></div>
         <div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>
         ${lista.length ? `<div class="kanban">${colunas}</div>` : `<div class="empty" style="padding:30px 10px">${flor()}<h2>Nenhuma peça ainda</h2><p>Use “Nova peça” para registrar o primeiro post, carrossel, reels ou story.</p></div>`}
       </div>`;
   },
 
   acoes: {
+    'link-aprovacao': async (el) => {
+      const c = store.obter('cliente', el.dataset.cliente);
+      if (!c) return;
+      const montar = (token) => `${location.origin}${location.pathname.replace(/[^/]*$/, '')}aprovar.html#${token}`;
+      let url = montar(await store.linkAprovacao(c.id));
+      const m = abrirModal({
+        titulo: `Link de aprovação: ${c.nome}`,
+        subtitulo: 'Envie este link ao cliente. Ele vê só as peças dele (as que estão em “Aguardando aprovação” ou depois) e não precisa de senha.',
+        corpo: `<div class="field"><label for="link-ap">Link do cliente</label><input id="link-ap" readonly value="${esc(url)}"></div>
+          <p class="lbl" style="margin-top:10px">Quem tem este link consegue ver e aprovar as peças de ${esc(c.nome)}. Se ele for parar em mãos erradas, gere um novo: o antigo deixa de funcionar.</p>
+          <div class="modal-f"><button class="btn ghost danger" data-renovar>Gerar novo link</button><div class="actions"><button class="btn sec" data-fechar-link>Fechar</button><button class="btn pri" data-copiar>${ic('link')}Copiar link</button></div></div>`,
+      });
+      const campo = m.el.querySelector('#link-ap');
+      campo.addEventListener('focus', () => campo.select());
+      m.el.querySelector('[data-fechar-link]').onclick = () => m.fechar();
+      m.el.querySelector('[data-copiar]').onclick = async () => {
+        try { await navigator.clipboard.writeText(campo.value); toast('Link copiado'); } catch { campo.select(); toast('Selecionei o link: use Ctrl+C para copiar'); }
+      };
+      m.el.querySelector('[data-renovar]').onclick = async () => {
+        if (!(await confirmar('Gerar um novo link? O link atual deixa de funcionar e você precisa enviar o novo ao cliente.', 'Gerar novo link', true))) return;
+        url = montar(await store.linkAprovacao(c.id, true));
+        campo.value = url;
+        toast('Novo link gerado');
+      };
+    },
     'aba-conteudo': (el) => { aba = el.dataset.aba === 'calendario' ? 'calendario' : 'status'; recarregarTela(); },
     'cal-mes': (el) => {
       const passo = Number(el.dataset.passo);

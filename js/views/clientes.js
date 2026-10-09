@@ -1,8 +1,8 @@
-import { store } from '../store.js?v=16';
-import { brl, esc, iniciais, toast, dataBR, mesAno, mesesEntre, mesesTxt, urlSegura, norm } from '../util.js?v=16';
-import { ic, flor } from '../icons.js?v=16';
-import { formulario, confirmar } from '../ui.js?v=16';
-import { ETAPAS, pecasDoCliente } from '../conteudo.js?v=16';
+import { store } from '../store.js?v=22';
+import { brl, esc, iniciais, toast, dataBR, mesAno, mesesEntre, mesesTxt, urlSegura, norm } from '../util.js?v=22';
+import { ic, flor } from '../icons.js?v=22';
+import { formulario, confirmar } from '../ui.js?v=22';
+import { ETAPAS, pecasDoCliente } from '../conteudo.js?v=22';
 
 const STATUS = {
   ativo: ['ok', 'Ativo'],
@@ -26,6 +26,7 @@ const campos = [
   { nome: 'modelo', rotulo: 'Tipo de contratação', tipo: 'select', opcoes: [{ v: 'recorrente', t: 'Recorrente (mensal)' }, { v: 'pontual', t: 'Projeto pontual' }] },
   { nome: 'mensalidade', rotulo: 'Valor mensal (ou do projeto), R$', tipo: 'dinheiro' },
   { nome: 'imagem', rotulo: 'Logo ou imagem do cliente', tipo: 'imagem', cheio: true, ajuda: 'Opcional. Aparece na ficha e nas propostas.' },
+  { nome: 'instagram', rotulo: 'Instagram do cliente', placeholder: '@perfil', ajuda: 'Aparece na página de aprovação, como no perfil do Instagram.' },
   { nome: 'origem', rotulo: 'Como chegou', placeholder: 'Indicação, Instagram…' },
   { nome: 'contato', rotulo: 'Contato principal' },
   { nome: 'inicio', rotulo: 'Início do trabalho', tipo: 'data' },
