@@ -1,9 +1,9 @@
-import { store } from '../store.js?v=45';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=45';
-import { ic, flor } from '../icons.js?v=45';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=45';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=45';
-import { idDrive, urlAbrir } from '../drive.js?v=45';
+import { store } from '../store.js?v=47';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=47';
+import { ic, flor } from '../icons.js?v=47';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=47';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=47';
+import { idDrive, urlAbrir } from '../drive.js?v=47';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a peça ser produzida.
@@ -13,13 +13,34 @@ const FUNIL_COR = { topo: 'cor-mute', meio: 'cor-mute', fundo: 'cor-mute' };
 // Cor por tipo de conteúdo: Reels, Carrossel, Story e Feed têm cada um a sua.
 const fmCls = (p) => `fm-${FORMATOS[p.formato] ? p.formato : 'feed'}`;
 const funilChip = (p) => (FUNIL_COR[p.funil] ? `<span class="chip ${FUNIL_COR[p.funil]}">${FUNIL[p.funil]}</span>` : '');
-// Resumo "Topo 3 · Meio 4 · Fundo 2" do que está na tela, para ver se o mix está equilibrado.
+// Filtro do funil no Calendário: '' (todos), 'topo', 'meio', 'fundo' ou 'sem'. Vale até recarregar a página.
+let filtroFunil = '';
+const casaFunil = (p) => !filtroFunil || (filtroFunil === 'sem' ? !FUNIL_COR[p.funil] : p.funil === filtroFunil);
+
+// Resumo "Topo 3 · Meio 4 · Fundo 2": cada um é um botão que mostra a lista das peças daquele grupo.
 function resumoFunil(lista) {
   const n = (k) => lista.filter((p) => p.funil === k).length;
   const sem = lista.filter((p) => !FUNIL_COR[p.funil]).length;
   if (n('topo') + n('meio') + n('fundo') === 0) return '';
-  return `<div class="legenda" style="margin:-4px 0 14px" title="Quantas peças há em cada etapa do funil">${['topo', 'meio', 'fundo'].map((k) => `<span class="chip ${FUNIL_COR[k]}">${FUNIL[k].replace(' de funil', '')} ${n(k)}</span>`).join('')}${sem ? `<span class="chip cor-mute">Sem funil ${sem}</span>` : ''}</div>`;
+  const botao = (k, texto, qtd) => `<button type="button" class="chip cor-mute funil-btn${filtroFunil === k ? ' on' : ''}" data-act="filtro-funil" data-funil="${k}" aria-pressed="${filtroFunil === k}">${texto} ${qtd}</button>`;
+  return `<div class="legenda" style="margin:-4px 0 14px" title="Clique para ver só as peças de cada etapa do funil">${['topo', 'meio', 'fundo'].map((k) => botao(k, FUNIL[k].replace(' de funil', ''), n(k))).join('')}${sem ? botao('sem', 'Sem funil', sem) : ''}</div>`;
 }
+
+// Lista das peças do grupo escolhido no funil, logo abaixo do calendário.
+function listaFunil(lista, mostrarCliente) {
+  if (!filtroFunil) return '';
+  const itens = ordenarPecas(lista.filter(casaFunil));
+  const nome = filtroFunil === 'sem' ? 'Sem etapa de funil' : FUNIL[filtroFunil];
+  const linha = (p) => {
+    const f = FORMATOS[p.formato] || FORMATOS.feed;
+    const e = etapaDe(p);
+    const cli = store.obter('cliente', p.clienteId)?.nome || '';
+    const meta = [p.publicar ? dataBR(p.publicar).slice(0, 5) : 'Sem data', f.nome, mostrarCliente ? cli : ''].filter(Boolean).join(' · ');
+    return `<div class="li click" data-act="editar-peca" data-id="${p.id}"><span class="chip ${fmCls(p)}" style="min-width:34px;justify-content:center">${ic(f.icone)}</span><div class="li-t"><b>${esc(p.titulo || '(sem título)')}</b><span>${esc(meta)}</span></div><span class="chip cor-${e.cor}">${esc(e.nome)}</span></div>`;
+  };
+  return `<div class="funil-lista"><div class="card-h" style="margin-bottom:6px"><div><h3 style="font:700 16px var(--ui)">${esc(nome)} · ${itens.length}</h3><p class="sub" style="margin:2px 0 0">Clique em uma peça para abrir.</p></div><button type="button" class="btn ghost sm" data-act="filtro-funil" data-funil="">Limpar filtro</button></div><div class="list">${itens.map(linha).join('') || '<p class="lbl">Nenhuma peça nesta etapa.</p>'}</div></div>`;
+}
+
 const PLANO = { '': 'Não enviado ao cliente', aprovacao: 'Aguardando aprovação do cliente', ajustes: 'Alteração pedida pelo cliente', aprovado: 'Aprovado pelo cliente' };
 const PLANO_CHIP = { aprovacao: ['info', 'Plano enviado'], ajustes: ['warn', 'Plano: ajuste'], aprovado: ['ok', 'Plano aprovado'] };
 const PUBLICADAS_VISIVEIS = 10;
@@ -88,6 +109,18 @@ function botoesCabecalho(filtro) {
 
 const DATA_ISO = /^\d{4}-\d{2}-\d{2}$/;
 
+// O tipo da peça (reels, carrossel, story, feed) já aparece pela cor e pelo ícone, então o título não precisa repeti-lo.
+const PALAVRA_DO_TIPO = { reels: /^reels?$/i, carrossel: /^(carrossel|carross[eé]is)$/i, story: /^(story|stories)$/i, feed: /^feed$/i };
+function semTipoNoTitulo(titulo, formato) {
+  const m = titulo.match(/^\s*(reels?|carrossel|carross[eé]is|stories|story|feed)\s*(?:([:\-–])\s*|((?:de|do|da)\s+))?/i);
+  if (!m) return titulo;
+  const resto = titulo.slice(m[0].length).trim();
+  const temSeparador = !!m[2];
+  const mesmoTipo = !!PALAVRA_DO_TIPO[formato]?.test(m[1]);
+  if (!resto || !(temSeparador || mesmoTipo)) return titulo;
+  return resto[0].toUpperCase() + resto.slice(1);
+}
+
 // "Adicionar em lote": lê um arquivo de peças (preparado pelo Claude) e cria as que ainda não existem.
 // O arquivo pode trazer o cliente pelo nome ("clienteNome": "TRE Clinic") ou pelo código. Aceita
 // { "pecas": [ ... ] } ou o formato de backup { "registros": [ { "kind": "conteudo", ... } ] }.
@@ -131,9 +164,9 @@ async function adicionarEmLote(arquivo) {
   for (const p of brutas) {
     const c = achar(p);
     if (!c) { semCliente.add(String(p.clienteNome || p.clienteId || '(sem cliente)')); continue; }
-    const titulo = String(p.titulo || '').trim() || '(sem título)';
     const publicar = DATA_ISO.test(p.publicar || '') ? p.publicar : '';
     const formato = FORMATOS[p.formato] ? p.formato : 'feed';
+    const titulo = semTipoNoTitulo(String(p.titulo || '').trim(), formato) || '(sem título)';
     const etapaIn = p.etapa === 'planejamento' ? 'briefing' : p.etapa;
     const etapaExplicita = ETAPAS.some((e) => e.id === etapaIn);
     const existente = p.id && store.obter('conteudo', String(p.id)) ? store.obter('conteudo', String(p.id)) : (p.id ? null : acharExistente(c.id, titulo, publicar, formato));
@@ -285,7 +318,7 @@ function blocoPeca(p, mostrarCliente) {
   const f = FORMATOS[p.formato] || FORMATOS.feed;
   const e = etapaDe(p);
   const cli = store.obter('cliente', p.clienteId)?.nome || '';
-  return `<button class="cal-p ${fmCls(p)}${atrasada(p) ? ' atras' : ''}" data-act="editar-peca" data-id="${p.id}" draggable="true" data-peca="${p.id}" title="${esc([p.titulo, cli, f.nome, e.nome].filter(Boolean).join(' · '))}">
+  return `<button class="cal-p ${fmCls(p)}${atrasada(p) ? ' atras' : ''}${casaFunil(p) ? '' : ' apagado'}" data-act="editar-peca" data-id="${p.id}" draggable="true" data-peca="${p.id}" title="${esc([p.titulo, cli, f.nome, e.nome].filter(Boolean).join(' · '))}">
     <i class="cal-dot cor-${e.cor}" title="${esc(e.nome)}"></i>${ic(f.icone)}<span><b>${esc(p.titulo || '(sem título)')}</b>${mostrarCliente && cli ? `<small>${esc(cli)}</small>` : ''}</span></button>`;
 }
 
@@ -320,6 +353,7 @@ function calendario({ filtro, lista, chipsClientes }) {
       <div class="legenda" title="A cor de cada peça é o tipo de conteúdo; a bolinha mostra a etapa">${Object.entries(FORMATOS).map(([id, f]) => `<span class="chip fm-${id}">${ic(f.icone)}${esc(f.nome)}</span>`).join('')}<span class="chip cor-mute"><i class="cal-dot cor-mute" style="margin:0"></i>Bolinha = etapa</span></div>
     </div>
     <div class="calbox"><div class="calgrid">${DIAS_SEMANA.map((d) => `<div class="dow">${d}</div>`).join('')}${celulas}</div></div>
+    ${listaFunil(lista, !filtro)}
     ${semData.length ? `<div class="semdata"><h3>Sem data de publicação</h3><p class="lbl">Abra a peça e escolha a data para ela aparecer no calendário.</p><div class="semdata-l">${semData.map((p) => blocoPeca(p, !filtro)).join('')}</div></div>` : ''}
   </div>`;
 }
@@ -378,7 +412,7 @@ export default {
       <div class="card">
         <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2><p class="sub">${lista.length} ${lista.length === 1 ? 'peça' : 'peças'} no total</p></div>
           ${botoesCabecalho(filtro)}</div>
-        <div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>${resumoFunil(lista)}
+        <div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>
         ${lista.length ? `<div class="kanban">${colunas}</div>` : `<div class="empty" style="padding:30px 10px">${flor()}<h2>Nenhuma peça ainda</h2><p>Use “Nova peça” para registrar o primeiro post, carrossel, reels ou story.</p></div>`}
       </div>`;
   },
@@ -406,6 +440,7 @@ export default {
       for (const p of prontas) await store.salvar('conteudo', { ...p, planejamento: 'aprovacao' });
       toast(`${prontas.length} ${prontas.length === 1 ? 'ideia enviada' : 'ideias enviadas'} para aprovação`);
     },
+    'filtro-funil': (el) => { filtroFunil = el.dataset.funil === filtroFunil ? '' : el.dataset.funil; recarregarTela(); },
     'adicionar-lote': () => document.querySelector('[data-lote]')?.click(),
     'link-aprovacao': async (el) => {
       const c = store.obter('cliente', el.dataset.cliente);
