@@ -1,7 +1,7 @@
-import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=44';
-import { ic } from './icons.js?v=44';
-import { urlImagem, urlPlayer } from './drive.js?v=44';
-import { config } from './config.js?v=44';
+import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=45';
+import { ic } from './icons.js?v=45';
+import { urlImagem, urlPlayer } from './drive.js?v=45';
+import { config } from './config.js?v=45';
 
 // Visual de Instagram usado na prévia do painel e na página de aprovação do cliente.
 // Recebe os dados prontos, então funciona com ou sem login.
@@ -195,8 +195,8 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
     const tudo = pend ? `<button class="btn verde sm" data-ig-pl-todas>${ic('check')}Aprovar tudo deste mês</button>` : '';
     const itens = [...doMesP, ...semDataP].map(itemPlano).join('') || '<div class="ig-nada"><p>Nenhuma ideia neste mês. Use as setas para ver outros meses.</p></div>';
     return `<div class="ig-plgrid">
-      <aside class="ig-pl-lado"><h4 class="ig-sub" style="margin:0">Ideias do mês</h4>${resumo}<div class="ig-pl-fmts" title="A cor de cada ideia no calendário é o tipo de conteúdo; a bolinha mostra se foi aprovada">${Object.entries(FORMATO).map(([id, x]) => `<span class="chip fm-${id}">${esc(x.nome)}</span>`).join('')}</div>${tudo}<p class="ig-erro" data-ig-pl-erro hidden></p><div class="ig-pl-itens">${itens}</div></aside>
-      <div class="ig-pl-calwrap">${calendarioPlano(doMesP)}</div></div>`;
+      <aside class="ig-pl-lado"><h4 class="ig-sub" style="margin:0">Ideias do mês</h4>${resumo}${tudo}<p class="ig-erro" data-ig-pl-erro hidden></p><div class="ig-pl-itens">${itens}</div></aside>
+      <div class="ig-pl-calwrap">${calendarioPlano(doMesP)}<div class="ig-pl-fmts" title="A cor de cada ideia no calendário é o tipo de conteúdo; a bolinha mostra se foi aprovada">${Object.entries(FORMATO).map(([id, x]) => `<span class="chip fm-${id}">${esc(x.nome)}</span>`).join('')}</div></div></div>`;
   }
 
   function abrirPlano(id) {

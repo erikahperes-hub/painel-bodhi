@@ -1,9 +1,9 @@
-import { store } from '../store.js?v=44';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=44';
-import { ic, flor } from '../icons.js?v=44';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=44';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=44';
-import { idDrive, urlAbrir } from '../drive.js?v=44';
+import { store } from '../store.js?v=45';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=45';
+import { ic, flor } from '../icons.js?v=45';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=45';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=45';
+import { idDrive, urlAbrir } from '../drive.js?v=45';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a peça ser produzida.

@@ -269,7 +269,7 @@ button.card.clicavel:focus-visible{outline:2px solid var(--verde);outline-offset
 .cal-dot.cor-ok{background:var(--verde)}
 .fm-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:baseline}
 .fm-dot.fm-reels{background:#073F56}.fm-dot.fm-carrossel{background:#23BB84}.fm-dot.fm-story{background:#E96A6A}.fm-dot.fm-feed{background:#E8B94A}
-.ig-pl-fmts{display:flex;flex-wrap:wrap;gap:6px}
+.ig-pl-fmts{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:12px}
 .ig-pl-chip i.st-creme,.ig-pl-chip i.st-warn,.ig-pl-chip i.st-ok{border:0}
 @media (max-width:620px){.ig-pl-chip.fm-reels{background:#073F56}.ig-pl-chip.fm-carrossel{background:#23BB84}.ig-pl-chip.fm-story{background:#E96A6A}.ig-pl-chip.fm-feed{background:#E8B94A}}
 .kol-legenda{display:flex;flex-direction:column;gap:5px}
