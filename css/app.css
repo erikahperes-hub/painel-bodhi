@@ -406,13 +406,20 @@ a.chip{text-decoration:none}
 /* No celular, o calendário em grade encolhe para caber na tela: cada dia mostra miniaturas pequenas e a lista do mês fica logo abaixo. */
 @media (max-width:620px){.ig-cal{min-width:0;gap:3px}.ig .dow{font-size:10px;padding:2px 0;text-align:center;letter-spacing:0}.ig-dia{min-height:76px;padding:3px;border-radius:8px}.ig-dia>span{font-size:10.5px;display:block;text-align:center}.ig-dia>div{gap:3px;margin-top:3px}.ig-dia .ig-tile.mini{width:100%;height:auto;aspect-ratio:4/5;border-radius:5px}.ig-dia .ig-tile.mini .ig-st{width:8px;height:8px;left:2px;bottom:2px}.ig-li{flex-wrap:wrap;row-gap:6px}.ig-li-t{flex:1 1 150px}.ig-li-t b{white-space:normal}.ig-li .chip{margin-left:56px}}
 /* Visual da página do cliente: bordas bem arredondadas e quadradinhos separados, na identidade da Bôdhi */
-.ig-grade{gap:10px}
-.ig-grade .ig-tile{border-radius:20px;box-shadow:0 1px 2px rgba(41,43,45,.06),0 6px 16px rgba(41,43,45,.07)}
-.ig-grade .ig-tile::after{border-radius:20px}
+/* Feed: igual ao perfil do Instagram (quadradinhos colados, sem cantos arredondados, proporção 3:4). Só os Stories seguem arredondados. */
+.ig-grade{gap:2px}
+.ig-grade:not(.story) .ig-tile{border-radius:0;aspect-ratio:3/4;box-shadow:none}
+.ig-grade:not(.story) .ig-tile::after{border-radius:0}
+.ig-grade.story{gap:10px}
+.ig-grade.story .ig-tile{border-radius:20px;box-shadow:0 1px 2px rgba(41,43,45,.06),0 6px 16px rgba(41,43,45,.07)}
+.ig-grade.story .ig-tile::after{border-radius:20px}
 .ig-tile.mini{border-radius:8px}
-.ig-num{top:12px;left:14px}
-.ig-fmt{top:12px;right:12px}
-.ig-st{left:12px;bottom:12px}
+.ig-grade:not(.story) .ig-num{top:8px;left:9px}
+.ig-grade:not(.story) .ig-fmt{top:8px;right:8px}
+.ig-grade:not(.story) .ig-st{left:8px;bottom:8px}
+.ig-grade.story .ig-num{top:12px;left:14px}
+.ig-grade.story .ig-fmt{top:12px;right:12px}
+.ig-grade.story .ig-st{left:12px;bottom:12px}
 .ig-post{border-radius:30px;padding-bottom:4px}
 .ig-ph{padding:14px 16px 10px}
 .ig-media{border-radius:22px;overflow:hidden;margin:0 12px}
