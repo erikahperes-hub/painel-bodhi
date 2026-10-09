@@ -1,9 +1,9 @@
-import { store } from '../store.js?v=58';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=58';
-import { ic, flor } from '../icons.js?v=58';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=58';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=58';
-import { idDrive, urlAbrir } from '../drive.js?v=58';
+import { store } from '../store.js?v=60';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=60';
+import { ic, flor } from '../icons.js?v=60';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=60';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=60';
+import { idDrive, urlAbrir } from '../drive.js?v=60';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a peça ser produzida.
@@ -363,7 +363,7 @@ function calendario({ filtro, lista, chipsClientes }) {
       
     </div>
     <div class="calbox"><div class="calgrid">${DIAS_SEMANA.map((d) => `<div class="dow">${d}</div>`).join('')}${celulas}</div></div>
-    <div class="filtros-cal"><div class="filtros-linha"><span class="filtros-rot">Tipo</span><div class="legenda" title="Clique em um tipo para ver só as peças dele. A cor é o tipo de conteúdo">${Object.entries(FORMATOS).map(([id, f]) => `<button type="button" class="chip fm-${id} funil-btn tipo-btn${filtroTipo === id ? ' on' : ''}" data-act="filtro-tipo" data-tipo="${id}" aria-pressed="${filtroTipo === id}">${ic(f.icone)}${esc(f.nome)} ${lista.filter((p) => (FORMATOS[p.formato] ? p.formato : 'feed') === id).length}</button>`).join('')}</div></div>${linhaFunil(lista)}</div>
+    <div class="filtros-cal${filtroTipo && filtroFunil ? ' juntos' : ''}"${filtroTipo && filtroFunil ? ' title="Os dois filtros estão ligados ao mesmo tempo"' : ''}><div class="filtros-linha"><span class="filtros-rot">Tipo</span><div class="legenda" title="Clique em um tipo para ver só as peças dele. A cor é o tipo de conteúdo">${Object.entries(FORMATOS).map(([id, f]) => `<button type="button" class="chip fm-${id} funil-btn tipo-btn${filtroTipo === id ? ' on' : ''}" data-act="filtro-tipo" data-tipo="${id}" aria-pressed="${filtroTipo === id}">${ic(f.icone)}${esc(f.nome)} ${lista.filter((p) => (FORMATOS[p.formato] ? p.formato : 'feed') === id).length}</button>`).join('')}</div></div>${linhaFunil(lista)}</div>
     ${listaFunil(lista, !filtro)}
     ${semData.length ? `<div class="semdata"><h3>Sem data de publicação</h3><p class="lbl">Abra a peça e escolha a data para ela aparecer no calendário.</p><div class="semdata-l">${semData.map((p) => blocoPeca(p, !filtro)).join('')}</div></div>` : ''}
   </div>`;
