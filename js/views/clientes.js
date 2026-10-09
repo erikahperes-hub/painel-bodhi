@@ -1,8 +1,8 @@
-import { store } from '../store.js?v=22';
-import { brl, esc, iniciais, toast, dataBR, mesAno, mesesEntre, mesesTxt, urlSegura, norm } from '../util.js?v=22';
-import { ic, flor } from '../icons.js?v=22';
-import { formulario, confirmar } from '../ui.js?v=22';
-import { ETAPAS, pecasDoCliente } from '../conteudo.js?v=22';
+import { store } from '../store.js?v=23';
+import { brl, esc, iniciais, toast, dataBR, mesAno, mesesEntre, mesesTxt, urlSegura, norm } from '../util.js?v=23';
+import { ic, flor } from '../icons.js?v=23';
+import { formulario, confirmar } from '../ui.js?v=23';
+import { ETAPAS, pecasDoCliente } from '../conteudo.js?v=23';
 
 const STATUS = {
   ativo: ['ok', 'Ativo'],

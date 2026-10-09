@@ -1,9 +1,9 @@
-import { store } from '../store.js?v=22';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome } from '../util.js?v=22';
-import { ic, flor } from '../icons.js?v=22';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=22';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=22';
-import { idDrive, urlAbrir } from '../drive.js?v=22';
+import { store } from '../store.js?v=23';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome } from '../util.js?v=23';
+import { ic, flor } from '../icons.js?v=23';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=23';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=23';
+import { idDrive, urlAbrir } from '../drive.js?v=23';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 const PUBLICADAS_VISIVEIS = 10;
@@ -56,6 +56,35 @@ function abrirPeca(p = null, padrao = {}) {
       if (await confirmar(`Excluir a peça “${p.titulo}”?`, 'Excluir', true)) { await store.remover('conteudo', p.id); m.fechar(); toast('Peça excluída'); }
     } : null,
   });
+}
+
+// Botões do topo do cartão, iguais nas abas Status e Calendário.
+function botoesCabecalho(filtro) {
+  return `<div class="actions">${filtro ? `<button class="btn sec sm" data-act="ir" data-rota="previa" data-ref="${esc(filtro)}">${ic('image')}Prévia do cliente</button><button class="btn sec sm" data-act="link-aprovacao" data-cliente="${esc(filtro)}">${ic('link')}Link de aprovação</button>` : ''}
+    <button class="btn sec sm" data-act="inserir-dados">${ic('upload')}Inserir dados automáticos</button>
+    <button class="btn pri sm" data-act="nova-peca" data-cliente="${esc(filtro)}">${ic('plus')}Nova peça</button>
+    <input type="file" accept="application/json,.json" hidden data-inserir></div>`;
+}
+
+// "Inserir dados automáticos": lê o arquivo de peças preparado pelo Claude e cria as peças que ainda não existem.
+// Só aceita peças de conteúdo, e o que já existe só tem campos vazios preenchidos (nada que vocês editaram é apagado).
+async function inserirDados(arquivo) {
+  const lista = (Array.isArray(arquivo?.registros) ? arquivo.registros : []).filter((r) => r.kind === 'conteudo' && r.id && r.data);
+  if (!lista.length) throw new Error('Este arquivo não tem peças de conteúdo para inserir.');
+  const validas = lista.filter((r) => store.obter('cliente', r.data.clienteId));
+  if (!validas.length) throw new Error('Nenhuma peça do arquivo pertence a um cliente cadastrado no painel.');
+  const novas = validas.filter((r) => !store.obter('conteudo', r.id)).length;
+  const jaExistem = validas.length - novas;
+  const ignoradas = lista.length - validas.length;
+  const plural = (n, s, p) => `${n} ${n === 1 ? s : p}`;
+  const aviso = [
+    `Inserir ${plural(novas, 'peça nova', 'peças novas')}?`,
+    jaExistem ? `${plural(jaExistem, 'já existe', 'já existem')}: só campos vazios serão preenchidos, sem apagar o que vocês editaram.` : '',
+    ignoradas ? `${plural(ignoradas, 'peça foi ignorada', 'peças foram ignoradas')} por não ter cliente cadastrado.` : '',
+  ].filter(Boolean).join(' ');
+  if (!(await confirmar(aviso, 'Inserir'))) return;
+  await store.importar({ registros: validas.map((r) => ({ kind: 'conteudo', id: r.id, data: r.data, mesclar: 'preencher' })) });
+  toast(`${plural(novas, 'peça inserida', 'peças inseridas')}`);
 }
 
 function cartao(p, mostrarCliente) {
@@ -111,7 +140,7 @@ function calendario({ filtro, lista, chipsClientes }) {
 
   return `<div class="card">
     <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2><p class="sub">Cada peça aparece no dia da publicação. Clique em uma peça para abrir ou no + de um dia para criar.</p></div>
-      <button class="btn pri sm" data-act="nova-peca" data-cliente="${esc(filtro)}">${ic('plus')}Nova peça</button></div>
+      ${botoesCabecalho(filtro)}</div>
     <div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>
     <div class="toolbar" style="margin-bottom:12px">
       <div class="mes"><button class="iconbtn" data-act="cal-mes" data-passo="-1" aria-label="Mês anterior"><span style="display:grid;transform:scaleX(-1)">${ic('chev')}</span></button>
@@ -176,14 +205,23 @@ export default {
 
       <div class="card">
         <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2><p class="sub">${lista.length} ${lista.length === 1 ? 'peça' : 'peças'} no total</p></div>
-          <div class="actions">${filtro ? `<button class="btn sec sm" data-act="ir" data-rota="previa" data-ref="${esc(filtro)}">${ic('image')}Prévia do cliente</button><button class="btn sec sm" data-act="link-aprovacao" data-cliente="${esc(filtro)}">${ic('link')}Link de aprovação</button>` : ''}
-            <button class="btn pri sm" data-act="nova-peca" data-cliente="${esc(filtro)}">${ic('plus')}Nova peça</button></div></div>
+          ${botoesCabecalho(filtro)}</div>
         <div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>
         ${lista.length ? `<div class="kanban">${colunas}</div>` : `<div class="empty" style="padding:30px 10px">${flor()}<h2>Nenhuma peça ainda</h2><p>Use “Nova peça” para registrar o primeiro post, carrossel, reels ou story.</p></div>`}
       </div>`;
   },
 
+  montar(el) {
+    el.querySelector('[data-inserir]')?.addEventListener('change', async (ev) => {
+      const f = ev.target.files[0];
+      ev.target.value = '';
+      if (!f) return;
+      try { await inserirDados(JSON.parse(await f.text())); } catch (err) { toast(err instanceof SyntaxError ? 'Este arquivo não é válido.' : (err.message || 'Não foi possível inserir.'), true); }
+    });
+  },
+
   acoes: {
+    'inserir-dados': () => document.querySelector('[data-inserir]')?.click(),
     'link-aprovacao': async (el) => {
       const c = store.obter('cliente', el.dataset.cliente);
       if (!c) return;

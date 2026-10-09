@@ -93,6 +93,8 @@ A aba **Conteúdo** tem duas visões: **Status** (quadro por etapa) e **Calendá
 4. Em Conteúdo, escolha o cliente e use **Prévia do cliente** para ver como ele enxerga, e **Link de aprovação** para copiar o link dele. O link abre sem senha e mostra só as peças daquele cliente. **Gerar novo link** desativa o antigo.
 5. O cliente aprova ou pede alteração no próprio link. A peça muda sozinha para **Aprovado** ou **Ajustes** no painel (o pedido aparece no cartão e no sino).
 
+**Inserir dados automáticos:** em Conteúdo, o botão ao lado de **Nova peça** importa um arquivo de peças (preparado pelo Claude a partir da pasta do Drive e das legendas). Cria só o que ainda não existe e não apaga o que vocês editaram.
+
 **Ativar uma vez (Supabase):** abra o SQL Editor, cole o conteúdo de `supabase/aprovacao.sql` e clique em Run. Sem isso, o botão “Link de aprovação” avisa que falta ativar.
 
 **Observações:** o título da peça aparece para o cliente na lista do calendário, então use nomes que ele possa ler. Os vídeos tocam no player do Drive. O Google às vezes demora ou recusa uma imagem; a página tenta de novo sozinha.
