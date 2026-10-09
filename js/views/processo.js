@@ -1,7 +1,7 @@
-import { store } from '../store.js?v=55';
-import { esc, toast } from '../util.js?v=55';
-import { ic, flor } from '../icons.js?v=55';
-import { formulario, confirmar } from '../ui.js?v=55';
+import { store } from '../store.js?v=56';
+import { esc, toast } from '../util.js?v=56';
+import { ic, flor } from '../icons.js?v=56';
+import { formulario, confirmar } from '../ui.js?v=56';
 
 const p = (titulo, detalhes = []) => ({ titulo, detalhes });
 
