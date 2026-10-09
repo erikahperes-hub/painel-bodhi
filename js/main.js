@@ -1,22 +1,22 @@
-import { store } from './store.js?v=56';
-import { logo } from './logo.js?v=56';
-import { ic, flor } from './icons.js?v=56';
-import { esc, toast, debounce } from './util.js?v=56';
-import { alertas } from './calc.js?v=56';
-import { buscar, htmlResultados } from './search.js?v=56';
-import { temModal, fecharTopo, formulario } from './ui.js?v=56';
+import { store } from './store.js?v=57';
+import { logo } from './logo.js?v=57';
+import { ic, flor } from './icons.js?v=57';
+import { esc, toast, debounce } from './util.js?v=57';
+import { alertas } from './calc.js?v=57';
+import { buscar, htmlResultados } from './search.js?v=57';
+import { temModal, fecharTopo, formulario } from './ui.js?v=57';
 
-import inicio from './views/inicio.js?v=56';
-import comercial from './views/comercial.js?v=56';
-import clientes from './views/clientes.js?v=56';
-import conteudo from './views/conteudo.js?v=56';
-import previa from './views/previa.js?v=56';
-import propostas from './views/propostas.js?v=56';
-import contratos from './views/contratos.js?v=56';
-import financeiro from './views/financeiro.js?v=56';
-import processo from './views/processo.js?v=56';
-import prospeccao from './views/prospeccao.js?v=56';
-import configuracoes from './views/configuracoes.js?v=56';
+import inicio from './views/inicio.js?v=57';
+import comercial from './views/comercial.js?v=57';
+import clientes from './views/clientes.js?v=57';
+import conteudo from './views/conteudo.js?v=57';
+import previa from './views/previa.js?v=57';
+import propostas from './views/propostas.js?v=57';
+import contratos from './views/contratos.js?v=57';
+import financeiro from './views/financeiro.js?v=57';
+import processo from './views/processo.js?v=57';
+import prospeccao from './views/prospeccao.js?v=57';
+import configuracoes from './views/configuracoes.js?v=57';
 
 const VIEWS = { inicio, comercial, clientes, conteudo, previa, propostas, contratos, financeiro, processo, prospeccao, configuracoes };
 const NAV = [
@@ -263,6 +263,8 @@ document.addEventListener('acionar', (e) => {
   Promise.resolve().then(() => ACOES[e.detail.acao]?.({ dataset: e.detail.dados })).catch((err) => toast(err?.message || 'Algo deu errado.', true));
 });
 window.addEventListener('hashchange', () => { if (document.getElementById('view')) renderRota(true); });
+// Filtros e botões de mês redesenham a tela mantendo a posição da rolagem.
+window.addEventListener('atualizar-tela', () => { if (document.getElementById('view')) renderRota(false); });
 
 /* ---------- Início ---------- */
 (async () => {

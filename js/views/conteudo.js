@@ -1,9 +1,9 @@
-import { store } from '../store.js?v=56';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=56';
-import { ic, flor } from '../icons.js?v=56';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=56';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=56';
-import { idDrive, urlAbrir } from '../drive.js?v=56';
+import { store } from '../store.js?v=57';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=57';
+import { ic, flor } from '../icons.js?v=57';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=57';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=57';
+import { idDrive, urlAbrir } from '../drive.js?v=57';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a peça ser produzida.
@@ -318,7 +318,8 @@ function cartao(p, mostrarCliente) {
 // Visão escolhida (Status ou Calendário) e mês mostrado no calendário; valem até recarregar a página.
 let aba = 'status';
 let mesCal = null;
-const recarregarTela = () => window.dispatchEvent(new HashChangeEvent('hashchange'));
+const recarregarTela = () => window.dispatchEvent(new Event('atualizar-tela'));
+let verLista = false; // depois de escolher um filtro, mostra a lista sem mexer no resto da tela
 
 const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const isoDia = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -429,6 +430,10 @@ export default {
 
   montar(el) {
     ligarArrastar(el);
+    if (verLista) {
+      verLista = false;
+      el.querySelector('.funil-lista')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
     el.querySelector('[data-lote]')?.addEventListener('change', async (ev) => {
       const f = ev.target.files[0];
       ev.target.value = '';
@@ -450,9 +455,9 @@ export default {
       for (const p of prontas) await store.salvar('conteudo', { ...p, planejamento: 'aprovacao' });
       toast(`${prontas.length} ${prontas.length === 1 ? 'ideia enviada' : 'ideias enviadas'} para aprovação`);
     },
-    'filtro-tipo': (el) => { filtroTipo = el.dataset.tipo === filtroTipo ? '' : el.dataset.tipo; recarregarTela(); },
+    'filtro-tipo': (el) => { filtroTipo = el.dataset.tipo === filtroTipo ? '' : el.dataset.tipo; verLista = !!filtroTipo; recarregarTela(); },
     'limpar-filtros': () => { filtroFunil = ''; filtroTipo = ''; recarregarTela(); },
-    'filtro-funil': (el) => { filtroFunil = el.dataset.funil === filtroFunil ? '' : el.dataset.funil; recarregarTela(); },
+    'filtro-funil': (el) => { filtroFunil = el.dataset.funil === filtroFunil ? '' : el.dataset.funil; verLista = !!filtroFunil; recarregarTela(); },
     'adicionar-lote': () => document.querySelector('[data-lote]')?.click(),
     'link-aprovacao': async (el) => {
       const c = store.obter('cliente', el.dataset.cliente);
