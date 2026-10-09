@@ -1,9 +1,9 @@
-import { store } from '../store.js?v=57';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=57';
-import { ic, flor } from '../icons.js?v=57';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=57';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=57';
-import { idDrive, urlAbrir } from '../drive.js?v=57';
+import { store } from '../store.js?v=58';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=58';
+import { ic, flor } from '../icons.js?v=58';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=58';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=58';
+import { idDrive, urlAbrir } from '../drive.js?v=58';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a peça ser produzida.
@@ -353,7 +353,7 @@ function calendario({ filtro, lista, chipsClientes }) {
   }).join('');
 
   return `<div class="card">
-    <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2><p class="sub">${lista.length} ${lista.length === 1 ? 'peça' : 'peças'} no total. Clique em uma peça para abrir ou no + de um dia para criar.</p></div>
+    <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2><p class="sub">${lista.length} ${lista.length === 1 ? 'peça' : 'peças'} no total. Clique em uma peça para abrir ou arraste para outro dia para mudar a data de publicação.</p></div>
       ${botoesCabecalho(filtro)}</div>
     <div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>
     <div class="toolbar" style="margin-bottom:12px">
