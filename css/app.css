@@ -255,6 +255,8 @@ button.card.clicavel:focus-visible{outline:2px solid var(--verde);outline-offset
 .peca.enviado .btn.sec{background:rgba(255,255,255,.7)}
 .cor-slate{background:#CAD6E2;color:#1F3347}
 .kol-dica{display:flex;align-items:center;gap:6px;font:400 11.5px var(--ui);color:var(--ink-2);padding:0 4px}
+.kol-legenda{display:flex;flex-direction:column;gap:5px}
+.kol-dica i.claro{background:#fff;box-shadow:inset 0 0 0 1.5px #B5AFA3}
 .kol-dica i{width:12px;height:12px;border-radius:4px;background:#CAD6E2;box-shadow:inset 0 0 0 1.5px #4F6A85;flex:none}
 .peca-t{border:0;background:none;padding:0;text-align:left;font:700 14.5px/1.3 var(--ui);color:var(--ink)}
 .peca-t:hover{text-decoration:underline;text-decoration-color:var(--verde);text-underline-offset:3px}
