@@ -1,9 +1,9 @@
-import { store } from '../store.js?v=26';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome } from '../util.js?v=26';
-import { ic, flor } from '../icons.js?v=26';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=26';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=26';
-import { idDrive, urlAbrir } from '../drive.js?v=26';
+import { store } from '../store.js?v=27';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=27';
+import { ic, flor } from '../icons.js?v=27';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=27';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=27';
+import { idDrive, urlAbrir } from '../drive.js?v=27';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 const PUBLICADAS_VISIVEIS = 10;
@@ -61,30 +61,69 @@ function abrirPeca(p = null, padrao = {}) {
 // Botões do topo do cartão, iguais nas abas Status e Calendário.
 function botoesCabecalho(filtro) {
   return `<div class="actions">${filtro ? `<button class="btn sec sm" data-act="ir" data-rota="previa" data-ref="${esc(filtro)}">${ic('image')}Prévia do cliente</button><button class="btn sec sm" data-act="link-aprovacao" data-cliente="${esc(filtro)}">${ic('link')}Link de aprovação</button>` : ''}
-    <button class="btn sec sm" data-act="inserir-dados">${ic('upload')}Inserir dados automáticos</button>
+    <button class="btn sec sm" data-act="adicionar-lote">${ic('upload')}Adicionar em lote</button>
     <button class="btn pri sm" data-act="nova-peca" data-cliente="${esc(filtro)}">${ic('plus')}Nova peça</button>
-    <input type="file" accept="application/json,.json" hidden data-inserir></div>`;
+    <input type="file" accept="application/json,.json" hidden data-lote></div>`;
 }
 
-// "Inserir dados automáticos": lê o arquivo de peças preparado pelo Claude e cria as peças que ainda não existem.
-// Só aceita peças de conteúdo, e o que já existe só tem campos vazios preenchidos (nada que vocês editaram é apagado).
-async function inserirDados(arquivo) {
-  const lista = (Array.isArray(arquivo?.registros) ? arquivo.registros : []).filter((r) => r.kind === 'conteudo' && r.id && r.data);
-  if (!lista.length) throw new Error('Este arquivo não tem peças de conteúdo para inserir.');
-  const validas = lista.filter((r) => store.obter('cliente', r.data.clienteId));
-  if (!validas.length) throw new Error('Nenhuma peça do arquivo pertence a um cliente cadastrado no painel.');
+const DATA_ISO = /^\d{4}-\d{2}-\d{2}$/;
+
+// "Adicionar em lote": lê um arquivo de peças (preparado pelo Claude) e cria as que ainda não existem.
+// O arquivo pode trazer o cliente pelo nome ("clienteNome": "TRE Clinic") ou pelo código. Aceita
+// { "pecas": [ ... ] } ou o formato de backup { "registros": [ { "kind": "conteudo", ... } ] }.
+// Só entram campos de peça conhecidos, e o que já existe só tem campos vazios preenchidos (nada que vocês editaram é apagado).
+async function adicionarEmLote(arquivo) {
+  const brutas = [
+    ...(Array.isArray(arquivo?.registros) ? arquivo.registros.filter((r) => r?.kind === 'conteudo' && r.data).map((r) => ({ ...r.data, id: r.id || r.data.id })) : []),
+    ...(Array.isArray(arquivo?.pecas) ? arquivo.pecas : []),
+  ].filter((p) => p && typeof p === 'object');
+  if (!brutas.length) throw new Error('Este arquivo não tem peças para adicionar.');
+
+  const clientes = store.todos('cliente');
+  const achar = (p) => {
+    const porId = store.obter('cliente', p.clienteId);
+    if (porId) return porId;
+    const nome = norm(p.clienteNome || '');
+    const iguais = nome ? clientes.filter((c) => norm(c.nome) === nome) : [];
+    return iguais.length === 1 ? iguais[0] : null;
+  };
+  const semCliente = new Set();
+  const validas = [];
+  for (const p of brutas) {
+    const c = achar(p);
+    if (!c) { semCliente.add(String(p.clienteNome || p.clienteId || '(sem cliente)')); continue; }
+    const titulo = String(p.titulo || '').trim() || '(sem título)';
+    const publicar = DATA_ISO.test(p.publicar || '') ? p.publicar : '';
+    validas.push({
+      id: String(p.id || `lote-${c.id}-${publicar || 'sem-data'}-${slug(titulo)}`),
+      clienteId: c.id,
+      titulo,
+      formato: FORMATOS[p.formato] ? p.formato : 'feed',
+      etapa: ETAPAS.some((e) => e.id === p.etapa) ? p.etapa : 'criacao',
+      publicar,
+      legenda: String(p.legenda || ''),
+      midias: (Array.isArray(p.midias) ? p.midias : []).map((m) => ({ tipo: m?.tipo === 'video' ? 'video' : 'imagem', id: idDrive(m?.id || m?.url) })).filter((m) => m.id),
+      capa: idDrive(p.capa),
+      ajuste: String(p.ajuste || ''),
+      briefing: String(p.briefing || ''),
+      responsavel: RESPONSAVEIS.includes(p.responsavel) ? p.responsavel : '',
+      link: urlSegura(p.link),
+      criadoEm: new Date().toISOString(),
+    });
+  }
+  if (!validas.length) throw new Error(`Nenhuma peça tem cliente cadastrado no painel (${[...semCliente].join(', ')}). Confira o nome do cliente no arquivo.`);
+
   const novas = validas.filter((r) => !store.obter('conteudo', r.id)).length;
   const jaExistem = validas.length - novas;
-  const ignoradas = lista.length - validas.length;
   const plural = (n, s, p) => `${n} ${n === 1 ? s : p}`;
   const aviso = [
-    `Inserir ${plural(novas, 'peça nova', 'peças novas')}?`,
+    `Adicionar ${plural(novas, 'peça nova', 'peças novas')}?`,
     jaExistem ? `${plural(jaExistem, 'já existe', 'já existem')}: só campos vazios serão preenchidos, sem apagar o que vocês editaram.` : '',
-    ignoradas ? `${plural(ignoradas, 'peça foi ignorada', 'peças foram ignoradas')} por não ter cliente cadastrado.` : '',
+    semCliente.size ? `Ignoradas por cliente não encontrado: ${[...semCliente].join(', ')}.` : '',
   ].filter(Boolean).join(' ');
-  if (!(await confirmar(aviso, 'Inserir'))) return;
-  await store.importar({ registros: validas.map((r) => ({ kind: 'conteudo', id: r.id, data: r.data, mesclar: 'preencher' })) });
-  toast(`${plural(novas, 'peça inserida', 'peças inseridas')}`);
+  if (!(await confirmar(aviso, 'Adicionar'))) return;
+  await store.importar({ registros: validas.map((d) => ({ kind: 'conteudo', id: d.id, data: d, mesclar: 'preencher' })) });
+  toast(novas ? `${plural(novas, 'peça adicionada', 'peças adicionadas')}` : 'Nada novo para adicionar');
 }
 
 function cartao(p, mostrarCliente) {
@@ -212,16 +251,16 @@ export default {
   },
 
   montar(el) {
-    el.querySelector('[data-inserir]')?.addEventListener('change', async (ev) => {
+    el.querySelector('[data-lote]')?.addEventListener('change', async (ev) => {
       const f = ev.target.files[0];
       ev.target.value = '';
       if (!f) return;
-      try { await inserirDados(JSON.parse(await f.text())); } catch (err) { toast(err instanceof SyntaxError ? 'Este arquivo não é válido.' : (err.message || 'Não foi possível inserir.'), true); }
+      try { await adicionarEmLote(JSON.parse(await f.text())); } catch (err) { toast(err instanceof SyntaxError ? 'Este arquivo não é válido.' : (err.message || 'Não foi possível adicionar.'), true); }
     });
   },
 
   acoes: {
-    'inserir-dados': () => document.querySelector('[data-inserir]')?.click(),
+    'adicionar-lote': () => document.querySelector('[data-lote]')?.click(),
     'link-aprovacao': async (el) => {
       const c = store.obter('cliente', el.dataset.cliente);
       if (!c) return;

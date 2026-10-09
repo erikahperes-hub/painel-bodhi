@@ -1,6 +1,6 @@
-import { esc, toast, reduzirImagem, urlSegura } from './util.js?v=26';
-import { ic } from './icons.js?v=26';
-import { idDrive, urlAbrir } from './drive.js?v=26';
+import { esc, toast, reduzirImagem, urlSegura } from './util.js?v=27';
+import { ic } from './icons.js?v=27';
+import { idDrive, urlAbrir } from './drive.js?v=27';
 
 let pilha = [];
 

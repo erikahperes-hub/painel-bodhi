@@ -1,8 +1,8 @@
-import { config } from './config.js?v=26';
-import { logo } from './logo.js?v=26';
-import { esc } from './util.js?v=26';
-import { flor } from './icons.js?v=26';
-import { montarFeed } from './instagram.js?v=26';
+import { config } from './config.js?v=27';
+import { logo } from './logo.js?v=27';
+import { esc } from './util.js?v=27';
+import { flor } from './icons.js?v=27';
+import { montarFeed } from './instagram.js?v=27';
 
 // Página pública de aprovação. Não tem login: o código do link (depois do #) identifica o cliente.
 // O banco só entrega as peças desse cliente e só aceita aprovar ou pedir alteração nelas.

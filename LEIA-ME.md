@@ -93,9 +93,13 @@ A aba **Conteúdo** tem duas visões: **Status** (quadro por etapa) e **Calendá
 4. Em Conteúdo, escolha o cliente e use **Prévia do cliente** para ver como ele enxerga, e **Link de aprovação** para copiar o link dele. O link abre sem senha e mostra só as peças daquele cliente. **Gerar novo link** desativa o antigo.
 5. O cliente aprova ou pede alteração no próprio link. A peça muda sozinha para **Aprovado** ou **Ajustes** no painel (o pedido aparece no cartão e no sino).
 
-**Inserir dados automáticos:** em Conteúdo, o botão ao lado de **Nova peça** importa um arquivo de peças (preparado pelo Claude a partir da pasta do Drive e das legendas). Cria só o que ainda não existe e não apaga o que vocês editaram.
+**Adicionar em lote:** em Conteúdo, o botão ao lado de **Nova peça** adiciona várias peças de uma vez a partir de um arquivo `.json` (preparado pelo Claude a partir da pasta do Drive e das legendas). Formato simples, com o cliente pelo **nome**:
 
-**Inserir dados automáticos:** em Conteúdo, o botão ao lado de **Nova peça** importa um arquivo de peças (preparado pelo Claude a partir da pasta do Drive e das legendas). Cria só o que ainda não existe e não apaga o que vocês editaram.
+```json
+{ "pecas": [ { "clienteNome": "TRE Clinic", "titulo": "Reels de teste", "formato": "reels", "publicar": "2026-10-20", "etapa": "aprovacao", "legenda": "Texto da legenda", "capa": "link ou código do arquivo no Drive", "midias": [ { "tipo": "video", "id": "link ou código do arquivo no Drive" } ] } ] }
+```
+
+Formatos: feed, carrossel, reels, story. Etapas: briefing, criacao, aprovacao, ajustes, aprovado, publicado (sem etapa, entra em criacao). Cria só o que ainda não existe, ignora clientes que não estão no painel e não apaga o que vocês editaram. Também aceita o formato de backup.
 
 **Vídeos com player próprio (já ligado):** os vídeos tocam por um Worker gratuito do Cloudflare (`https://bodhi-midia.erikahperes.workers.dev`, conta erikahperes@gmail.com), que busca o arquivo no Drive e entrega com player de verdade, sem faixa preta e sem o botão que abre o Drive. O Worker só atende pedidos vindos de painel.bodhi.marketing. O código está em `cloudflare/worker-midia.js` (legível) e `cloudflare/worker-midia.min.js` (a versão de uma linha que está publicada no Cloudflare, equivalente). O endereço fica em `js/config.js`, campo `midiaProxy`. Se o Worker falhar, a página volta sozinha para o player do Drive. Limite do plano gratuito do Cloudflare: 100 mil pedidos por dia.
 
