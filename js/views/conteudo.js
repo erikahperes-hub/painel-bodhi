@@ -1,12 +1,12 @@
-import { store } from '../store.js?v=64';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=64';
-import { ic, flor } from '../icons.js?v=64';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=64';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=64';
-import { idDrive, urlAbrir } from '../drive.js?v=64';
-import { lerPasta } from '../drive-pasta.js?v=64';
-import { lerTabela } from '../planejamento.js?v=64';
-import { config } from '../config.js?v=64';
+import { store } from '../store.js?v=65';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=65';
+import { ic, flor } from '../icons.js?v=65';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=65';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=65';
+import { idDrive, urlAbrir } from '../drive.js?v=65';
+import { lerPasta } from '../drive-pasta.js?v=65';
+import { lerTabela } from '../planejamento.js?v=65';
+import { config } from '../config.js?v=65';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a peça ser produzida.
@@ -412,10 +412,10 @@ function calendario({ filtro, lista, chipsClientes }) {
       ${pecasDia.map((p) => blocoPeca(p, !filtro)).join('')}</div>`;
   }).join('');
 
-  return `<div class="card">
+  return `<div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>
+  <div class="card">
     <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2><p class="sub">${lista.length} ${lista.length === 1 ? 'peça' : 'peças'} no total. Clique em uma peça para abrir ou arraste para outro dia para mudar a data de publicação.</p></div>
       ${botoesCabecalho(filtro)}</div>
-    <div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>
     <div class="toolbar" style="margin-bottom:12px">
       <div class="mes"><button class="iconbtn" data-act="cal-mes" data-passo="-1" aria-label="Mês anterior"><span style="display:grid;transform:scaleX(-1)">${ic('chev')}</span></button>
         <b>${nomeMes[0].toUpperCase()}${nomeMes.slice(1)} de ${a}</b><button class="iconbtn" data-act="cal-mes" data-passo="1" aria-label="Próximo mês">${ic('chev')}</button>
@@ -480,10 +480,11 @@ export default {
         <div class="card stat tone-coral"><div><div class="lbl">Atrasadas</div><div class="big num">${lista.filter(atrasada).length}</div><div class="hint">Passaram da data de publicação</div></div><span class="stat-ic">${ic('calendar')}</span></div>
       </div>
 
+      <div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>
+
       <div class="card">
         <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2></div>
           ${botoesCabecalho(filtro)}</div>
-        <div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>
         ${lista.length ? `<div class="kanban">${colunas}</div>` : `<div class="empty" style="padding:30px 10px">${flor()}<h2>Nenhuma peça ainda</h2><p>Use “Nova peça” para registrar o primeiro post, carrossel, reels ou story.</p></div>`}
       </div>`;
   },
