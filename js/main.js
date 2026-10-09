@@ -1,22 +1,22 @@
-import { store } from './store.js?v=34';
-import { logo } from './logo.js?v=34';
-import { ic, flor } from './icons.js?v=34';
-import { esc, toast, debounce } from './util.js?v=34';
-import { alertas } from './calc.js?v=34';
-import { buscar, htmlResultados } from './search.js?v=34';
-import { temModal, fecharTopo, formulario } from './ui.js?v=34';
+import { store } from './store.js?v=36';
+import { logo } from './logo.js?v=36';
+import { ic, flor } from './icons.js?v=36';
+import { esc, toast, debounce } from './util.js?v=36';
+import { alertas } from './calc.js?v=36';
+import { buscar, htmlResultados } from './search.js?v=36';
+import { temModal, fecharTopo, formulario } from './ui.js?v=36';
 
-import inicio from './views/inicio.js?v=34';
-import comercial from './views/comercial.js?v=34';
-import clientes from './views/clientes.js?v=34';
-import conteudo from './views/conteudo.js?v=34';
-import previa from './views/previa.js?v=34';
-import propostas from './views/propostas.js?v=34';
-import contratos from './views/contratos.js?v=34';
-import financeiro from './views/financeiro.js?v=34';
-import processo from './views/processo.js?v=34';
-import prospeccao from './views/prospeccao.js?v=34';
-import configuracoes from './views/configuracoes.js?v=34';
+import inicio from './views/inicio.js?v=36';
+import comercial from './views/comercial.js?v=36';
+import clientes from './views/clientes.js?v=36';
+import conteudo from './views/conteudo.js?v=36';
+import previa from './views/previa.js?v=36';
+import propostas from './views/propostas.js?v=36';
+import contratos from './views/contratos.js?v=36';
+import financeiro from './views/financeiro.js?v=36';
+import processo from './views/processo.js?v=36';
+import prospeccao from './views/prospeccao.js?v=36';
+import configuracoes from './views/configuracoes.js?v=36';
 
 const VIEWS = { inicio, comercial, clientes, conteudo, previa, propostas, contratos, financeiro, processo, prospeccao, configuracoes };
 const NAV = [
@@ -38,8 +38,8 @@ function lerRota() {
 function telaLogin() {
   app.innerHTML = `<div class="login"><div class="login-art" role="img" aria-label="Padrão xadrez ondulado da Bôdhi"></div>
     <form class="login-box" novalidate>${logo('verde', '#FFFCF6')}
-      <div class="field"><label for="le">E-mail</label><input id="le" type="email" autocomplete="username" required></div>
-      <div class="field"><label for="ls">Senha</label><input id="ls" type="password" autocomplete="current-password" required></div>
+      <div class="field"><label for="le">E-mail</label><input id="le" type="email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" required></div>
+      <div class="field"><label for="ls">Senha</label><div class="pw"><input id="ls" type="password" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" required><button class="pw-ver" type="button" data-ver aria-label="Mostrar senha">Mostrar</button></div></div>
       <div class="err-msg" role="alert" hidden></div>
       <button class="btn pri" type="submit" style="width:100%;padding:15px">Entrar</button>
       <button class="btn ghost" type="button" data-esqueci style="margin-top:10px;align-self:flex-start">Esqueci minha senha</button>
@@ -55,12 +55,55 @@ function telaLogin() {
     try { await store.entrar(form.le.value.trim(), form.ls.value); abrirApp(); }
     catch (err) { mostrar(err.message); btn.disabled = false; btn.textContent = 'Entrar'; }
   });
+  form.querySelector('[data-ver]').addEventListener('click', (ev) => {
+    const campo = form.ls;
+    const mostrando = campo.type === 'text';
+    campo.type = mostrando ? 'password' : 'text';
+    ev.currentTarget.textContent = mostrando ? 'Mostrar' : 'Ocultar';
+    ev.currentTarget.setAttribute('aria-label', mostrando ? 'Mostrar senha' : 'Ocultar senha');
+  });
   form.querySelector('[data-esqueci]').addEventListener('click', async () => {
     const email = form.le.value.trim();
     if (!email) return mostrar('Digite seu e-mail acima e clique de novo.');
     try { await store.recuperarSenha(email); mostrar(''); toast('Enviamos um e-mail para você redefinir a senha'); } catch (err) { mostrar(err.message); }
   });
   form.le.focus();
+}
+
+function telaNovaSenha() {
+  app.innerHTML = `<div class="login"><div class="login-art" role="img" aria-label="Padrão xadrez ondulado da Bôdhi"></div>
+    <form class="login-box" novalidate>${logo('verde', '#FFFCF6')}
+      <h1 style="font:700 26px var(--display);margin-bottom:6px">Criar nova senha</h1>
+      <p style="color:var(--ink-2);margin-bottom:18px">Escolha uma senha com pelo menos 8 caracteres.</p>
+      <div class="field"><label for="n1">Nova senha</label><div class="pw"><input id="n1" type="password" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" required><button class="pw-ver" type="button" data-ver aria-label="Mostrar senha">Mostrar</button></div></div>
+      <div class="field"><label for="n2">Repita a nova senha</label><input id="n2" type="password" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" required></div>
+      <div class="err-msg" role="alert" hidden></div>
+      <button class="btn pri" type="submit" style="width:100%;padding:15px">Salvar nova senha</button>
+    </form></div>`;
+  const form = app.querySelector('form');
+  const erro = app.querySelector('.err-msg');
+  const mostrar = (t) => { erro.textContent = t; erro.hidden = !t; };
+  form.querySelector('[data-ver]').addEventListener('click', (ev) => {
+    const mostrando = form.n1.type === 'text';
+    form.n1.type = form.n2.type = mostrando ? 'password' : 'text';
+    ev.currentTarget.textContent = mostrando ? 'Mostrar' : 'Ocultar';
+  });
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    mostrar('');
+    if (form.n1.value.length < 8) return mostrar('Use pelo menos 8 caracteres.');
+    if (form.n1.value !== form.n2.value) return mostrar('As duas senhas precisam ser iguais.');
+    const btn = form.querySelector('[type=submit]');
+    btn.disabled = true; btn.textContent = 'Salvando…';
+    try {
+      await store.definirSenha(form.n1.value);
+      history.replaceState(null, '', location.pathname + location.search + '#/inicio');
+      toast('Senha trocada com sucesso');
+      await store.recarregar(true);
+      abrirApp();
+    } catch (err) { mostrar(err.message); btn.disabled = false; btn.textContent = 'Salvar nova senha'; }
+  });
+  form.n1.focus();
 }
 
 function telaConfigurar() {
@@ -227,6 +270,7 @@ window.addEventListener('hashchange', () => { if (document.getElementById('view'
   try {
     const estado = await store.iniciar();
     if (estado === 'login') return telaLogin();
+    if (estado === 'nova-senha') return telaNovaSenha();
     if (estado === 'configurar') return telaConfigurar();
     abrirApp();
   } catch (err) {

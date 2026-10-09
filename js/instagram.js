@@ -1,7 +1,7 @@
-import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=34';
-import { ic } from './icons.js?v=34';
-import { urlImagem, urlPlayer } from './drive.js?v=34';
-import { config } from './config.js?v=34';
+import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=36';
+import { ic } from './icons.js?v=36';
+import { urlImagem, urlPlayer } from './drive.js?v=36';
+import { config } from './config.js?v=36';
 
 // Visual de Instagram usado na prévia do painel e na página de aprovação do cliente.
 // Recebe os dados prontos, então funciona com ou sem login.
@@ -26,6 +26,7 @@ const PLANO_ST = {
   ajustes: ['warn', 'Alteração pedida'],
   aprovado: ['ok', 'Aprovado'],
 };
+const FUNIL_CLIENTE = { topo: ['cor-info', 'Topo de funil'], meio: ['cor-creme', 'Meio de funil'], fundo: ['cor-ok', 'Fundo de funil'] };
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const isoDia = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const ehVideo = (m) => m.tipo === 'video';
@@ -137,7 +138,7 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
     }
     const r = String(p.roteiro || '').trim();
     return `<article class="ig-pl" data-ig-pl="${id}">
-      <div class="ig-pl-h">${quando}<span class="chip info">${esc(f.nome)}</span><span class="chip cor-${st[0]}">${esc(st[1])}</span></div>
+      <div class="ig-pl-h">${quando}<span class="chip info">${esc(f.nome)}</span>${FUNIL_CLIENTE[p.funil] ? `<span class="chip ${FUNIL_CLIENTE[p.funil][0]}">${FUNIL_CLIENTE[p.funil][1]}</span>` : ''}<span class="chip cor-${st[0]}">${esc(st[1])}</span></div>
       <h4>${esc(p.titulo || 'Peça')}</h4>
       ${r ? `<details class="ig-det"${r.length <= 420 ? ' open' : ''}><summary>Ideia e roteiro</summary><div class="ig-pl-r">${texto(r)}</div></details>` : '<p class="lbl">Ainda sem roteiro escrito.</p>'}
       ${p.planejamento === 'ajustes' && p.ajustePlano ? `<p class="ig-msg warn">Você pediu: “${esc(p.ajustePlano)}”</p>` : ''}

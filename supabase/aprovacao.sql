@@ -6,7 +6,7 @@
 -- * O cliente entra por um link com um código longo (tabela aprovacao_links). Sem esse código, nada abre.
 -- * O cliente usa só duas funções: ver as peças DELE e responder (aprovar ou pedir alteração) nelas.
 --   As funções entregam apenas os campos que o cliente precisa (nada de briefing, valores ou dados de outros clientes).
--- * O roteiro (campo interno) só é entregue ao cliente nas peças que a Bôdhi enviou para aprovação do planejamento.
+-- * O roteiro e a etapa do funil (campos internos) só são entregues ao cliente nas peças que a Bôdhi enviou para aprovação do planejamento.
 
 create table if not exists public.aprovacao_links (
   token       text primary key,
@@ -48,7 +48,8 @@ begin
       'ajuste', r.data->>'ajuste',
       'planejamento', case when r.data->>'planejamento' in ('aprovacao', 'ajustes', 'aprovado') then r.data->>'planejamento' else null end,
       'ajustePlano', case when r.data->>'planejamento' in ('aprovacao', 'ajustes', 'aprovado') then r.data->>'ajustePlano' else null end,
-      'roteiro', case when r.data->>'planejamento' in ('aprovacao', 'ajustes', 'aprovado') then r.data->>'roteiro' else null end
+      'roteiro', case when r.data->>'planejamento' in ('aprovacao', 'ajustes', 'aprovado') then r.data->>'roteiro' else null end,
+      'funil', case when r.data->>'planejamento' in ('aprovacao', 'ajustes', 'aprovado') then r.data->>'funil' else null end
     ) order by r.data->>'publicar' nulls last), '[]'::jsonb)
   into v_pecas
   from records r

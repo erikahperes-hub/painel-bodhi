@@ -82,6 +82,10 @@ No painel: **Configurações > Restaurar de um backup** e escolha o arquivo `see
 
 A aba **Processo** (ícone de fluxo na lateral) guarda o passo a passo da Bôdhi Marketing, começando por “Fechei uma estratégia, e agora?”. Use **Editar** para mudar etapas e passos e **Novo processo** para documentar outros fluxos.
 
+## Entrar no painel
+
+Os logins são **erika@bodhi.marketing** e **milena@bodhi.marketing** (o e-mail de login não é o Gmail). Se a senha for recusada no celular, toque em **Mostrar** para conferir o que foi digitado: o painel já desliga a maiúscula automática e tenta sozinho tirar espaços que o teclado do celular deixa sobrando. **Esqueci minha senha** manda um e-mail com um link que abre a tela **Criar nova senha**.
+
 ## Conteúdo e aprovação do cliente
 
 A aba **Conteúdo** tem duas visões: **Status** (quadro por etapa) e **Calendário** (mês com as peças nas datas de publicação). No computador, **arraste os cartões entre as colunas** para mudar a etapa (ao soltar em Ajustes, a peça abre para anotar o pedido) e, no Calendário, **arraste uma peça para outro dia** para mudar a data de publicação. No celular valem os botões de cada cartão.
@@ -100,6 +104,8 @@ A aba **Conteúdo** tem duas visões: **Status** (quadro por etapa) e **Calendá
 ```
 
 **Aprovação do planejamento pelo cliente (opcional):** para clientes que querem aprovar as ideias antes da produção, em Conteúdo escolha o cliente e clique em **Enviar planejamento**: todas as ideias que estão no Briefing vão para a aba **Planejamento** do link dele (dia, formato, título e o texto de "Ideia e roteiro"). Ele aprova uma a uma, pede alteração ou aprova o mês todo. No painel a peça mostra "Plano enviado", "Plano aprovado" ou "Plano: ajuste", e o pedido do cliente aparece no cartão e no sino. Atenção: o texto de **Ideia e roteiro** fica visível para o cliente nas peças enviadas; anotações internas vão em "Briefing e observações internas". Exige rodar a versão 2 do arquivo supabase/aprovacao.sql no Supabase.
+
+**Etapa do funil:** cada peça tem a **Etapa do funil** (topo, meio ou fundo), que aparece como etiqueta no cartão e num resumo "Topo 3, Meio 4, Fundo 2" acima do quadro. Nas peças enviadas para aprovação do planejamento, o cliente também vê a etapa.
 
 **Planejamento primeiro, produção depois:** a peça tem o campo **Ideia e roteiro** (só interno). Dá para adicionar só o planejamento (data, formato, título, roteiro, etapa briefing) e, depois, adicionar outro lote com os arquivos e a legenda: o painel liga à peça do planejamento pela mesma data e formato (ou pelo título), completa só o que estava vazio e tira a peça do Briefing. Os cartões mostram "Roteiro", "Sem arte" e "Sem legenda".
 

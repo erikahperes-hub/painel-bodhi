@@ -1,12 +1,23 @@
-import { store } from '../store.js?v=34';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=34';
-import { ic, flor } from '../icons.js?v=34';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=34';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=34';
-import { idDrive, urlAbrir } from '../drive.js?v=34';
+import { store } from '../store.js?v=36';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=36';
+import { ic, flor } from '../icons.js?v=36';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=36';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=36';
+import { idDrive, urlAbrir } from '../drive.js?v=36';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a peça ser produzida.
+// Etapa do funil de cada peça: topo (atrair), meio (considerar) e fundo (converter).
+const FUNIL = { '': 'Sem etapa de funil', topo: 'Topo de funil', meio: 'Meio de funil', fundo: 'Fundo de funil' };
+const FUNIL_COR = { topo: 'cor-info', meio: 'cor-creme', fundo: 'cor-ok' };
+const funilChip = (p) => (FUNIL_COR[p.funil] ? `<span class="chip ${FUNIL_COR[p.funil]}">${FUNIL[p.funil]}</span>` : '');
+// Resumo "Topo 3 · Meio 4 · Fundo 2" do que está na tela, para ver se o mix está equilibrado.
+function resumoFunil(lista) {
+  const n = (k) => lista.filter((p) => p.funil === k).length;
+  const sem = lista.filter((p) => !FUNIL_COR[p.funil]).length;
+  if (n('topo') + n('meio') + n('fundo') === 0) return '';
+  return `<div class="legenda" style="margin:-4px 0 14px" title="Quantas peças há em cada etapa do funil">${['topo', 'meio', 'fundo'].map((k) => `<span class="chip ${FUNIL_COR[k]}">${FUNIL[k].replace(' de funil', '')} ${n(k)}</span>`).join('')}${sem ? `<span class="chip cor-mute">Sem funil ${sem}</span>` : ''}</div>`;
+}
 const PLANO = { '': 'Não enviado ao cliente', aprovacao: 'Aguardando aprovação do cliente', ajustes: 'Alteração pedida pelo cliente', aprovado: 'Aprovado pelo cliente' };
 const PLANO_CHIP = { aprovacao: ['info', 'Plano enviado'], ajustes: ['warn', 'Plano: ajuste'], aprovado: ['ok', 'Plano aprovado'] };
 const PUBLICADAS_VISIVEIS = 10;
@@ -37,6 +48,7 @@ function abrirPeca(p = null, padrao = {}) {
       { nome: 'clienteId', rotulo: 'Cliente', tipo: 'select', obrigatorio: true, opcoes: [{ v: '', t: 'Escolha o cliente' }, ...clientes.map((c) => ({ v: c.id, t: c.nome || '(sem nome)' }))] },
       { nome: 'titulo', rotulo: 'Título da peça', obrigatorio: true, placeholder: 'Ex.: Post de lançamento da coleção' },
       { nome: 'formato', rotulo: 'Formato', tipo: 'select', opcoes: Object.entries(FORMATOS).map(([v, f]) => ({ v, t: f.nome })) },
+      { nome: 'funil', rotulo: 'Etapa do funil', tipo: 'select', opcoes: Object.entries(FUNIL).map(([v, t]) => ({ v, t })) },
       { nome: 'etapa', rotulo: 'Etapa', tipo: 'select', opcoes: ETAPAS.map((e) => ({ v: e.id, t: e.nome })) },
       { nome: 'publicar', rotulo: 'Data de publicação', tipo: 'data' },
       { nome: 'responsavel', rotulo: 'Responsável', tipo: 'select', opcoes: [{ v: '', t: 'Sem responsável' }, ...RESPONSAVEIS.map((r) => ({ v: r, t: r }))] },
@@ -132,6 +144,7 @@ async function adicionarEmLote(arquivo) {
       etapa: etapaExplicita ? p.etapa : 'criacao',
       publicar,
       roteiro: String(p.roteiro || ''),
+      funil: ['topo', 'meio', 'fundo'].includes(p.funil) ? p.funil : '',
       planejamento: ['aprovacao', 'ajustes', 'aprovado'].includes(p.planejamento) ? p.planejamento : '',
       ajustePlano: String(p.ajustePlano || ''),
       legenda: String(p.legenda || ''),
@@ -244,7 +257,7 @@ function cartao(p, mostrarCliente) {
   const atras = atrasada(p);
   const botoes = (PROXIMOS[p.etapa] || []).map(([para, texto, estilo]) => `<button class="btn ${estilo || 'sec'} sm" data-act="mover-peca" data-id="${p.id}" data-para="${para}">${esc(texto)}</button>`).join('');
   return `<div class="peca" draggable="true" data-peca="${p.id}">
-    <div class="actions" style="gap:6px"><span class="chip info">${ic(f.icone)}${esc(f.nome)}</span>${atras ? '<span class="chip warn">Atrasada</span>' : ''}${p.link && urlSegura(p.link) ? `<a class="chip mute" href="${esc(urlSegura(p.link))}" target="_blank" rel="noopener noreferrer" title="Abrir a arte">${ic('file')}Arte</a>` : ''}</div>
+    <div class="actions" style="gap:6px"><span class="chip info">${ic(f.icone)}${esc(f.nome)}</span>${funilChip(p)}${atras ? '<span class="chip warn">Atrasada</span>' : ''}${p.link && urlSegura(p.link) ? `<a class="chip mute" href="${esc(urlSegura(p.link))}" target="_blank" rel="noopener noreferrer" title="Abrir a arte">${ic('file')}Arte</a>` : ''}</div>
     <button class="peca-t" data-act="editar-peca" data-id="${p.id}">${esc(p.titulo || '(sem título)')}</button>
     <div class="peca-m">${esc(meta)}</div>
     ${faltas(p)}
@@ -293,7 +306,7 @@ function calendario({ filtro, lista, chipsClientes }) {
   return `<div class="card">
     <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2><p class="sub">Cada peça aparece no dia da publicação. Clique em uma peça para abrir ou no + de um dia para criar.</p></div>
       ${botoesCabecalho(filtro)}</div>
-    <div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>
+    <div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>${resumoFunil(lista)}
     <div class="toolbar" style="margin-bottom:12px">
       <div class="mes"><button class="iconbtn" data-act="cal-mes" data-passo="-1" aria-label="Mês anterior"><span style="display:grid;transform:scaleX(-1)">${ic('chev')}</span></button>
         <b>${nomeMes[0].toUpperCase()}${nomeMes.slice(1)} de ${a}</b><button class="iconbtn" data-act="cal-mes" data-passo="1" aria-label="Próximo mês">${ic('chev')}</button>
@@ -358,7 +371,7 @@ export default {
       <div class="card">
         <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2><p class="sub">${lista.length} ${lista.length === 1 ? 'peça' : 'peças'} no total</p></div>
           ${botoesCabecalho(filtro)}</div>
-        <div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>
+        <div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>${resumoFunil(lista)}
         ${lista.length ? `<div class="kanban">${colunas}</div>` : `<div class="empty" style="padding:30px 10px">${flor()}<h2>Nenhuma peça ainda</h2><p>Use “Nova peça” para registrar o primeiro post, carrossel, reels ou story.</p></div>`}
       </div>`;
   },

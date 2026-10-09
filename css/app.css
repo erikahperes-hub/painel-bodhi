@@ -461,6 +461,10 @@ a.chip{text-decoration:none}
 .login-box h1{font:700 34px/1.15 var(--display);margin-bottom:8px}
 .login-box p{color:var(--ink-2);margin-bottom:26px}
 .login-box .field{margin-bottom:14px}
+.pw{position:relative}
+.pw input{padding-right:92px}
+.pw-ver{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--petroleo);font:700 13px var(--ui);padding:10px 12px;cursor:pointer;border-radius:99px}
+.pw-ver:hover{background:var(--graf-s)}
 .err-msg{color:var(--coral-ink);font:700 13.5px var(--ui);margin:4px 0 12px}
 .setup{max-width:720px;margin:8vh auto;padding:0 20px}
 .setup .card{padding:34px}

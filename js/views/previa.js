@@ -1,7 +1,7 @@
-import { store } from '../store.js?v=34';
-import { esc } from '../util.js?v=34';
-import { ic, flor } from '../icons.js?v=34';
-import { montarFeed, ETAPAS_CLIENTE } from '../instagram.js?v=34';
+import { store } from '../store.js?v=36';
+import { esc } from '../util.js?v=36';
+import { ic, flor } from '../icons.js?v=36';
+import { montarFeed, ETAPAS_CLIENTE } from '../instagram.js?v=36';
 
 export default {
   titulo: () => 'Prévia do cliente',
@@ -26,7 +26,7 @@ export default {
     const noPlano = (p) => ['aprovacao', 'ajustes', 'aprovado'].includes(p.planejamento);
     const pecas = store.todos('conteudo')
       .filter((p) => p.clienteId === c.id && (ETAPAS_CLIENTE.includes(p.etapa) || noPlano(p)))
-      .map((p) => (noPlano(p) ? p : { ...p, roteiro: '', planejamento: '', ajustePlano: '' }));
+      .map((p) => (noPlano(p) ? p : { ...p, roteiro: '', planejamento: '', ajustePlano: '', funil: '' }));
     montarFeed(alvo, { cliente: c, pecas, previa: true });
   },
 };

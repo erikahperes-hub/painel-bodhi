@@ -1,5 +1,5 @@
-import { config } from './config.js?v=34';
-import { uid } from './util.js?v=34';
+import { config } from './config.js?v=36';
+import { uid } from './util.js?v=36';
 
 const KINDS = ['cliente', 'proposta', 'contrato', 'pendencia', 'lancamento', 'processo', 'conteudo', 'config'];
 const LS_KEY = 'bodhi.painel.v1';
@@ -28,7 +28,7 @@ function erroLogin(error) {
   const msg = String(error?.message || '');
   const cod = String(error?.code || '');
   const tec = ` (${[error?.status, cod, msg].filter(Boolean).join(', ').slice(0, 120)})`;
-  if (/invalid login|invalid_credentials/i.test(msg + cod)) return 'E-mail ou senha incorretos.';
+  if (/invalid login|invalid_credentials/i.test(msg + cod)) return 'E-mail ou senha incorretos. Toque em “Mostrar” para conferir a senha, ou use “Esqueci minha senha”.';
   if (/not confirmed|email_not_confirmed/i.test(msg + cod)) return 'Este e-mail ainda não foi confirmado. Abra o e-mail de confirmação do Supabase e clique no link.' + tec;
   if (/rate limit|too many|over_request_rate_limit|429/i.test(msg + cod + error?.status)) return 'Muitas tentativas seguidas. Espere alguns minutos e tente de novo.' + tec;
   if (/fetch|network|failed|load failed/i.test(msg)) return 'Sem conexão com o servidor agora. Confira a internet e tente de novo.' + tec;
@@ -89,12 +89,15 @@ export const store = {
 
   async iniciar() {
     if (this.modo === 'supabase') {
+      // O link do e-mail de “Esqueci minha senha” chega com type=recovery no endereço; guardamos antes de o Supabase limpar.
+      this.recuperando = /[#&?]type=recovery/.test(location.hash + location.search);
       const { createClient } = await import(SB_CDN);
       sb = createClient(config.supabaseUrl, config.supabaseKey, { auth: { persistSession: true, autoRefreshToken: true } });
       const { data } = await sb.auth.getSession();
       this.usuario = data.session?.user || null;
       sb.auth.onAuthStateChange((_e, sess) => { this.usuario = sess?.user || null; });
       if (!this.usuario) return 'login';
+      if (this.recuperando) return 'nova-senha';
       await this.recarregar(true);
       document.addEventListener('visibilitychange', () => { if (!document.hidden) this.recarregar(); });
       return 'pronto';
@@ -112,12 +115,39 @@ export const store = {
   },
 
   async entrar(email, senha) {
-    const { error } = await sb.auth.signInWithPassword({ email, password: senha });
-    if (error) throw new Error(erroLogin(error));
+    // Teclados de celular costumam pôr maiúscula no começo do e-mail ou deixar um espaço no fim da senha.
+    // Se o primeiro envio for recusado por "senha incorreta", tentamos essas variações antes de desistir.
+    const emailLimpo = String(email || '').trim();
+    const tentativas = [[emailLimpo, senha]];
+    const minusculo = emailLimpo.toLowerCase();
+    const senhaSemEspacoFinal = String(senha || '').replace(/\s+$/, '');
+    if (minusculo !== emailLimpo) tentativas.push([minusculo, senha]);
+    if (senhaSemEspacoFinal !== senha) {
+      tentativas.push([emailLimpo, senhaSemEspacoFinal]);
+      if (minusculo !== emailLimpo) tentativas.push([minusculo, senhaSemEspacoFinal]);
+    }
+    let falha = null;
+    for (const [e, p] of tentativas) {
+      const { error } = await sb.auth.signInWithPassword({ email: e, password: p });
+      if (!error) { falha = null; break; }
+      falha = error;
+      if (!/invalid login|invalid_credentials/i.test(String(error.message || '') + String(error.code || ''))) break;
+    }
+    if (falha) throw new Error(erroLogin(falha));
     const { data } = await sb.auth.getUser();
     this.usuario = data.user;
     await this.recarregar(true);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) this.recarregar(); });
+  },
+
+  async definirSenha(nova) {
+    if (!sb) throw new Error('Não foi possível trocar a senha agora.');
+    const { error } = await sb.auth.updateUser({ password: nova });
+    if (error) {
+      console.error('Erro ao trocar a senha', error);
+      throw new Error(/same|different/i.test(String(error.message)) ? 'A nova senha precisa ser diferente da anterior.' : /weak|short|least/i.test(String(error.message)) ? 'A senha é fraca ou curta demais. Use pelo menos 8 caracteres.' : 'Não foi possível trocar a senha agora. Peça um novo link em “Esqueci minha senha”.');
+    }
+    this.recuperando = false;
   },
 
   async recuperarSenha(email) {
