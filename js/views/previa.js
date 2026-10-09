@@ -1,7 +1,7 @@
-import { store } from '../store.js?v=32';
-import { esc } from '../util.js?v=32';
-import { ic, flor } from '../icons.js?v=32';
-import { montarFeed, ETAPAS_CLIENTE } from '../instagram.js?v=32';
+import { store } from '../store.js?v=33';
+import { esc } from '../util.js?v=33';
+import { ic, flor } from '../icons.js?v=33';
+import { montarFeed, ETAPAS_CLIENTE } from '../instagram.js?v=33';
 
 export default {
   titulo: () => 'Prévia do cliente',
@@ -21,7 +21,12 @@ export default {
     const alvo = el.querySelector('#ig-previa');
     const c = alvo && store.obter('cliente', alvo.dataset.cliente);
     if (!c) return;
-    const pecas = store.todos('conteudo').filter((p) => p.clienteId === c.id && ETAPAS_CLIENTE.includes(p.etapa));
+    // Igual ao que o banco entrega ao cliente: peças enviadas para aprovação do conteúdo ou do planejamento.
+    // O roteiro (interno) só vai nas peças enviadas para aprovação do planejamento.
+    const noPlano = (p) => ['aprovacao', 'ajustes', 'aprovado'].includes(p.planejamento);
+    const pecas = store.todos('conteudo')
+      .filter((p) => p.clienteId === c.id && (ETAPAS_CLIENTE.includes(p.etapa) || noPlano(p)))
+      .map((p) => (noPlano(p) ? p : { ...p, roteiro: '', planejamento: '', ajustePlano: '' }));
     montarFeed(alvo, { cliente: c, pecas, previa: true });
   },
 };

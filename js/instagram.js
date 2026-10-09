@@ -1,7 +1,7 @@
-import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=32';
-import { ic } from './icons.js?v=32';
-import { urlImagem, urlPlayer } from './drive.js?v=32';
-import { config } from './config.js?v=32';
+import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=33';
+import { ic } from './icons.js?v=33';
+import { urlImagem, urlPlayer } from './drive.js?v=33';
+import { config } from './config.js?v=33';
 
 // Visual de Instagram usado na prévia do painel e na página de aprovação do cliente.
 // Recebe os dados prontos, então funciona com ou sem login.
@@ -20,6 +20,11 @@ const STATUS = {
   ajustes: ['warn', 'Alteração pedida'],
   aprovado: ['ok', 'Aprovado'],
   publicado: ['mute', 'Publicado'],
+};
+const PLANO_ST = {
+  aprovacao: ['creme', 'Aguardando sua aprovação'],
+  ajustes: ['warn', 'Alteração pedida'],
+  aprovado: ['ok', 'Aprovado'],
 };
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const isoDia = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -48,18 +53,23 @@ const rotuloMes = (ym) => { const [a, m] = ym.split('-').map(Number); const n = 
 const porDataAsc = (l) => [...l].sort((a, b) => String(a.publicar || '9').localeCompare(String(b.publicar || '9')));
 
 export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = false }) {
-  const lista = pecas.map((p) => ({ ...p }));
+  const todas = pecas.map((p) => ({ ...p }));
+  // Feed, stories e calendário mostram só o que já foi enviado para aprovação do conteúdo.
+  // A aba Planejamento mostra as ideias que a Bôdhi enviou para aprovar antes da produção.
+  const lista = todas.filter((p) => ETAPAS_CLIENTE.includes(p.etapa));
+  const plano = todas.filter((p) => PLANO_ST[p.planejamento]);
   const handle = String(cliente.instagram || '').replace(/^@/, '').trim() || String(cliente.nome || '').trim();
   const avatar = (grande = false) => `<span class="ig-av${grande ? ' lg' : ''}">${cliente.imagem ? `<img src="${esc(cliente.imagem)}" alt="">` : esc(iniciais(cliente.nome))}</span>`;
   let overlay = null;
 
   // Abre no mês da primeira peça que ainda espera aprovação; se não houver, no mês mais recente com peças.
   function mesInicial() {
-    const pend = porDataAsc(lista.filter((p) => p.etapa === 'aprovacao' && p.publicar))[0];
-    const ultimo = porDataAsc(lista.filter((p) => p.publicar)).pop();
+    const pend = porDataAsc(lista.filter((p) => p.etapa === 'aprovacao' && p.publicar))[0] || porDataAsc(plano.filter((p) => p.planejamento === 'aprovacao' && p.publicar))[0];
+    const ultimo = porDataAsc([...lista, ...plano].filter((p) => p.publicar)).pop();
     return (pend || ultimo)?.publicar.slice(0, 7) || hojeISO().slice(0, 7);
   }
-  const estado = { aba: 'feed', mes: mesInicial(), aberta: null };
+  const planoPendente = plano.some((p) => p.planejamento === 'aprovacao');
+  const estado = { aba: planoPendente && !lista.some((p) => p.etapa === 'aprovacao') ? 'plano' : (plano.length && !lista.length ? 'plano' : 'feed'), mes: mesInicial(), aberta: null };
 
   function tile(p, { pequeno = false, num = '', passivo = false } = {}) {
     const tag = passivo ? 'span' : 'button';
@@ -77,13 +87,14 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
   function cabecalho() {
     const doMesLista = lista.filter((p) => doMes(p, estado.mes));
     const aguardando = doMesLista.filter((p) => p.etapa === 'aprovacao').length;
+    const ideiasPend = plano.filter((p) => doMes(p, estado.mes) && p.planejamento === 'aprovacao').length;
     return `<div class="ig-perfil">${avatar(true)}<div>
         <h2>${esc(cliente.nome)}</h2>${cliente.instagram ? `<p class="ig-h">@${esc(handle)}</p>` : ''}
-        <p class="lbl">${doMesLista.length} ${doMesLista.length === 1 ? 'publicação' : 'publicações'} em ${esc(rotuloMes(estado.mes).split(' ')[0].toLowerCase())}${aguardando ? ` · <b>${aguardando} aguardando sua aprovação</b>` : ''}</p></div></div>
+        <p class="lbl">${doMesLista.length} ${doMesLista.length === 1 ? 'publicação' : 'publicações'} em ${esc(rotuloMes(estado.mes).split(' ')[0].toLowerCase())}${aguardando ? ` · <b>${aguardando} aguardando sua aprovação</b>` : ''}${ideiasPend ? ` · <b>${ideiasPend} ${ideiasPend === 1 ? 'ideia aguardando' : 'ideias aguardando'} sua aprovação</b>` : ''}</p></div></div>
       <div class="ig-mes"><button class="iconbtn" data-ig-mes="-1" aria-label="Mês anterior"><span style="display:grid;transform:scaleX(-1)">${ic('chev')}</span></button>
         <h3>${esc(rotuloMes(estado.mes))}</h3>
         <button class="iconbtn" data-ig-mes="1" aria-label="Próximo mês">${ic('chev')}</button></div>
-      <p class="ig-dica">Toque em qualquer post para ver o conteúdo completo. Carrosséis deslizam e reels tocam o vídeo. Tudo como vai ao ar.</p>`;
+      <p class="ig-dica">${estado.aba === 'plano' ? 'Confira a ideia e o roteiro de cada dia. Aprove ou peça alteração antes de a gente começar a produzir.' : 'Toque em qualquer post para ver o conteúdo completo. Carrosséis deslizam e reels tocam o vídeo. Tudo como vai ao ar.'}</p>`;
   }
 
   function grade(itens, stories = false) {
@@ -114,17 +125,90 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
       ${linhas ? `<h4 class="ig-sub">Calendário do mês</h4><div class="ig-lista">${linhas}</div>` : '<div class="ig-nada"><p>Nenhuma publicação neste mês.</p></div>'}`;
   }
 
+  /* ---------- Planejamento (ideias antes da produção) ---------- */
+  function cardPlano(p) {
+    const st = PLANO_ST[p.planejamento];
+    const f = fmt(p);
+    const id = esc(p.id);
+    let quando = '<span class="ig-pl-d"><b>?</b><small>sem data</small></span>';
+    if (p.publicar) {
+      const [a, m, d] = p.publicar.slice(0, 10).split('-').map(Number);
+      quando = `<span class="ig-pl-d"><b>${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}</b><small>${DIAS[new Date(a, m - 1, d).getDay()]}</small></span>`;
+    }
+    const r = String(p.roteiro || '').trim();
+    return `<article class="ig-pl" data-ig-pl="${id}">
+      <div class="ig-pl-h">${quando}<span class="chip info">${esc(f.nome)}</span><span class="chip cor-${st[0]}">${esc(st[1])}</span></div>
+      <h4>${esc(p.titulo || 'Peça')}</h4>
+      ${r ? `<details class="ig-det"${r.length <= 420 ? ' open' : ''}><summary>Ideia e roteiro</summary><div class="ig-pl-r">${texto(r)}</div></details>` : '<p class="lbl">Ainda sem roteiro escrito.</p>'}
+      ${p.planejamento === 'ajustes' && p.ajustePlano ? `<p class="ig-msg warn">Você pediu: “${esc(p.ajustePlano)}”</p>` : ''}
+      <div class="ig-pl-a">
+        ${p.planejamento === 'aprovado' ? '<span class="ig-msg ok" style="margin:0">Você aprovou esta ideia.</span>' : `<button class="btn verde sm" data-ig-pl-aprovar="${id}">${ic('check')}Aprovar</button>`}
+        <button class="btn sec sm" data-ig-pl-ajustar="${id}">${ic('edit')}Pedir alteração</button>
+      </div>
+      <form class="ig-aj" data-ig-pl-form="${id}" hidden><label>O que você gostaria de mudar nesta ideia?</label><textarea rows="3" maxlength="1500" placeholder="Ex.: trocar o tema ou mudar a data"></textarea>
+        <div class="actions"><button class="btn pri sm" type="submit">Enviar pedido</button><button class="btn ghost sm" type="button" data-ig-pl-cancelar>Cancelar</button></div></form>
+      <p class="ig-erro" hidden></p>
+    </article>`;
+  }
+
+  function planoHTML() {
+    const doMesP = porDataAsc(plano.filter((p) => doMes(p, estado.mes)));
+    const semDataP = plano.filter((p) => !p.publicar);
+    const pend = doMesP.filter((p) => p.planejamento === 'aprovacao').length;
+    const topo = `<div class="ig-pl-topo"><span>${doMesP.length} ${doMesP.length === 1 ? 'ideia' : 'ideias'} neste mês${pend ? ` · ${pend} aguardando sua aprovação` : ''}</span>${pend ? `<button class="btn verde sm" data-ig-pl-todas>${ic('check')}Aprovar tudo deste mês</button>` : ''}</div>`;
+    const cards = [...doMesP, ...semDataP].map(cardPlano).join('');
+    return `${topo}<p class="ig-erro" data-ig-pl-erro hidden></p>${cards ? `<div class="ig-pl-lista">${cards}</div>` : '<div class="ig-nada"><p>Nenhuma ideia neste mês. Use as setas para ver outros meses.</p></div>'}`;
+  }
+
+  async function responderPlano(id, acao, comentario = '', agrupado = false) {
+    const p = plano.find((x) => x.id === id);
+    if (!p) return false;
+    const card = raiz.querySelector(`[data-ig-pl="${CSS.escape(id)}"]`);
+    const erroEl = card?.querySelector('.ig-erro');
+    const erroTexto = (t) => { if (erroEl) { erroEl.textContent = t; erroEl.hidden = !t; } };
+    if (!aoResponder) { erroTexto('Na prévia os botões não enviam nada. O cliente os usa na página de aprovação.'); return false; }
+    card?.querySelectorAll('button').forEach((b) => { b.disabled = true; });
+    try {
+      await aoResponder(p, acao, comentario);
+      p.planejamento = acao === 'plano_aprovar' ? 'aprovado' : 'ajustes';
+      if (acao === 'plano_ajustar') p.ajustePlano = comentario;
+      if (!agrupado) desenhar();
+      return true;
+    } catch (err) {
+      card?.querySelectorAll('button').forEach((b) => { b.disabled = false; });
+      erroTexto(err?.message || 'Não foi possível enviar agora. Tente de novo.');
+      return false;
+    }
+  }
+
+  async function aprovarTudoDoMes() {
+    const pend = plano.filter((p) => doMes(p, estado.mes) && p.planejamento === 'aprovacao');
+    if (!pend.length) return;
+    const geral = raiz.querySelector('[data-ig-pl-erro]');
+    if (!aoResponder) { geral.textContent = 'Na prévia os botões não enviam nada. O cliente os usa na página de aprovação.'; geral.hidden = false; return; }
+    if (!window.confirm(`Aprovar as ${pend.length} ${pend.length === 1 ? 'ideia' : 'ideias'} de ${rotuloMes(estado.mes)}?`)) return;
+    const btn = raiz.querySelector('[data-ig-pl-todas]');
+    btn.disabled = true;
+    btn.textContent = 'Aprovando...';
+    let falhas = 0;
+    for (const p of pend) { if (!(await responderPlano(p.id, 'plano_aprovar', '', true))) falhas += 1; }
+    desenhar();
+    if (falhas) { const e = raiz.querySelector('[data-ig-pl-erro]'); if (e) { e.textContent = `${falhas} ${falhas === 1 ? 'ideia não foi aprovada' : 'ideias não foram aprovadas'}. Atualize a página e tente de novo.`; e.hidden = false; } }
+  }
+
   function desenhar() {
     const itensMes = lista.filter((p) => doMes(p, estado.mes));
     const feed = itensMes.filter((p) => !ehStory(p));
     const stories = itensMes.filter(ehStory);
     const semData = lista.filter((p) => !p.publicar);
     const aba = (id, icone, nome, n) => `<button class="tab ${estado.aba === id ? 'on' : ''}" role="tab" aria-selected="${estado.aba === id}" data-ig-aba="${id}">${ic(icone)}${nome}${n === undefined ? '' : ` <small>${n}</small>`}</button>`;
-    const corpo = estado.aba === 'feed' ? grade(feed) : estado.aba === 'stories' ? grade(stories, true) : calendario(itensMes);
+    if (estado.aba === 'plano' && !plano.length) estado.aba = 'feed';
+    const corpo = estado.aba === 'plano' ? planoHTML() : estado.aba === 'feed' ? grade(feed) : estado.aba === 'stories' ? grade(stories, true) : calendario(itensMes);
+    const ideiasPendTotal = plano.filter((p) => p.planejamento === 'aprovacao').length;
     raiz.innerHTML = `<div class="ig">${cabecalho()}
-      <div class="tabs" role="tablist" style="margin:16px 0 14px">${aba('feed', 'grid', 'Feed', feed.length)}${aba('stories', 'circle', 'Stories', stories.length)}${aba('calendario', 'calendar', 'Calendário')}</div>
+      <div class="tabs" role="tablist" style="margin:16px 0 14px">${plano.length ? aba('plano', 'doc', 'Planejamento', ideiasPendTotal || undefined) : ''}${aba('feed', 'grid', 'Feed', feed.length)}${aba('stories', 'circle', 'Stories', stories.length)}${aba('calendario', 'calendar', 'Calendário')}</div>
       ${corpo}
-      ${semData.length && estado.aba !== 'calendario' ? `<h4 class="ig-sub">Sem data definida</h4><div class="ig-grade">${semData.map((p) => tile(p)).join('')}</div>` : ''}</div>`;
+      ${semData.length && (estado.aba === 'feed' || estado.aba === 'stories') ? `<h4 class="ig-sub">Sem data definida</h4><div class="ig-grade">${semData.map((p) => tile(p)).join('')}</div>` : ''}</div>`;
   }
 
   /* ---------- Post aberto ---------- */
@@ -274,7 +358,22 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
   }
 
   raiz.addEventListener('error', retentar, true);
+  raiz.addEventListener('submit', (e) => {
+    const f = e.target.closest('[data-ig-pl-form]');
+    if (!f) return;
+    e.preventDefault();
+    const t = f.querySelector('textarea').value.trim();
+    const erroEl = f.closest('[data-ig-pl]')?.querySelector('.ig-erro');
+    if (!t) { if (erroEl) { erroEl.textContent = 'Escreva o que você gostaria de mudar.'; erroEl.hidden = false; } return; }
+    responderPlano(f.dataset.igPlForm, 'plano_ajustar', t);
+  });
   raiz.addEventListener('click', (e) => {
+    const plAprovar = e.target.closest('[data-ig-pl-aprovar]');
+    if (plAprovar) return void responderPlano(plAprovar.dataset.igPlAprovar, 'plano_aprovar');
+    const plAjustar = e.target.closest('[data-ig-pl-ajustar]');
+    if (plAjustar) { const f = raiz.querySelector(`[data-ig-pl-form="${CSS.escape(plAjustar.dataset.igPlAjustar)}"]`); f.hidden = false; f.querySelector('textarea').focus(); return; }
+    if (e.target.closest('[data-ig-pl-cancelar]')) { e.target.closest('[data-ig-pl-form]').hidden = true; return; }
+    if (e.target.closest('[data-ig-pl-todas]')) return void aprovarTudoDoMes();
     const abrirBtn = e.target.closest('[data-ig-abrir]');
     if (abrirBtn) return abrir(abrirBtn.dataset.igAbrir);
     const aba = e.target.closest('[data-ig-aba]');

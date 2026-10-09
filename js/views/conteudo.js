@@ -1,11 +1,14 @@
-import { store } from '../store.js?v=32';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=32';
-import { ic, flor } from '../icons.js?v=32';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=32';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=32';
-import { idDrive, urlAbrir } from '../drive.js?v=32';
+import { store } from '../store.js?v=33';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=33';
+import { ic, flor } from '../icons.js?v=33';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=33';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=33';
+import { idDrive, urlAbrir } from '../drive.js?v=33';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
+// Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a peça ser produzida.
+const PLANO = { '': 'Não enviado ao cliente', aprovacao: 'Aguardando aprovação do cliente', ajustes: 'Alteração pedida pelo cliente', aprovado: 'Aprovado pelo cliente' };
+const PLANO_CHIP = { aprovacao: ['info', 'Plano enviado'], ajustes: ['warn', 'Plano: ajuste'], aprovado: ['ok', 'Plano aprovado'] };
 const PUBLICADAS_VISIVEIS = 10;
 
 // O que fazer em cada etapa: [etapa de destino, texto do botão, estilo].
@@ -38,6 +41,8 @@ function abrirPeca(p = null, padrao = {}) {
       { nome: 'publicar', rotulo: 'Data de publicação', tipo: 'data' },
       { nome: 'responsavel', rotulo: 'Responsável', tipo: 'select', opcoes: [{ v: '', t: 'Sem responsável' }, ...RESPONSAVEIS.map((r) => ({ v: r, t: r }))] },
       { nome: 'roteiro', rotulo: 'Ideia e roteiro', tipo: 'area', cheio: true, linhas: 7, ajuda: 'Só vocês veem. Pode colar a ideia do post ou o roteiro inteiro.' },
+      { nome: 'planejamento', rotulo: 'Planejamento no link do cliente', tipo: 'select', cheio: true, opcoes: Object.entries(PLANO).map(([v, t]) => ({ v, t })), ajuda: 'Escolha “Aguardando aprovação” para o cliente ver esta ideia e o roteiro no link dele e aprovar antes da produção.' },
+      { nome: 'ajustePlano', rotulo: 'Pedido de alteração no planejamento', tipo: 'area', cheio: true, linhas: 2, ajuda: 'O que o cliente pediu para mudar na ideia ou no roteiro.' },
       { nome: 'legenda', rotulo: 'Legenda', tipo: 'area', cheio: true, linhas: 6, ajuda: 'É o texto que o cliente vai ver junto com a arte na hora de aprovar.' },
       { nome: 'secao', tipo: 'secao', rotulo: 'Arquivos para o cliente aprovar' },
       { nome: 'midias', rotulo: 'Arquivos da peça', tipo: 'midias', cheio: true, ajuda: 'Cole o link de cada arquivo da pasta de aprovação no Drive. Carrossel: uma imagem por linha, na ordem dos slides. Reels e story em vídeo: escolha “Vídeo”.' },
@@ -61,7 +66,7 @@ function abrirPeca(p = null, padrao = {}) {
 
 // Botões do topo do cartão, iguais nas abas Status e Calendário.
 function botoesCabecalho(filtro) {
-  return `<div class="actions">${filtro ? `<button class="btn sec sm" data-act="ir" data-rota="previa" data-ref="${esc(filtro)}">${ic('image')}Prévia do cliente</button><button class="btn sec sm" data-act="link-aprovacao" data-cliente="${esc(filtro)}">${ic('link')}Link de aprovação</button>` : ''}
+  return `<div class="actions">${filtro ? `<button class="btn sec sm" data-act="ir" data-rota="previa" data-ref="${esc(filtro)}">${ic('image')}Prévia do cliente</button><button class="btn sec sm" data-act="enviar-planejamento" data-cliente="${esc(filtro)}">${ic('send')}Enviar planejamento</button><button class="btn sec sm" data-act="link-aprovacao" data-cliente="${esc(filtro)}">${ic('link')}Link de aprovação</button>` : ''}
     <button class="btn sec sm" data-act="adicionar-lote">${ic('upload')}Adicionar em lote</button>
     <button class="btn pri sm" data-act="nova-peca" data-cliente="${esc(filtro)}">${ic('plus')}Nova peça</button>
     <input type="file" accept="application/json,.json" hidden data-lote></div>`;
@@ -127,6 +132,8 @@ async function adicionarEmLote(arquivo) {
       etapa: etapaExplicita ? p.etapa : 'criacao',
       publicar,
       roteiro: String(p.roteiro || ''),
+      planejamento: ['aprovacao', 'ajustes', 'aprovado'].includes(p.planejamento) ? p.planejamento : '',
+      ajustePlano: String(p.ajustePlano || ''),
       legenda: String(p.legenda || ''),
       midias: (Array.isArray(p.midias) ? p.midias : []).map((m) => ({ tipo: m?.tipo === 'video' ? 'video' : 'imagem', id: idDrive(m?.id || m?.url) })).filter((m) => m.id),
       capa: idDrive(p.capa),
@@ -164,7 +171,8 @@ async function adicionarEmLote(arquivo) {
 // O que ainda falta na peça: mostra o que precisa ser completado depois do planejamento.
 function faltas(p) {
   const chips = [];
-  if (p.roteiro) chips.push('<span class="chip info">Roteiro</span>');
+  if (p.roteiro) chips.push('<span class="chip mute">Roteiro</span>');
+  if (PLANO_CHIP[p.planejamento]) chips.push(`<span class="chip ${PLANO_CHIP[p.planejamento][0]}">${PLANO_CHIP[p.planejamento][1]}</span>`);
   if (!(p.midias || []).length) chips.push('<span class="chip mute">Sem arte</span>');
   if (!String(p.legenda || '').trim()) chips.push('<span class="chip mute">Sem legenda</span>');
   return chips.length ? `<div class="actions" style="gap:5px">${chips.join('')}</div>` : '';
@@ -182,6 +190,7 @@ function cartao(p, mostrarCliente) {
     <div class="peca-m">${esc(meta)}</div>
     ${faltas(p)}
     ${p.etapa === 'ajustes' && p.ajuste ? `<div class="peca-aj">${esc(p.ajuste)}</div>` : ''}
+    ${p.planejamento === 'ajustes' && p.ajustePlano ? `<div class="peca-aj"><b>Plano:</b> ${esc(p.ajustePlano)}</div>` : ''}
     ${botoes ? `<div class="peca-a">${botoes}</div>` : ''}
   </div>`;
 }
@@ -305,6 +314,17 @@ export default {
   },
 
   acoes: {
+    'enviar-planejamento': async (el) => {
+      const c = store.obter('cliente', el.dataset.cliente);
+      if (!c) return;
+      const prontas = pecas().filter((p) => p.clienteId === c.id && p.etapa === 'briefing' && !p.planejamento);
+      if (!prontas.length) { toast('Não há ideias novas no Briefing para enviar.', true); return; }
+      const sem = prontas.filter((p) => !String(p.roteiro || '').trim()).length;
+      const aviso = `Enviar ${prontas.length} ${prontas.length === 1 ? 'ideia' : 'ideias'} para ${c.nome} aprovar? Elas aparecem na aba Planejamento do link de aprovação dele, com data, formato, título e o texto de “Ideia e roteiro”.${sem ? ` ${sem} ${sem === 1 ? 'não tem' : 'não têm'} roteiro escrito.` : ''}`;
+      if (!(await confirmar(aviso, 'Enviar'))) return;
+      for (const p of prontas) await store.salvar('conteudo', { ...p, planejamento: 'aprovacao' });
+      toast(`${prontas.length} ${prontas.length === 1 ? 'ideia enviada' : 'ideias enviadas'} para aprovação`);
+    },
     'adicionar-lote': () => document.querySelector('[data-lote]')?.click(),
     'link-aprovacao': async (el) => {
       const c = store.obter('cliente', el.dataset.cliente);
