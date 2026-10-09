@@ -1,0 +1,30 @@
+# O Supabase gratuito pausa o projeto depois de cerca de 7 dias sem uso.
+# Este aviso automático faz uma consulta simples ao banco toda segunda e quinta, para o painel não pausar.
+# É gratuito (repositório público) e não usa nenhum dado de cliente: a consulta é anônima e volta vazia.
+name: Manter o Supabase ativo
+
+on:
+  schedule:
+    - cron: '17 12 * * 1,4'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  consulta:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Consultar o banco
+        run: |
+          URL=$(grep -oP "supabaseUrl: '\K[^']+" js/config.js)
+          KEY=$(grep -oP "supabaseKey: '\K[^']+" js/config.js)
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then echo "Não achei a configuração do Supabase em js/config.js"; exit 1; fi
+          curl --fail --silent --show-error --max-time 30 \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" \
+            "$URL/rest/v1/records?select=kind&limit=1"
+          echo
+          echo "Banco respondeu. Projeto ativo."
