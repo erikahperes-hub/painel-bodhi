@@ -1,9 +1,9 @@
-import { store } from '../store.js?v=48';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=48';
-import { ic, flor } from '../icons.js?v=48';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=48';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=48';
-import { idDrive, urlAbrir } from '../drive.js?v=48';
+import { store } from '../store.js?v=51';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=51';
+import { ic, flor } from '../icons.js?v=51';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=51';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=51';
+import { idDrive, urlAbrir } from '../drive.js?v=51';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a peça ser produzida.
@@ -15,7 +15,9 @@ const fmCls = (p) => `fm-${FORMATOS[p.formato] ? p.formato : 'feed'}`;
 const funilChip = (p) => (FUNIL_COR[p.funil] ? `<span class="chip ${FUNIL_COR[p.funil]}">${FUNIL[p.funil]}</span>` : '');
 // Filtro do funil no Calendário: '' (todos), 'topo', 'meio', 'fundo' ou 'sem'. Vale até recarregar a página.
 let filtroFunil = '';
+let filtroTipo = ''; // '', 'feed', 'carrossel', 'reels' ou 'story'
 const casaFunil = (p) => !filtroFunil || (filtroFunil === 'sem' ? !FUNIL_COR[p.funil] : p.funil === filtroFunil);
+const casaTipo = (p) => !filtroTipo || (FORMATOS[p.formato] ? p.formato : 'feed') === filtroTipo;
 
 // Resumo "Topo 3 · Meio 4 · Fundo 2": cada um é um botão que mostra a lista das peças daquele grupo.
 function resumoFunil(lista) {
@@ -28,9 +30,9 @@ function resumoFunil(lista) {
 
 // Lista das peças do grupo escolhido no funil, logo abaixo do calendário.
 function listaFunil(lista, mostrarCliente) {
-  if (!filtroFunil) return '';
-  const itens = ordenarPecas(lista.filter(casaFunil));
-  const nome = filtroFunil === 'sem' ? 'Sem etapa de funil' : FUNIL[filtroFunil];
+  if (!filtroFunil && !filtroTipo) return '';
+  const itens = ordenarPecas(lista.filter((p) => casaFunil(p) && casaTipo(p)));
+  const nome = [filtroTipo ? FORMATOS[filtroTipo].nome : '', filtroFunil ? (filtroFunil === 'sem' ? 'Sem etapa de funil' : FUNIL[filtroFunil]) : ''].filter(Boolean).join(' · ');
   const linha = (p) => {
     const f = FORMATOS[p.formato] || FORMATOS.feed;
     const e = etapaDe(p);
@@ -38,7 +40,7 @@ function listaFunil(lista, mostrarCliente) {
     const meta = [p.publicar ? dataBR(p.publicar).slice(0, 5) : 'Sem data', f.nome, mostrarCliente ? cli : ''].filter(Boolean).join(' · ');
     return `<div class="li click" data-act="editar-peca" data-id="${p.id}"><span class="chip ${fmCls(p)}" style="min-width:34px;justify-content:center">${ic(f.icone)}</span><div class="li-t"><b>${esc(p.titulo || '(sem título)')}</b><span>${esc(meta)}</span></div><span class="chip cor-${e.cor}">${esc(e.nome)}</span></div>`;
   };
-  return `<div class="funil-lista"><div class="card-h" style="margin-bottom:6px"><div><h3 style="font:700 16px var(--ui)">${esc(nome)} · ${itens.length}</h3><p class="sub" style="margin:2px 0 0">Clique em uma peça para abrir.</p></div><button type="button" class="btn ghost sm" data-act="filtro-funil" data-funil="">Limpar filtro</button></div><div class="list">${itens.map(linha).join('') || '<p class="lbl">Nenhuma peça nesta etapa.</p>'}</div></div>`;
+  return `<div class="funil-lista"><div class="card-h" style="margin-bottom:6px"><div><h3 style="font:700 16px var(--ui)">${esc(nome)} · ${itens.length}</h3><p class="sub" style="margin:2px 0 0">Clique em uma peça para abrir.</p></div><button type="button" class="btn ghost sm" data-act="limpar-filtros">Limpar filtros</button></div><div class="list">${itens.map(linha).join('') || '<p class="lbl">Nenhuma peça com este filtro.</p>'}</div></div>`;
 }
 
 const PLANO = { '': 'Não enviado ao cliente', aprovacao: 'Aguardando aprovação do cliente', ajustes: 'Alteração pedida pelo cliente', aprovado: 'Aprovado pelo cliente' };
@@ -318,7 +320,7 @@ function blocoPeca(p, mostrarCliente) {
   const f = FORMATOS[p.formato] || FORMATOS.feed;
   const e = etapaDe(p);
   const cli = store.obter('cliente', p.clienteId)?.nome || '';
-  return `<button class="cal-p ${fmCls(p)}${atrasada(p) ? ' atras' : ''}${casaFunil(p) ? '' : ' apagado'}" data-act="editar-peca" data-id="${p.id}" draggable="true" data-peca="${p.id}" title="${esc([p.titulo, cli, f.nome, e.nome].filter(Boolean).join(' · '))}">
+  return `<button class="cal-p ${fmCls(p)}${atrasada(p) ? ' atras' : ''}${casaFunil(p) && casaTipo(p) ? '' : ' apagado'}" data-act="editar-peca" data-id="${p.id}" draggable="true" data-peca="${p.id}" title="${esc([p.titulo, cli, f.nome, e.nome].filter(Boolean).join(' · '))}">
     <i class="cal-dot cor-${e.cor}" title="${esc(e.nome)}"></i>${ic(f.icone)}<span><b>${esc(p.titulo || '(sem título)')}</b>${mostrarCliente && cli ? `<small>${esc(cli)}</small>` : ''}</span></button>`;
 }
 
@@ -350,7 +352,7 @@ function calendario({ filtro, lista, chipsClientes }) {
       <div class="mes"><button class="iconbtn" data-act="cal-mes" data-passo="-1" aria-label="Mês anterior"><span style="display:grid;transform:scaleX(-1)">${ic('chev')}</span></button>
         <b>${nomeMes[0].toUpperCase()}${nomeMes.slice(1)} de ${a}</b><button class="iconbtn" data-act="cal-mes" data-passo="1" aria-label="Próximo mês">${ic('chev')}</button>
         ${ym !== hoje.slice(0, 7) ? '<button class="btn ghost sm" data-act="cal-mes" data-passo="0">Mês atual</button>' : ''}</div>
-      <div class="legenda" title="A cor de cada peça é o tipo de conteúdo; a bolinha mostra a etapa">${Object.entries(FORMATOS).map(([id, f]) => `<span class="chip fm-${id}">${ic(f.icone)}${esc(f.nome)}</span>`).join('')}<span class="chip cor-mute"><i class="cal-dot cor-mute" style="margin:0"></i>Bolinha = etapa</span></div>
+      <div class="legenda" title="Clique em um tipo para ver só as peças dele. A cor é o tipo de conteúdo; a bolinha mostra a etapa">${Object.entries(FORMATOS).map(([id, f]) => `<button type="button" class="chip fm-${id} funil-btn tipo-btn${filtroTipo === id ? ' on' : ''}" data-act="filtro-tipo" data-tipo="${id}" aria-pressed="${filtroTipo === id}">${ic(f.icone)}${esc(f.nome)} ${lista.filter((p) => (FORMATOS[p.formato] ? p.formato : 'feed') === id).length}</button>`).join('')}<span class="chip cor-mute" title="A bolinha de cada peça mostra a etapa"><i class="cal-dot cor-mute" style="margin:0"></i>Etapa</span></div>
     </div>
     <div class="calbox"><div class="calgrid">${DIAS_SEMANA.map((d) => `<div class="dow">${d}</div>`).join('')}${celulas}</div></div>
     ${listaFunil(lista, !filtro)}
@@ -440,6 +442,8 @@ export default {
       for (const p of prontas) await store.salvar('conteudo', { ...p, planejamento: 'aprovacao' });
       toast(`${prontas.length} ${prontas.length === 1 ? 'ideia enviada' : 'ideias enviadas'} para aprovação`);
     },
+    'filtro-tipo': (el) => { filtroTipo = el.dataset.tipo === filtroTipo ? '' : el.dataset.tipo; recarregarTela(); },
+    'limpar-filtros': () => { filtroFunil = ''; filtroTipo = ''; recarregarTela(); },
     'filtro-funil': (el) => { filtroFunil = el.dataset.funil === filtroFunil ? '' : el.dataset.funil; recarregarTela(); },
     'adicionar-lote': () => document.querySelector('[data-lote]')?.click(),
     'link-aprovacao': async (el) => {
