@@ -7,4 +7,7 @@ export const config = {
   // Endereço do Worker do Cloudflare que entrega os vídeos com player próprio (LEIA-ME, "Vídeos com player próprio").
   // Vazio = usa o player do Drive.
   midiaProxy: 'https://bodhi-midia.erikahperes.workers.dev',
+  // Chave do Google para "Importar da pasta" (só lê o Drive e só vale em painel.bodhi.marketing; pública por desenho, como a anon).
+  // Projeto "My First Project" no Google Cloud (conta erikahperes@gmail.com), API Drive ativada, restrição por site.
+  driveKey: 'AIzaSyBMslqhcuZ6o8O8IZY9W5VQ6rRRjfGVTro',
 };

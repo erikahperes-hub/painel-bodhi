@@ -1,9 +1,12 @@
-import { store } from '../store.js?v=60';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=60';
-import { ic, flor } from '../icons.js?v=60';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=60';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=60';
-import { idDrive, urlAbrir } from '../drive.js?v=60';
+import { store } from '../store.js?v=62';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=62';
+import { ic, flor } from '../icons.js?v=62';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=62';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=62';
+import { idDrive, urlAbrir } from '../drive.js?v=62';
+import { lerPasta } from '../drive-pasta.js?v=62';
+import { lerTabela } from '../planejamento.js?v=62';
+import { config } from '../config.js?v=62';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a peça ser produzida.
@@ -84,7 +87,7 @@ function abrirPeca(p = null, padrao = {}) {
       { nome: 'etapa', rotulo: 'Etapa', tipo: 'select', opcoes: ETAPAS.map((e) => ({ v: e.id, t: e.nome })) },
       { nome: 'publicar', rotulo: 'Data de publicação', tipo: 'data' },
       { nome: 'responsavel', rotulo: 'Responsável', tipo: 'select', opcoes: [{ v: '', t: 'Sem responsável' }, ...RESPONSAVEIS.map((r) => ({ v: r, t: r }))] },
-      { nome: 'roteiro', rotulo: 'Ideia e roteiro', tipo: 'area', cheio: true, linhas: 7, ajuda: 'Só vocês veem. Pode colar a ideia do post ou o roteiro inteiro.' },
+      { nome: 'roteiro', rotulo: 'Ideia e roteiro', tipo: 'area', cheio: true, linhas: 7, ajuda: 'O cliente lê este texto quando o planejamento é enviado para aprovação, então escreva sem comentário interno. Notas só da equipe vão em “Observações internas”.' },
       { nome: 'planejamento', rotulo: 'Planejamento no link do cliente', tipo: 'select', cheio: true, opcoes: Object.entries(PLANO).map(([v, t]) => ({ v, t })), ajuda: 'Escolha “Aguardando aprovação” para o cliente ver esta ideia e o roteiro no link dele e aprovar antes da produção.' },
       { nome: 'ajustePlano', rotulo: 'Pedido de alteração no planejamento', tipo: 'area', cheio: true, linhas: 2, ajuda: 'O que o cliente pediu para mudar na ideia ou no roteiro.' },
       { nome: 'legenda', rotulo: 'Legenda', tipo: 'area', cheio: true, linhas: 6, ajuda: 'É o texto que o cliente vai ver junto com a arte na hora de aprovar.' },
@@ -111,6 +114,8 @@ function abrirPeca(p = null, padrao = {}) {
 // Botões do topo do cartão, iguais nas abas Status e Calendário.
 function botoesCabecalho(filtro) {
   return `<div class="actions">${filtro ? `<button class="btn sec sm" data-act="ir" data-rota="previa" data-ref="${esc(filtro)}">${ic('image')}Prévia do cliente</button><button class="btn sec sm" data-act="enviar-planejamento" data-cliente="${esc(filtro)}">${ic('send')}Enviar planejamento</button><button class="btn sec sm" data-act="link-aprovacao" data-cliente="${esc(filtro)}">${ic('link')}Link de aprovação</button>` : ''}
+    <button class="btn sec sm" data-act="colar-planejamento" data-cliente="${esc(filtro)}">${ic('edit')}Colar planejamento</button>
+    <button class="btn sec sm" data-act="importar-pasta">${ic('download')}Importar da pasta</button>
     <button class="btn sec sm" data-act="adicionar-lote">${ic('upload')}Adicionar em lote</button>
     <button class="btn pri sm" data-act="nova-peca" data-cliente="${esc(filtro)}">${ic('plus')}Nova peça</button>
     <input type="file" accept="application/json,.json" hidden data-lote></div>`;
@@ -224,6 +229,52 @@ async function adicionarEmLote(arquivo) {
   await store.importar({ registros: validas.map(({ _etapaExplicita, ...d }) => ({ kind: 'conteudo', id: d.id, data: d, mesclar: 'preencher' })) });
   for (const a of avancos) await store.salvar('conteudo', { ...store.obter('conteudo', a.id), etapa: a.etapa });
   toast(novas ? `${plural(novas, 'peça adicionada', 'peças adicionadas')}` : (jaExistem ? 'Peças completadas' : 'Nada novo para adicionar'));
+}
+
+// "Importar da pasta": o usuário cola o link da pasta do cliente (ou do mês) no Drive; o painel lê os arquivos com o
+// nome padrão e passa as peças pelo mesmo caminho do "Adicionar em lote" (que pede confirmação e não apaga nada).
+function importarDaPasta() {
+  formulario({
+    titulo: 'Importar da pasta do Drive',
+    subtitulo: 'O painel lê os arquivos da pasta pelo nome padrão (data_formato_titulo) e cria ou completa as peças.',
+    salvarTexto: 'Ler pasta',
+    campos: [
+      { nome: 'pasta', rotulo: 'Link da pasta no Drive', obrigatorio: true, cheio: true, placeholder: 'https://drive.google.com/drive/folders/…', ajuda: 'Use a pasta do cliente (ex.: Aprovação / TRE Clinic) ou a de um mês (ex.: 2026-10). Subpastas entram junto. Arquivos fora do padrão de nome são ignorados.' },
+    ],
+    aoSalvar: async (v) => {
+      let r;
+      try {
+        r = await lerPasta(v.pasta, { chave: config.driveKey, clientes: store.todos('cliente').map((c) => c.nome) });
+      } catch (err) { toast(err.message || 'Não consegui ler a pasta.', true); return false; }
+      if (!r.pecas.length) { toast(`Nenhum arquivo com o nome padrão nessa pasta.${r.ignorados.length ? ` ${r.ignorados.length} fora do padrão.` : ''}`, true); return false; }
+      if (r.ignorados.length) toast(`${r.ignorados.length} ${r.ignorados.length === 1 ? 'arquivo fora do padrão foi ignorado' : 'arquivos fora do padrão foram ignorados'}.`);
+      try { await adicionarEmLote({ pecas: r.pecas }); } catch (err) { toast(err.message || 'Não foi possível adicionar.', true); return false; }
+    },
+  });
+}
+
+// "Colar planejamento": cola a tabela do planejamento (do chat do Claude ou de uma planilha) e cria as ideias na etapa
+// Planejamento, pelo mesmo caminho do lote (pede confirmação, completa só o que está vazio e não apaga nada).
+function colarPlanejamento(clienteId = '') {
+  const clientes = clientesDeTrabalho();
+  formulario({
+    titulo: 'Colar planejamento',
+    subtitulo: 'Cole a tabela do planejamento (Data, Formato, Funil, Título, Ideia e roteiro, Legenda). Cada linha vira uma ideia na coluna Planejamento.',
+    largo: true,
+    salvarTexto: 'Adicionar ao planejamento',
+    valores: { clienteId: store.obter('cliente', clienteId) ? clienteId : '' },
+    campos: [
+      { nome: 'clienteId', rotulo: 'Cliente', tipo: 'select', obrigatorio: true, cheio: true, opcoes: [{ v: '', t: 'Escolha o cliente' }, ...clientes.map((c) => ({ v: c.id, t: c.nome || '(sem nome)' }))] },
+      { nome: 'tabela', rotulo: 'Tabela do planejamento', tipo: 'area', obrigatorio: true, cheio: true, linhas: 10, placeholder: 'Data | Formato | Funil | Título | Ideia e roteiro | Legenda\n11/10 | Reels | Topo | Tipos de cicatrização | Gancho: nem toda cicatriz é igual…', ajuda: 'Copie a tabela direto do chat ou de uma planilha e cole aqui. Sem data completa (ex.: 11/10), vale o ano atual. A legenda pode ficar em branco; ela entra na etapa seguinte.' },
+    ],
+    aoSalvar: async (v) => {
+      const c = store.obter('cliente', v.clienteId);
+      const r = lerTabela(v.tabela, { clienteNome: c?.nome || '' });
+      if (!r.pecas.length) { toast('Não encontrei nenhuma linha com título na tabela colada.', true); return false; }
+      if (r.ignoradas.length) toast(`${r.ignoradas.length} ${r.ignoradas.length === 1 ? 'linha sem título foi ignorada' : 'linhas sem título foram ignoradas'}.`);
+      try { await adicionarEmLote({ pecas: r.pecas }); } catch (err) { toast(err.message || 'Não foi possível adicionar.', true); return false; }
+    },
+  });
 }
 
 // O que ainda falta na peça: mostra o que precisa ser completado depois do planejamento.
@@ -459,6 +510,8 @@ export default {
     'limpar-filtros': () => { filtroFunil = ''; filtroTipo = ''; recarregarTela(); },
     'filtro-funil': (el) => { filtroFunil = el.dataset.funil === filtroFunil ? '' : el.dataset.funil; verLista = !!filtroFunil; recarregarTela(); },
     'adicionar-lote': () => document.querySelector('[data-lote]')?.click(),
+    'importar-pasta': () => importarDaPasta(),
+    'colar-planejamento': (el) => colarPlanejamento(el.dataset.cliente),
     'link-aprovacao': async (el) => {
       const c = store.obter('cliente', el.dataset.cliente);
       if (!c) return;
