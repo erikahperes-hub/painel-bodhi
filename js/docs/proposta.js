@@ -1,8 +1,8 @@
-import { store } from '../store.js?v=25';
-import { logo } from '../logo.js?v=25';
-import { esc, brl, semTravessao } from '../util.js?v=25';
-import { faixaProposta } from '../calc.js?v=25';
-import { documento, abrirDocumento } from './base.js?v=25';
+import { store } from '../store.js?v=26';
+import { logo } from '../logo.js?v=26';
+import { esc, brl, semTravessao } from '../util.js?v=26';
+import { faixaProposta } from '../calc.js?v=26';
+import { documento, abrirDocumento } from './base.js?v=26';
 
 const CSS = `
 @page{size:A4;margin:0}

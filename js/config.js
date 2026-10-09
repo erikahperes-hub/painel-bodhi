@@ -6,5 +6,5 @@ export const config = {
   asaasFunction: 'asaas',
   // Endereço do Worker do Cloudflare que entrega os vídeos com player próprio (LEIA-ME, "Vídeos com player próprio").
   // Vazio = usa o player do Drive.
-  midiaProxy: '',
+  midiaProxy: 'https://bodhi-midia.erikahperes.workers.dev',
 };
