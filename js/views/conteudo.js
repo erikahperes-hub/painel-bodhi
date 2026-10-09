@@ -1,12 +1,12 @@
-import { store } from '../store.js?v=62';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=62';
-import { ic, flor } from '../icons.js?v=62';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=62';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=62';
-import { idDrive, urlAbrir } from '../drive.js?v=62';
-import { lerPasta } from '../drive-pasta.js?v=62';
-import { lerTabela } from '../planejamento.js?v=62';
-import { config } from '../config.js?v=62';
+import { store } from '../store.js?v=63';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=63';
+import { ic, flor } from '../icons.js?v=63';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=63';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=63';
+import { idDrive, urlAbrir } from '../drive.js?v=63';
+import { lerPasta } from '../drive-pasta.js?v=63';
+import { lerTabela } from '../planejamento.js?v=63';
+import { config } from '../config.js?v=63';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a peça ser produzida.
@@ -142,7 +142,7 @@ function semTipoNoTitulo(titulo, formato) {
 const palavrasDe = (t) => new Set(norm(t).split(/[^a-z0-9]+/).filter((w) => w.length > 3));
 const palavrasEmComum = (a, b) => { const B = palavrasDe(b); return [...palavrasDe(a)].filter((w) => B.has(w)).length; };
 
-async function adicionarEmLote(arquivo) {
+async function adicionarEmLote(arquivo, detalhe = '') {
   const brutas = [
     ...(Array.isArray(arquivo?.registros) ? arquivo.registros.filter((r) => r?.kind === 'conteudo' && r.data).map((r) => ({ ...r.data, id: r.id || r.data.id })) : []),
     ...(Array.isArray(arquivo?.pecas) ? arquivo.pecas : []),
@@ -201,7 +201,7 @@ async function adicionarEmLote(arquivo) {
       midias: (Array.isArray(p.midias) ? p.midias : []).map((m) => ({ tipo: m?.tipo === 'video' ? 'video' : 'imagem', id: idDrive(m?.id || m?.url) })).filter((m) => m.id),
       capa: idDrive(p.capa),
       ajuste: String(p.ajuste || ''),
-      briefing: String(p.briefing || ''),
+      briefing: String(p.observacoes || p.briefing || ''), // "observacoes" é o nome novo; "briefing" continua valendo (backups e dados antigos)
       responsavel: RESPONSAVEIS.includes(p.responsavel) ? p.responsavel : '',
       link: urlSegura(p.link),
       criadoEm: new Date().toISOString(),
@@ -217,6 +217,7 @@ async function adicionarEmLote(arquivo) {
     `Adicionar ${plural(novas, 'peça nova', 'peças novas')}?`,
     jaExistem ? `${plural(jaExistem, 'já existe', 'já existem')} (mesma data e formato, ou mesmo título): só os campos vazios serão completados, sem apagar o que vocês editaram.` : '',
     semCliente.size ? `Ignoradas por cliente não encontrado: ${[...semCliente].join(', ')}.` : '',
+    detalhe,
   ].filter(Boolean).join(' ');
   if (!(await confirmar(aviso, 'Adicionar'))) return;
   // Peça que estava só no Planejamento e agora chegou com arquivos sai do Planejamento sozinha.
@@ -264,15 +265,23 @@ function colarPlanejamento(clienteId = '') {
     salvarTexto: 'Adicionar ao planejamento',
     valores: { clienteId: store.obter('cliente', clienteId) ? clienteId : '' },
     campos: [
-      { nome: 'clienteId', rotulo: 'Cliente', tipo: 'select', obrigatorio: true, cheio: true, opcoes: [{ v: '', t: 'Escolha o cliente' }, ...clientes.map((c) => ({ v: c.id, t: c.nome || '(sem nome)' }))] },
-      { nome: 'tabela', rotulo: 'Tabela do planejamento', tipo: 'area', obrigatorio: true, cheio: true, linhas: 10, placeholder: 'Data | Formato | Funil | Título | Ideia e roteiro | Legenda\n11/10 | Reels | Topo | Tipos de cicatrização | Gancho: nem toda cicatriz é igual…', ajuda: 'Copie a tabela direto do chat ou de uma planilha e cole aqui. Sem data completa (ex.: 11/10), vale o ano atual. A legenda pode ficar em branco; ela entra na etapa seguinte.' },
+      { nome: 'clienteId', rotulo: 'Cliente', tipo: 'select', cheio: true, opcoes: [{ v: '', t: 'Automático (pela linha “Cliente: …” da tabela colada)' }, ...clientes.map((c) => ({ v: c.id, t: c.nome || '(sem nome)' }))] },
+      { nome: 'tabela', rotulo: 'Tabela do planejamento', tipo: 'area', obrigatorio: true, cheio: true, linhas: 10, placeholder: 'Cliente: TRE Clinic\n\nData | Formato | Funil | Título | Ideia e roteiro | Legenda\n11/10 | Reels | Topo | Tipos de cicatrização | Gancho: nem toda cicatriz é igual…', ajuda: 'Copie tudo que o Claude entregou (com a linha “Cliente: …”) e cole aqui: o cliente é reconhecido sozinho. Sem data completa (ex.: 11/10), vale o ano atual. A legenda pode ficar em branco; ela entra na etapa seguinte.' },
     ],
     aoSalvar: async (v) => {
-      const c = store.obter('cliente', v.clienteId);
-      const r = lerTabela(v.tabela, { clienteNome: c?.nome || '' });
+      // Cliente: o escolhido na lista ou, se ficou em "Automático", o da linha "Cliente: Nome" colada junto da tabela.
+      let c = store.obter('cliente', v.clienteId);
+      if (!c) {
+        const nomeColado = String(v.tabela || '').match(/^\s*\**cliente\**\s*[:\-]\s*\**\s*(.+?)\s*\**\s*$/im)?.[1] || '';
+        const iguais = nomeColado ? store.todos('cliente').filter((x) => norm(x.nome) === norm(nomeColado)) : [];
+        c = iguais.length === 1 ? iguais[0] : null;
+        if (!c) { toast(nomeColado ? `Não encontrei o cliente “${nomeColado}” no painel. Escolha o cliente na lista.` : 'Escolha o cliente na lista ou cole a tabela com a linha “Cliente: Nome” em cima.', true); return false; }
+      }
+      const r = lerTabela(v.tabela, { clienteNome: c.nome || '' });
       if (!r.pecas.length) { toast('Não encontrei nenhuma linha com título na tabela colada.', true); return false; }
       if (r.ignoradas.length) toast(`${r.ignoradas.length} ${r.ignoradas.length === 1 ? 'linha sem título foi ignorada' : 'linhas sem título foram ignoradas'}.`);
-      try { await adicionarEmLote({ pecas: r.pecas }); } catch (err) { toast(err.message || 'Não foi possível adicionar.', true); return false; }
+      const lidas = r.pecas.map((p) => `${p.publicar ? dataBR(p.publicar).slice(0, 5) : 'sem data'} ${FORMATOS[p.formato].nome}${p.funil ? ` (${p.funil})` : ''}: ${p.titulo}`).join('; ');
+      try { await adicionarEmLote({ pecas: r.pecas }, `Cliente: ${c.nome}. Ideias lidas: ${lidas}.`); } catch (err) { toast(err.message || 'Não foi possível adicionar.', true); return false; }
     },
   });
 }

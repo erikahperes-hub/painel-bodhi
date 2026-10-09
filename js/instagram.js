@@ -1,7 +1,7 @@
-import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=62';
-import { ic } from './icons.js?v=62';
-import { urlImagem, urlPlayer } from './drive.js?v=62';
-import { config } from './config.js?v=62';
+import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=63';
+import { ic } from './icons.js?v=63';
+import { urlImagem, urlPlayer } from './drive.js?v=63';
+import { config } from './config.js?v=63';
 
 // Visual de Instagram usado na prévia do painel e na página de aprovação do cliente.
 // Recebe os dados prontos, então funciona com ou sem login.

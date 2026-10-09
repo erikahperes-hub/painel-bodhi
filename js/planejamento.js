@@ -12,7 +12,7 @@ const COLUNAS = [
   ['titulo', /^(titulo|tema|peca|nome da peca)$/],
   ['roteiro', /^(ideia e roteiro|roteiro|ideia|ideia roteiro|descricao)$/],
   ['legenda', /^(legenda|legenda pode ficar para depois|legenda pode ficar para depois )$/],
-  ['briefing', /^(observacoes|observacoes internas|obs|notas)$/],
+  ['observacoes', /^(observacoes|observacoes internas|obs|notas)$/],
   ['clienteNome', /^(cliente)$/],
 ];
 const ORDEM_PADRAO = ['publicar', 'formato', 'funil', 'titulo', 'roteiro', 'legenda'];
@@ -120,7 +120,7 @@ export function lerTabela(texto, { clienteNome = '', hoje = new Date() } = {}) {
     if (funil) peca.funil = funil;
     if (String(v.roteiro || '').trim()) peca.roteiro = v.roteiro.trim();
     if (String(v.legenda || '').trim() && !/^[-–—\s]*$/.test(v.legenda)) peca.legenda = v.legenda.trim();
-    if (String(v.briefing || '').trim()) peca.briefing = v.briefing.trim();
+    if (String(v.observacoes || '').trim()) peca.observacoes = v.observacoes.trim();
     pecas.push(peca);
   }
   return { pecas, ignoradas };
