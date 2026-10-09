@@ -1,9 +1,9 @@
-import { store } from '../store.js?v=53';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=53';
-import { ic, flor } from '../icons.js?v=53';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=53';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=53';
-import { idDrive, urlAbrir } from '../drive.js?v=53';
+import { store } from '../store.js?v=54';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=54';
+import { ic, flor } from '../icons.js?v=54';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=54';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=54';
+import { idDrive, urlAbrir } from '../drive.js?v=54';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a peça ser produzida.
@@ -20,12 +20,19 @@ const casaFunil = (p) => !filtroFunil || (filtroFunil === 'sem' ? !FUNIL_COR[p.f
 const casaTipo = (p) => !filtroTipo || (FORMATOS[p.formato] ? p.formato : 'feed') === filtroTipo;
 
 // Resumo "Topo 3 · Meio 4 · Fundo 2": cada um é um botão que mostra a lista das peças daquele grupo.
-function resumoFunil(lista) {
+function resumoFunil(lista, cru = false) {
   const n = (k) => lista.filter((p) => p.funil === k).length;
   const sem = lista.filter((p) => !FUNIL_COR[p.funil]).length;
   if (n('topo') + n('meio') + n('fundo') === 0) return '';
   const botao = (k, texto, qtd) => `<button type="button" class="chip cor-mute funil-btn${filtroFunil === k ? ' on' : ''}" data-act="filtro-funil" data-funil="${k}" aria-pressed="${filtroFunil === k}">${texto} ${qtd}</button>`;
-  return `<div class="legenda" style="margin:-4px 0 14px" title="Clique para ver só as peças de cada etapa do funil">${['topo', 'meio', 'fundo'].map((k) => botao(k, FUNIL[k].replace(' de funil', ''), n(k))).join('')}${sem ? botao('sem', 'Sem funil', sem) : ''}</div>`;
+  const botoes = `${['topo', 'meio', 'fundo'].map((k) => botao(k, FUNIL[k].replace(' de funil', ''), n(k))).join('')}${sem ? botao('sem', 'Sem funil', sem) : ''}`;
+  return cru ? botoes : `<div class="legenda" style="margin:-4px 0 14px" title="Clique para ver só as peças de cada etapa do funil">${botoes}</div>`;
+}
+
+// Linha "Funil" dos filtros que ficam abaixo do calendário.
+function linhaFunil(lista) {
+  const botoes = resumoFunil(lista, true);
+  return botoes ? `<div class="filtros-linha"><span class="filtros-rot">Funil</span><div class="legenda" title="Clique para ver só as peças de cada etapa do funil">${botoes}</div></div>` : '';
 }
 
 // Lista das peças do grupo escolhido no funil, logo abaixo do calendário.
@@ -347,7 +354,7 @@ function calendario({ filtro, lista, chipsClientes }) {
   return `<div class="card">
     <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2><p class="sub">Cada peça aparece no dia da publicação. Clique em uma peça para abrir ou no + de um dia para criar.</p></div>
       ${botoesCabecalho(filtro)}</div>
-    <div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>${resumoFunil(lista)}
+    <div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>
     <div class="toolbar" style="margin-bottom:12px">
       <div class="mes"><button class="iconbtn" data-act="cal-mes" data-passo="-1" aria-label="Mês anterior"><span style="display:grid;transform:scaleX(-1)">${ic('chev')}</span></button>
         <b>${nomeMes[0].toUpperCase()}${nomeMes.slice(1)} de ${a}</b><button class="iconbtn" data-act="cal-mes" data-passo="1" aria-label="Próximo mês">${ic('chev')}</button>
@@ -355,7 +362,7 @@ function calendario({ filtro, lista, chipsClientes }) {
       
     </div>
     <div class="calbox"><div class="calgrid">${DIAS_SEMANA.map((d) => `<div class="dow">${d}</div>`).join('')}${celulas}</div></div>
-    <div class="legenda" style="margin-top:14px" title="Clique em um tipo para ver só as peças dele. A cor é o tipo de conteúdo; a bolinha mostra a etapa">${Object.entries(FORMATOS).map(([id, f]) => `<button type="button" class="chip fm-${id} funil-btn tipo-btn${filtroTipo === id ? ' on' : ''}" data-act="filtro-tipo" data-tipo="${id}" aria-pressed="${filtroTipo === id}">${ic(f.icone)}${esc(f.nome)} ${lista.filter((p) => (FORMATOS[p.formato] ? p.formato : 'feed') === id).length}</button>`).join('')}</div>
+    <div class="filtros-cal"><div class="filtros-linha"><span class="filtros-rot">Tipo</span><div class="legenda" title="Clique em um tipo para ver só as peças dele. A cor é o tipo de conteúdo">${Object.entries(FORMATOS).map(([id, f]) => `<button type="button" class="chip fm-${id} funil-btn tipo-btn${filtroTipo === id ? ' on' : ''}" data-act="filtro-tipo" data-tipo="${id}" aria-pressed="${filtroTipo === id}">${ic(f.icone)}${esc(f.nome)} ${lista.filter((p) => (FORMATOS[p.formato] ? p.formato : 'feed') === id).length}</button>`).join('')}</div></div>${linhaFunil(lista)}</div>
     ${listaFunil(lista, !filtro)}
     ${semData.length ? `<div class="semdata"><h3>Sem data de publicação</h3><p class="lbl">Abra a peça e escolha a data para ela aparecer no calendário.</p><div class="semdata-l">${semData.map((p) => blocoPeca(p, !filtro)).join('')}</div></div>` : ''}
   </div>`;

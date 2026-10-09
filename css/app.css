@@ -257,6 +257,10 @@ button.card.clicavel:focus-visible{outline:2px solid var(--verde);outline-offset
 .kol-dica{display:flex;align-items:center;gap:6px;font:400 11.5px var(--ui);color:var(--ink-2);padding:0 4px}
 .kol-n{margin-left:auto;font:700 11.5px var(--ui);background:var(--card);color:var(--ink);border-radius:99px;padding:2px 8px;min-width:24px;text-align:center}
 /* Cor por tipo de conteúdo (calendário e etiquetas) */
+.filtros-cal{display:flex;flex-direction:column;align-items:flex-end;gap:8px;margin-top:14px}
+.filtros-linha{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.filtros-linha .legenda{margin:0!important;justify-content:flex-end}
+.filtros-rot{font:700 11.5px var(--ui);letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
 .funil-btn{border:0;cursor:pointer;font-family:inherit}
 .funil-btn:hover{filter:brightness(.95)}
 .funil-btn.on{background:var(--petroleo);color:var(--creme)}
