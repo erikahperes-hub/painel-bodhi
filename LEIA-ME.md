@@ -84,7 +84,7 @@ A aba **Processo** (ícone de fluxo na lateral) guarda o passo a passo da Bôdhi
 
 ## Conteúdo e aprovação do cliente
 
-A aba **Conteúdo** tem duas visões: **Status** (quadro por etapa) e **Calendário** (mês com as peças nas datas de publicação).
+A aba **Conteúdo** tem duas visões: **Status** (quadro por etapa) e **Calendário** (mês com as peças nas datas de publicação). No computador, **arraste os cartões entre as colunas** para mudar a etapa (ao soltar em Ajustes, a peça abre para anotar o pedido) e, no Calendário, **arraste uma peça para outro dia** para mudar a data de publicação. No celular valem os botões de cada cartão.
 
 **Como as artes chegam ao cliente:**
 1. As artes, carrosséis e vídeos ficam numa **pasta do Google Drive** compartilhada como **“Qualquer pessoa com o link”** (leitor). O espaço usado é o do Drive, não o do Supabase.

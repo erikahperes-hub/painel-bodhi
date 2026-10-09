@@ -1,9 +1,9 @@
-import { store } from '../store.js?v=33';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=33';
-import { ic, flor } from '../icons.js?v=33';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=33';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=33';
-import { idDrive, urlAbrir } from '../drive.js?v=33';
+import { store } from '../store.js?v=34';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=34';
+import { ic, flor } from '../icons.js?v=34';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=34';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=34';
+import { idDrive, urlAbrir } from '../drive.js?v=34';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a peça ser produzida.
@@ -178,13 +178,72 @@ function faltas(p) {
   return chips.length ? `<div class="actions" style="gap:5px">${chips.join('')}</div>` : '';
 }
 
+// Arrastar e soltar (computador): cartão entre as colunas muda a etapa; peça entre os dias do calendário muda a data.
+// No celular continuam valendo os botões de cada cartão.
+function ligarArrastar(el) {
+  let arrastando = null;
+  const limpar = () => el.querySelectorAll('.arrastando, .alvo').forEach((x) => x.classList.remove('arrastando', 'alvo'));
+  el.addEventListener('dragstart', (ev) => {
+    const c = ev.target.closest?.('[data-peca]');
+    if (!c) return;
+    arrastando = c.dataset.peca;
+    ev.dataTransfer.effectAllowed = 'move';
+    ev.dataTransfer.setData('text/plain', arrastando);
+    setTimeout(() => c.classList.add('arrastando'), 0);
+  });
+  el.addEventListener('dragend', () => { arrastando = null; limpar(); });
+  el.addEventListener('dragover', (ev) => {
+    if (!arrastando) return;
+    // Perto da borda do quadro, rola para o lado para alcançar as outras colunas.
+    const quadro = ev.target.closest?.('.kanban');
+    if (quadro) {
+      const r = quadro.getBoundingClientRect();
+      if (ev.clientX < r.left + 80) quadro.scrollLeft -= 28;
+      else if (ev.clientX > r.right - 80) quadro.scrollLeft += 28;
+    }
+    const alvo = ev.target.closest?.('.kol[data-etapa], .dia[data-dia]');
+    if (!alvo) return;
+    ev.preventDefault();
+    ev.dataTransfer.dropEffect = 'move';
+    if (!alvo.classList.contains('alvo')) { el.querySelectorAll('.alvo').forEach((x) => x.classList.remove('alvo')); alvo.classList.add('alvo'); }
+  });
+  el.addEventListener('dragleave', (ev) => {
+    const alvo = ev.target.closest?.('.kol[data-etapa], .dia[data-dia]');
+    if (alvo && !alvo.contains(ev.relatedTarget)) alvo.classList.remove('alvo');
+  });
+  el.addEventListener('drop', async (ev) => {
+    const id = arrastando || ev.dataTransfer.getData('text/plain');
+    const alvo = ev.target.closest?.('.kol[data-etapa], .dia[data-dia]');
+    limpar();
+    arrastando = null;
+    const p = id && store.obter('conteudo', id);
+    if (!alvo || !p) return;
+    ev.preventDefault();
+    try {
+      if (alvo.dataset.etapa) {
+        const etapa = alvo.dataset.etapa;
+        if (p.etapa === etapa) return;
+        // Ao mandar para Ajustes, abre a peça para já anotar o que o cliente pediu.
+        if (etapa === 'ajustes') { abrirPeca(p, { etapa: 'ajustes' }); return; }
+        await store.salvar('conteudo', { ...p, etapa });
+        toast(`Movida para ${etapaDe({ etapa }).nome}`);
+      } else {
+        const dia = alvo.dataset.dia;
+        if (p.publicar === dia) return;
+        await store.salvar('conteudo', { ...p, publicar: dia });
+        toast(`Publicação marcada para ${dataBR(dia).slice(0, 5)}`);
+      }
+    } catch (err) { toast(err?.message || 'Não foi possível mover.', true); }
+  });
+}
+
 function cartao(p, mostrarCliente) {
   const f = FORMATOS[p.formato] || FORMATOS.feed;
   const cli = store.obter('cliente', p.clienteId);
   const meta = [mostrarCliente ? (cli?.nome || 'Cliente removido') : '', p.publicar ? dataBR(p.publicar).slice(0, 5) : 'Sem data', p.responsavel].filter(Boolean).join(' · ');
   const atras = atrasada(p);
   const botoes = (PROXIMOS[p.etapa] || []).map(([para, texto, estilo]) => `<button class="btn ${estilo || 'sec'} sm" data-act="mover-peca" data-id="${p.id}" data-para="${para}">${esc(texto)}</button>`).join('');
-  return `<div class="peca">
+  return `<div class="peca" draggable="true" data-peca="${p.id}">
     <div class="actions" style="gap:6px"><span class="chip info">${ic(f.icone)}${esc(f.nome)}</span>${atras ? '<span class="chip warn">Atrasada</span>' : ''}${p.link && urlSegura(p.link) ? `<a class="chip mute" href="${esc(urlSegura(p.link))}" target="_blank" rel="noopener noreferrer" title="Abrir a arte">${ic('file')}Arte</a>` : ''}</div>
     <button class="peca-t" data-act="editar-peca" data-id="${p.id}">${esc(p.titulo || '(sem título)')}</button>
     <div class="peca-m">${esc(meta)}</div>
@@ -207,7 +266,7 @@ function blocoPeca(p, mostrarCliente) {
   const f = FORMATOS[p.formato] || FORMATOS.feed;
   const e = etapaDe(p);
   const cli = store.obter('cliente', p.clienteId)?.nome || '';
-  return `<button class="cal-p cor-${e.cor}${atrasada(p) ? ' atras' : ''}" data-act="editar-peca" data-id="${p.id}" title="${esc([p.titulo, cli, f.nome, e.nome].filter(Boolean).join(' · '))}">
+  return `<button class="cal-p cor-${e.cor}${atrasada(p) ? ' atras' : ''}" data-act="editar-peca" data-id="${p.id}" draggable="true" data-peca="${p.id}" title="${esc([p.titulo, cli, f.nome, e.nome].filter(Boolean).join(' · '))}">
     ${ic(f.icone)}<span><b>${esc(p.titulo || '(sem título)')}</b>${mostrarCliente && cli ? `<small>${esc(cli)}</small>` : ''}</span></button>`;
 }
 
@@ -226,7 +285,7 @@ function calendario({ filtro, lista, chipsClientes }) {
     const d = new Date(a, m - 1, 1 - primeiroDia + i);
     const iso = isoDia(d);
     const pecasDia = porDia[iso] || [];
-    return `<div class="dia${d.getMonth() !== m - 1 ? ' fora' : ''}${iso === hoje ? ' hoje' : ''}">
+    return `<div class="dia${d.getMonth() !== m - 1 ? ' fora' : ''}${iso === hoje ? ' hoje' : ''}" data-dia="${iso}">
       <div class="dia-h"><b>${d.getDate()}</b><button class="dia-add" data-act="nova-peca" data-data="${iso}" data-cliente="${esc(filtro)}" aria-label="Nova peça em ${dataBR(iso)}" title="Nova peça neste dia">+</button></div>
       ${pecasDia.map((p) => blocoPeca(p, !filtro)).join('')}</div>`;
   }).join('');
@@ -282,7 +341,7 @@ export default {
       let itens = e.id === 'publicado' ? ordenarPecas(em(e.id), true) : ordenarPecas(em(e.id));
       const total = itens.length;
       if (e.id === 'publicado') itens = itens.slice(0, PUBLICADAS_VISIVEIS);
-      return `<section class="kol" aria-label="${esc(e.nome)}">
+      return `<section class="kol" data-etapa="${e.id}" aria-label="${esc(e.nome)}">
         <div class="kol-h"><span>${esc(e.nome)}</span><b class="chip ${e.chip}">${total}</b></div>
         ${itens.map((p) => cartao(p, !filtro)).join('') || '<div class="kol-vazio">Nada aqui</div>'}
         ${total > itens.length ? `<div class="kol-vazio">E mais ${total - itens.length} publicadas</div>` : ''}
@@ -305,6 +364,7 @@ export default {
   },
 
   montar(el) {
+    ligarArrastar(el);
     el.querySelector('[data-lote]')?.addEventListener('change', async (ev) => {
       const f = ev.target.files[0];
       ev.target.value = '';
