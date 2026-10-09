@@ -1,9 +1,9 @@
-import { store } from '../store.js?v=54';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=54';
-import { ic, flor } from '../icons.js?v=54';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=54';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=54';
-import { idDrive, urlAbrir } from '../drive.js?v=54';
+import { store } from '../store.js?v=55';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=55';
+import { ic, flor } from '../icons.js?v=55';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=55';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=55';
+import { idDrive, urlAbrir } from '../drive.js?v=55';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a peça ser produzida.
@@ -420,7 +420,7 @@ export default {
       </div>
 
       <div class="card">
-        <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2><p class="sub">${lista.length} ${lista.length === 1 ? 'peça' : 'peças'} no total</p></div>
+        <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2></div>
           ${botoesCabecalho(filtro)}</div>
         <div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>
         ${lista.length ? `<div class="kanban">${colunas}</div>` : `<div class="empty" style="padding:30px 10px">${flor()}<h2>Nenhuma peça ainda</h2><p>Use “Nova peça” para registrar o primeiro post, carrossel, reels ou story.</p></div>`}
