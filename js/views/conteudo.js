@@ -1,9 +1,9 @@
-import { store } from '../store.js?v=38';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=38';
-import { ic, flor } from '../icons.js?v=38';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=38';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=38';
-import { idDrive, urlAbrir } from '../drive.js?v=38';
+import { store } from '../store.js?v=39';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=39';
+import { ic, flor } from '../icons.js?v=39';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=39';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=39';
+import { idDrive, urlAbrir } from '../drive.js?v=39';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a peça ser produzida.
@@ -183,6 +183,9 @@ async function adicionarEmLote(arquivo) {
 }
 
 // O que ainda falta na peça: mostra o que precisa ser completado depois do planejamento.
+// Ideia que ainda está no Planejamento e já foi enviada ao cliente (aguardando, com alteração ou aprovada).
+const enviadaNoPlano = (p) => p.etapa === 'briefing' && !!p.planejamento;
+
 function faltas(p) {
   const chips = [];
   if (p.roteiro) chips.push('<span class="chip mute">Roteiro</span>');
@@ -257,7 +260,7 @@ function cartao(p, mostrarCliente) {
   const meta = [mostrarCliente ? (cli?.nome || 'Cliente removido') : '', p.publicar ? dataBR(p.publicar).slice(0, 5) : 'Sem data', p.responsavel].filter(Boolean).join(' · ');
   const atras = atrasada(p);
   const botoes = (PROXIMOS[p.etapa] || []).map(([para, texto, estilo]) => `<button class="btn ${estilo || 'sec'} sm" data-act="mover-peca" data-id="${p.id}" data-para="${para}">${esc(texto)}</button>`).join('');
-  return `<div class="peca" draggable="true" data-peca="${p.id}">
+  return `<div class="peca${enviadaNoPlano(p) ? ' enviado' : ''}" draggable="true" data-peca="${p.id}">
     <div class="actions" style="gap:6px"><span class="chip info">${ic(f.icone)}${esc(f.nome)}</span>${funilChip(p)}${atras ? '<span class="chip warn">Atrasada</span>' : ''}${p.link && urlSegura(p.link) ? `<a class="chip mute" href="${esc(urlSegura(p.link))}" target="_blank" rel="noopener noreferrer" title="Abrir a arte">${ic('file')}Arte</a>` : ''}</div>
     <button class="peca-t" data-act="editar-peca" data-id="${p.id}">${esc(p.titulo || '(sem título)')}</button>
     <div class="peca-m">${esc(meta)}</div>
@@ -280,7 +283,7 @@ function blocoPeca(p, mostrarCliente) {
   const f = FORMATOS[p.formato] || FORMATOS.feed;
   const e = etapaDe(p);
   const cli = store.obter('cliente', p.clienteId)?.nome || '';
-  return `<button class="cal-p cor-${e.cor}${atrasada(p) ? ' atras' : ''}" data-act="editar-peca" data-id="${p.id}" draggable="true" data-peca="${p.id}" title="${esc([p.titulo, cli, f.nome, e.nome].filter(Boolean).join(' · '))}">
+  return `<button class="cal-p cor-${enviadaNoPlano(p) ? 'slate' : e.cor}${atrasada(p) ? ' atras' : ''}" data-act="editar-peca" data-id="${p.id}" draggable="true" data-peca="${p.id}" title="${esc([p.titulo, cli, f.nome, e.nome].filter(Boolean).join(' · '))}">
     ${ic(f.icone)}<span><b>${esc(p.titulo || '(sem título)')}</b>${mostrarCliente && cli ? `<small>${esc(cli)}</small>` : ''}</span></button>`;
 }
 
@@ -357,6 +360,7 @@ export default {
       if (e.id === 'publicado') itens = itens.slice(0, PUBLICADAS_VISIVEIS);
       return `<section class="kol" data-etapa="${e.id}" aria-label="${esc(e.nome)}">
         <div class="kol-h"><span>${esc(e.nome)}</span><b class="chip ${e.chip}">${total}</b></div>
+        ${e.id === 'briefing' ? '<div class="kol-dica"><i></i>Cinza-azulado: já enviado ao cliente</div>' : ''}
         ${itens.map((p) => cartao(p, !filtro)).join('') || '<div class="kol-vazio">Nada aqui</div>'}
         ${total > itens.length ? `<div class="kol-vazio">E mais ${total - itens.length} publicadas</div>` : ''}
       </section>`;

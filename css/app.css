@@ -248,6 +248,14 @@ button.card.clicavel:focus-visible{outline:2px solid var(--verde);outline-offset
 .peca.arrastando,.cal-p.arrastando{opacity:.4}
 .kol.alvo{background:#E3F4EC;box-shadow:inset 0 0 0 2px var(--verde)}
 .dia.alvo{box-shadow:inset 0 0 0 2px var(--verde);background:#E3F4EC}
+.peca.enviado{background:#CAD6E2;box-shadow:inset 5px 0 0 #4F6A85,0 1px 2px rgba(41,43,45,.04),0 8px 22px rgba(41,43,45,.05)}
+.peca.enviado .peca-t{color:#1F3347}
+.peca.enviado .peca-m{color:#3B5169}
+.peca.enviado .chip.mute{background:rgba(255,255,255,.6);color:#3B5169}
+.peca.enviado .btn.sec{background:rgba(255,255,255,.7)}
+.cor-slate{background:#CAD6E2;color:#1F3347}
+.kol-dica{display:flex;align-items:center;gap:6px;font:400 11.5px var(--ui);color:var(--ink-2);padding:0 4px}
+.kol-dica i{width:12px;height:12px;border-radius:4px;background:#CAD6E2;box-shadow:inset 0 0 0 1.5px #4F6A85;flex:none}
 .peca-t{border:0;background:none;padding:0;text-align:left;font:700 14.5px/1.3 var(--ui);color:var(--ink)}
 .peca-t:hover{text-decoration:underline;text-decoration-color:var(--verde);text-underline-offset:3px}
 .peca-m{font:400 12.5px var(--ui);color:var(--ink-2)}
