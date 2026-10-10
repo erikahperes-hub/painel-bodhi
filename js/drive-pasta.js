@@ -5,7 +5,8 @@
 
 const API = 'https://www.googleapis.com/drive/v3/files';
 const norm = (t) => String(t ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
-const NOME = /^(?:(\d{4}-\d{2}-\d{2})_)?(feed|carrossel|reels|story)_(.+?)(?:_(capa|\d{1,2}))?\.([A-Za-z0-9]+)$/i;
+// O formato no nome do arquivo é reels, carrossel, estatico ou story ("feed" também vale, dos arquivos antigos).
+const NOME = /^(?:(\d{4}-\d{2}-\d{2})_)?(estatico|feed|carrossel|reels|story)_(.+?)(?:_(capa|\d{1,2}))?\.([A-Za-z0-9]+)$/i;
 const MES = /^\d{4}-\d{2}$/;
 
 // Aceita o link da pasta (…/folders/CODIGO ou …?id=CODIGO) ou o próprio código. Devolve o código ou ''.
@@ -55,7 +56,8 @@ export function montarPecas(arquivos, clientes = []) {
     const mime = String(a.mimeType || '');
     const tipo = mime.startsWith('image/') ? 'imagem' : mime.startsWith('video/') ? 'video' : (mime === 'text/plain' ? 'texto' : '');
     if (!m || !tipo) { if (!mime.includes('folder')) ignorados.push(a.name); continue; }
-    const [, data = '', formato, titulo, sufixo = ''] = m;
+    const [, data = '', formatoNome, titulo, sufixo = ''] = m;
+    const formato = formatoNome.toLowerCase() === 'estatico' ? 'feed' : formatoNome; // o código interno do estático é "feed"
     const cliente = (a.caminho || []).map((s) => nomesClientes.get(norm(s))).find(Boolean) || [...(a.caminho || [])].reverse().find((s) => !MES.test(s)) || '';
     const chave = [norm(cliente), data, formato.toLowerCase(), norm(titulo)].join('|');
     if (!grupos.has(chave)) grupos.set(chave, { cliente, data, formato: formato.toLowerCase(), titulo, arquivos: [] });

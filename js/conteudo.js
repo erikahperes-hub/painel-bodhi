@@ -1,5 +1,5 @@
-import { store } from './store.js?v=75';
-import { diasAte } from './util.js?v=75';
+import { store } from './store.js?v=76';
+import { diasAte } from './util.js?v=76';
 
 // Etapas do caminho de cada peça de conteúdo, na ordem em que acontecem.
 export const ETAPAS = [
@@ -11,12 +11,43 @@ export const ETAPAS = [
   { id: 'publicado', nome: 'Publicado', chip: 'mute', cor: 'mute' },
 ];
 
+// Os quatro formatos, na ordem de exibição. O código interno do estático continua "feed" (é o que já está guardado nas peças).
 export const FORMATOS = {
-  feed: { nome: 'Feed', icone: 'image' },
-  carrossel: { nome: 'Carrossel', icone: 'layers' },
   reels: { nome: 'Reels', icone: 'play' },
+  carrossel: { nome: 'Carrossel', icone: 'layers' },
+  feed: { nome: 'Estático', icone: 'image' },
   story: { nome: 'Story', icone: 'circle' },
 };
+
+// Redes sociais onde a peça é publicada (campo "Rede", como no Asana). O código é o que fica guardado na peça.
+export const REDES = {
+  instagram: { nome: 'Instagram' },
+  tiktok: { nome: 'TikTok' },
+  facebook: { nome: 'Facebook' },
+  pinterest: { nome: 'Pinterest' },
+  linkedin: { nome: 'LinkedIn' },
+};
+
+// Aceita a rede como escrita por pessoas ou arquivos ("Instagram", "tik tok", "IG"...). Devolve o código ou ''.
+export function redeDe(texto) {
+  const n = String(texto || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z]/g, '');
+  if (/^(instagram|insta|ig)$/.test(n)) return 'instagram';
+  if (/^(tiktok|tt)$/.test(n)) return 'tiktok';
+  if (/^(facebook|face|fb)$/.test(n)) return 'facebook';
+  if (/^pinterest$/.test(n)) return 'pinterest';
+  if (/^linkedin$/.test(n)) return 'linkedin';
+  return '';
+}
+
+// Aceita o formato como escrito por pessoas ou arquivos: "Estático", "estatico", "Feed", "Reels", "carrosséis"... Devolve o código interno ou ''.
+export function formatoDe(texto) {
+  const n = String(texto || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  if (/reel/.test(n)) return 'reels';
+  if (/carross/.test(n)) return 'carrossel';
+  if (/stor/.test(n)) return 'story';
+  if (/estatic|feed|post|imagem|foto/.test(n)) return 'feed';
+  return '';
+}
 
 export const etapaDe = (p) => ETAPAS.find((e) => e.id === p.etapa) || ETAPAS[0];
 

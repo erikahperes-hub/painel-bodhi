@@ -33,6 +33,7 @@ declare
   v_formato text;
   v_publicar text;
   v_funil text;
+  v_rede text;
   v_id text;
   v_criadas jsonb := '[]'::jsonb;
   v_ignoradas jsonb := '[]'::jsonb;
@@ -49,7 +50,7 @@ begin
   for p in select value from jsonb_array_elements(p_pecas) loop
     -- título sem o tipo no começo ("Reels: ...") e com a primeira letra maiúscula
     v_titulo := trim(coalesce(p ->> 'titulo', ''));
-    v_titulo := regexp_replace(v_titulo, '^\s*(reels?|carrossel|carross[eé]is|stories|story|feed)\s*[:\-–]\s*', '', 'i');
+    v_titulo := regexp_replace(v_titulo, '^\s*(reels?|carrossel|carross[eé]is|stories|story|feed|est[aá]ticos?)\s*[:\-–]\s*', '', 'i');
     if v_titulo = '' then
       v_ignoradas := v_ignoradas || jsonb_build_array(jsonb_build_object('titulo', coalesce(p ->> 'titulo', ''), 'motivo', 'sem titulo'));
       continue;
@@ -66,8 +67,20 @@ begin
     select id into v_cliid from records
       where kind = 'cliente' and bodhi_norm(data ->> 'nome') = bodhi_norm(p ->> 'clienteNome') limit 1;
 
-    v_formato := lower(coalesce(p ->> 'formato', ''));
+    -- formato: reels, carrossel, estático (guardado como "feed") ou story; aceita "Estático", "estatico", "post"
+    v_formato := bodhi_norm(coalesce(p ->> 'formato', ''));
+    if v_formato in ('estatico', 'estaticos', 'post') then v_formato := 'feed'; end if;
     if v_formato not in ('feed', 'carrossel', 'reels', 'story') then v_formato := 'feed'; end if;
+
+    -- rede onde a peça é publicada (opcional)
+    v_rede := bodhi_norm(coalesce(p ->> 'rede', ''));
+    v_rede := case
+      when v_rede in ('instagram', 'insta', 'ig') then 'instagram'
+      when v_rede in ('tiktok', 'tik tok', 'tt') then 'tiktok'
+      when v_rede in ('facebook', 'face', 'fb') then 'facebook'
+      when v_rede = 'pinterest' then 'pinterest'
+      when v_rede = 'linkedin' then 'linkedin'
+      else '' end;
 
     v_publicar := '';
     if (p ->> 'publicar') ~ '^\d{4}-\d{2}-\d{2}$' then
@@ -110,6 +123,7 @@ begin
       'publicar', v_publicar,
       'roteiro', left(coalesce(p ->> 'roteiro', ''), 5000),
       'funil', v_funil,
+      'rede', v_rede,
       'planejamento', '',
       'ajustePlano', '',
       'legenda', left(coalesce(p ->> 'legenda', ''), 5000),

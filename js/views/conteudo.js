@@ -1,26 +1,41 @@
-import { store } from '../store.js?v=75';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=75';
-import { ic, flor } from '../icons.js?v=75';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=75';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=75';
-import { idDrive, urlAbrir } from '../drive.js?v=75';
-import { lerPasta } from '../drive-pasta.js?v=75';
-import { lerTabela } from '../planejamento.js?v=75';
-import { config } from '../config.js?v=75';
+import { store } from '../store.js?v=76';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=76';
+import { ic, flor } from '../icons.js?v=76';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=76';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=76';
+import { idDrive, urlAbrir } from '../drive.js?v=76';
+import { lerPasta } from '../drive-pasta.js?v=76';
+import { lerTabela } from '../planejamento.js?v=76';
+import { config } from '../config.js?v=76';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a peça ser produzida.
 // Etapa do funil de cada peça: topo (atrair), meio (considerar) e fundo (converter).
 const FUNIL = { '': 'Sem etapa de funil', topo: 'Topo de funil', meio: 'Meio de funil', fundo: 'Fundo de funil' };
 const FUNIL_COR = { topo: 'cor-mute', meio: 'cor-mute', fundo: 'cor-mute' };
-// Cor por tipo de conteúdo: Reels, Carrossel, Story e Feed têm cada um a sua.
+// Cor por tipo de conteúdo: Reels, Carrossel, Estático e Story têm cada um a sua.
 const fmCls = (p) => `fm-${FORMATOS[p.formato] ? p.formato : 'feed'}`;
 const funilChip = (p) => (FUNIL_COR[p.funil] ? `<span class="chip ${FUNIL_COR[p.funil]}">${FUNIL[p.funil]}</span>` : '');
 // Filtro do funil no Calendário: '' (todos), 'topo', 'meio', 'fundo' ou 'sem'. Vale até recarregar a página.
 let filtroFunil = '';
-let filtroTipo = ''; // '', 'feed', 'carrossel', 'reels' ou 'story'
+let filtroTipo = ''; // '', 'reels', 'carrossel', 'feed' (estático) ou 'story'
 const casaFunil = (p) => !filtroFunil || (filtroFunil === 'sem' ? !FUNIL_COR[p.funil] : p.funil === filtroFunil);
 const casaTipo = (p) => !filtroTipo || (FORMATOS[p.formato] ? p.formato : 'feed') === filtroTipo;
+let filtroRede = ''; // '', um código de REDES ou 'sem'
+const casaRede = (p) => !filtroRede || (filtroRede === 'sem' ? !REDES[p.rede] : p.rede === filtroRede);
+const nFiltros = () => [filtroTipo, filtroFunil, filtroRede].filter(Boolean).length;
+// Etiqueta da rede no cartão (cada rede tem a sua cor).
+const redeChip = (p) => (REDES[p.rede] ? `<span class="chip rd-${p.rede}">${esc(REDES[p.rede].nome)}</span>` : '');
+
+// Linha "Rede" dos filtros que ficam abaixo do calendário (só aparece se alguma peça do mês tem rede).
+function linhaRede(lista) {
+  const n = (k) => lista.filter((p) => p.rede === k).length;
+  const sem = lista.filter((p) => !REDES[p.rede]).length;
+  if (!Object.keys(REDES).some((k) => n(k))) return '';
+  const botao = (k, texto, qtd, cls) => `<button type="button" class="chip ${cls} funil-btn rede-btn${filtroRede === k ? ' on' : ''}" data-act="filtro-rede" data-rede="${k}" aria-pressed="${filtroRede === k}">${esc(texto)} ${qtd}</button>`;
+  const botoes = `${Object.entries(REDES).filter(([k]) => n(k)).map(([k, r]) => botao(k, r.nome, n(k), `rd-${k}`)).join('')}${sem ? botao('sem', 'Sem rede', sem, 'cor-mute') : ''}`;
+  return `<div class="filtros-linha"><span class="filtros-rot">Rede</span><div class="legenda" title="Clique para ver só as peças de cada rede">${botoes}</div></div>`;
+}
 
 // Resumo "Topo 3 · Meio 4 · Fundo 2": cada um é um botão que mostra a lista das peças daquele grupo.
 function resumoFunil(lista, cru = false) {
@@ -40,9 +55,9 @@ function linhaFunil(lista) {
 
 // Lista das peças do grupo escolhido no funil, logo abaixo do calendário.
 function listaFunil(lista, mostrarCliente) {
-  if (!filtroFunil && !filtroTipo) return '';
-  const itens = ordenarPecas(lista.filter((p) => casaFunil(p) && casaTipo(p)));
-  const nome = [filtroTipo ? FORMATOS[filtroTipo].nome : '', filtroFunil ? (filtroFunil === 'sem' ? 'Sem etapa de funil' : FUNIL[filtroFunil]) : ''].filter(Boolean).join(' · ');
+  if (!nFiltros()) return '';
+  const itens = ordenarPecas(lista.filter((p) => casaFunil(p) && casaTipo(p) && casaRede(p)));
+  const nome = [filtroTipo ? FORMATOS[filtroTipo].nome : '', filtroFunil ? (filtroFunil === 'sem' ? 'Sem etapa de funil' : FUNIL[filtroFunil]) : '', filtroRede ? (filtroRede === 'sem' ? 'Sem rede' : REDES[filtroRede].nome) : ''].filter(Boolean).join(' · ');
   const linha = (p) => {
     const f = FORMATOS[p.formato] || FORMATOS.feed;
     const e = etapaDe(p);
@@ -77,12 +92,13 @@ function abrirPeca(p = null, padrao = {}) {
   if (atual && !clientes.includes(atual)) clientes.push(atual);
   formulario({
     titulo: p ? 'Editar peça' : 'Nova peça de conteúdo',
-    subtitulo: 'Cada post, carrossel, reels ou story do cliente vira uma peça acompanhada daqui.',
+    subtitulo: 'Cada reels, carrossel, estático ou story do cliente vira uma peça acompanhada daqui.',
     largo: true,
     campos: [
       { nome: 'clienteId', rotulo: 'Cliente', tipo: 'select', obrigatorio: true, opcoes: [{ v: '', t: 'Escolha o cliente' }, ...clientes.map((c) => ({ v: c.id, t: c.nome || '(sem nome)' }))] },
       { nome: 'titulo', rotulo: 'Título da peça', obrigatorio: true, placeholder: 'Ex.: Post de lançamento da coleção' },
       { nome: 'formato', rotulo: 'Formato', tipo: 'select', opcoes: Object.entries(FORMATOS).map(([v, f]) => ({ v, t: f.nome })) },
+      { nome: 'rede', rotulo: 'Rede', tipo: 'select', opcoes: [{ v: '', t: 'Sem rede definida' }, ...Object.entries(REDES).map(([v, r]) => ({ v, t: r.nome }))] },
       { nome: 'funil', rotulo: 'Etapa do funil', tipo: 'select', opcoes: Object.entries(FUNIL).map(([v, t]) => ({ v, t })) },
       { nome: 'etapa', rotulo: 'Etapa', tipo: 'select', opcoes: ETAPAS.map((e) => ({ v: e.id, t: e.nome })) },
       { nome: 'publicar', rotulo: 'Data de publicação', tipo: 'data' },
@@ -141,15 +157,16 @@ function escolherAdicionar(clienteId = '') {
 function botoesCabecalho(filtro) {
   return `<div class="actions">${filtro ? `<button class="btn sec sm" data-act="ir" data-rota="previa" data-ref="${esc(filtro)}">${ic('image')}Prévia do cliente</button><button class="btn sec sm" data-act="enviar-planejamento" data-cliente="${esc(filtro)}">${ic('send')}Enviar planejamento</button><button class="btn sec sm" data-act="link-aprovacao" data-cliente="${esc(filtro)}">${ic('link')}Link de aprovação</button>` : ''}
     <button class="btn sec sm" data-act="adicionar-pecas" data-cliente="${esc(filtro)}">${ic('upload')}Adicionar em lote</button>
+    <button class="btn pri sm" data-act="nova-peca" data-cliente="${esc(filtro)}">${ic('plus')}Nova peça</button>
     <input type="file" accept="application/json,.json" hidden data-lote></div>`;
 }
 
 const DATA_ISO = /^\d{4}-\d{2}-\d{2}$/;
 
-// O tipo da peça (reels, carrossel, story, feed) já aparece pela cor e pelo ícone, então o título não precisa repeti-lo.
-const PALAVRA_DO_TIPO = { reels: /^reels?$/i, carrossel: /^(carrossel|carross[eé]is)$/i, story: /^(story|stories)$/i, feed: /^feed$/i };
+// O tipo da peça (reels, carrossel, estático, story) já aparece pela cor e pelo ícone, então o título não precisa repeti-lo.
+const PALAVRA_DO_TIPO = { reels: /^reels?$/i, carrossel: /^(carrossel|carross[eé]is)$/i, story: /^(story|stories)$/i, feed: /^(feed|est[aá]ticos?)$/i };
 function semTipoNoTitulo(titulo, formato) {
-  const m = titulo.match(/^\s*(reels?|carrossel|carross[eé]is|stories|story|feed)\s*(?:([:\-–])\s*|((?:de|do|da)\s+))?/i);
+  const m = titulo.match(/^\s*(reels?|carrossel|carross[eé]is|stories|story|feed|est[aá]ticos?)\s*(?:([:\-–])\s*|((?:de|do|da)\s+))?/i);
   if (!m) return titulo;
   const resto = titulo.slice(m[0].length).trim();
   const temSeparador = !!m[2];
@@ -202,7 +219,7 @@ async function adicionarEmLote(arquivo, detalhe = '') {
     const c = achar(p);
     if (!c) { semCliente.add(String(p.clienteNome || p.clienteId || '(sem cliente)')); continue; }
     const publicar = DATA_ISO.test(p.publicar || '') ? p.publicar : '';
-    const formato = FORMATOS[p.formato] ? p.formato : 'feed';
+    const formato = formatoDe(p.formato) || 'feed';
     const titulo = semTipoNoTitulo(String(p.titulo || '').trim(), formato) || '(sem título)';
     const etapaIn = p.etapa === 'planejamento' ? 'briefing' : p.etapa;
     const etapaExplicita = ETAPAS.some((e) => e.id === etapaIn);
@@ -218,6 +235,7 @@ async function adicionarEmLote(arquivo, detalhe = '') {
       publicar,
       roteiro: String(p.roteiro || ''),
       funil: ['topo', 'meio', 'fundo'].includes(p.funil) ? p.funil : '',
+      rede: redeDe(p.rede),
       planejamento: ['aprovacao', 'ajustes', 'aprovado'].includes(p.planejamento) ? p.planejamento : '',
       ajustePlano: String(p.ajustePlano || ''),
       legenda: String(p.legenda || ''),
@@ -400,7 +418,7 @@ function cartao(p, mostrarCliente) {
   const atras = atrasada(p);
   const botoes = (PROXIMOS[p.etapa] || []).map(([para, texto, estilo]) => `<button class="btn ${estilo || 'sec'} sm" data-act="mover-peca" data-id="${p.id}" data-para="${para}">${esc(texto)}</button>`).join('');
   return `<div class="peca${enviadaNoPlano(p) ? ' enviado' : ''}${p.concluida ? ' feita' : ''}" draggable="true" data-peca="${p.id}">
-    <div class="actions" style="gap:6px">${botaoConcluir(p)}<span class="chip ${fmCls(p)}">${ic(f.icone)}${esc(f.nome)}</span>${funilChip(p)}${atras ? '<span class="chip warn">Atrasada</span>' : ''}${p.link && urlSegura(p.link) ? `<a class="chip mute" href="${esc(urlSegura(p.link))}" target="_blank" rel="noopener noreferrer" title="Abrir a arte">${ic('file')}Arte</a>` : ''}</div>
+    <div class="actions" style="gap:6px">${botaoConcluir(p)}<span class="chip ${fmCls(p)}">${ic(f.icone)}${esc(f.nome)}</span>${redeChip(p)}${funilChip(p)}${atras ? '<span class="chip warn">Atrasada</span>' : ''}${p.link && urlSegura(p.link) ? `<a class="chip mute" href="${esc(urlSegura(p.link))}" target="_blank" rel="noopener noreferrer" title="Abrir a arte">${ic('file')}Arte</a>` : ''}</div>
     <button class="peca-t" data-act="editar-peca" data-id="${p.id}">${esc(p.titulo || '(sem título)')}</button>
     <div class="peca-m">${esc(meta)}</div>
     ${faltas(p)}
@@ -423,7 +441,7 @@ function blocoPeca(p, mostrarCliente) {
   const f = FORMATOS[p.formato] || FORMATOS.feed;
   const e = etapaDe(p);
   const cli = store.obter('cliente', p.clienteId)?.nome || '';
-  return `<button class="cal-p ${fmCls(p)}${atrasada(p) ? ' atras' : ''}${p.concluida ? ' feita' : ''}${casaFunil(p) && casaTipo(p) ? '' : ' apagado'}" data-act="editar-peca" data-id="${p.id}" draggable="true" data-peca="${p.id}" title="${esc([p.titulo, cli, f.nome, e.nome, p.concluida ? 'Concluída' : ''].filter(Boolean).join(' · '))}">
+  return `<button class="cal-p ${fmCls(p)}${atrasada(p) ? ' atras' : ''}${p.concluida ? ' feita' : ''}${casaFunil(p) && casaTipo(p) && casaRede(p) ? '' : ' apagado'}" data-act="editar-peca" data-id="${p.id}" draggable="true" data-peca="${p.id}" title="${esc([p.titulo, cli, f.nome, REDES[p.rede]?.nome, e.nome, p.concluida ? 'Concluída' : ''].filter(Boolean).join(' · '))}">
     ${botaoConcluir(p, true)}<i class="cal-dot cor-${e.cor}" title="${esc(e.nome)}"></i>${ic(f.icone)}<span><b>${esc(p.titulo || '(sem título)')}</b>${mostrarCliente && cli ? `<small>${esc(cli)}</small>` : ''}</span></button>`;
 }
 
@@ -465,7 +483,7 @@ function calendario({ filtro, lista, chipsClientes }) {
       ${botoesCabecalho(filtro)}</div>
     ${seletorMes(ym)}
     <div class="calbox"><div class="calgrid">${DIAS_SEMANA.map((d) => `<div class="dow">${d}</div>`).join('')}${celulas}</div></div>
-    <div class="filtros-cal${filtroTipo && filtroFunil ? ' juntos' : ''}"${filtroTipo && filtroFunil ? ' title="Os dois filtros estão ligados ao mesmo tempo"' : ''}><div class="filtros-linha"><span class="filtros-rot">Tipo</span><div class="legenda" title="Clique em um tipo para ver só as peças dele. A cor é o tipo de conteúdo">${Object.entries(FORMATOS).map(([id, f]) => `<button type="button" class="chip fm-${id} funil-btn tipo-btn${filtroTipo === id ? ' on' : ''}" data-act="filtro-tipo" data-tipo="${id}" aria-pressed="${filtroTipo === id}">${ic(f.icone)}${esc(f.nome)} ${listaMes.filter((p) => (FORMATOS[p.formato] ? p.formato : 'feed') === id).length}</button>`).join('')}</div></div>${linhaFunil(listaMes)}</div>
+    <div class="filtros-cal${nFiltros() >= 2 ? ' juntos' : ''}"${nFiltros() >= 2 ? ' title="Mais de um filtro está ligado ao mesmo tempo"' : ''}><div class="filtros-linha"><span class="filtros-rot">Tipo</span><div class="legenda" title="Clique em um tipo para ver só as peças dele. A cor é o tipo de conteúdo">${Object.entries(FORMATOS).map(([id, f]) => `<button type="button" class="chip fm-${id} funil-btn tipo-btn${filtroTipo === id ? ' on' : ''}" data-act="filtro-tipo" data-tipo="${id}" aria-pressed="${filtroTipo === id}">${ic(f.icone)}${esc(f.nome)} ${listaMes.filter((p) => (FORMATOS[p.formato] ? p.formato : 'feed') === id).length}</button>`).join('')}</div></div>${linhaFunil(listaMes)}${linhaRede(listaMes)}</div>
     ${listaFunil(listaMes, !filtro)}
     ${semData.length ? `<div class="semdata"><h3>Sem data de publicação</h3><p class="lbl">Abra a peça e escolha a data para ela aparecer no calendário.</p><div class="semdata-l">${semData.map((p) => blocoPeca(p, !filtro)).join('')}</div></div>` : ''}
   </div>`;
@@ -515,9 +533,7 @@ export default {
         <div class="card stat tone-coral"><div><div class="lbl">Pedidos de ajuste</div><div class="big num">${em('ajustes').length}</div><div class="hint">Para refazer</div></div><span class="stat-ic">${ic('edit')}</span></div>
         <div class="card stat tone-coral"><div><div class="lbl">Atrasadas</div><div class="big num">${lista.filter(atrasada).length}</div><div class="hint">Passaram da data, em todos os meses</div></div><span class="stat-ic">${ic('calendar')}</span></div>
       </div>`;
-    // O botão Nova peça fica sempre à direita da linha das abas, logo abaixo dos números.
-    const novaPeca = `<button class="btn pri sm" data-act="nova-peca" data-cliente="${esc(filtro)}">${ic('plus')}Nova peça</button>`;
-    const cabeca = `<div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>${numeros}<div class="abas-linha">${abas}${novaPeca}</div>`;
+    const cabeca = `<div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>${numeros}${abas}`;
     if (aba === 'calendario') return cabeca + calendario({ filtro, lista });
 
     const colunas = ETAPAS.map((e) => {
@@ -535,7 +551,7 @@ export default {
     return cabeca + `<div class="card">
         <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2></div>
           ${botoesCabecalho(filtro)}</div>
-        ${lista.length ? `${seletorMes(ym)}<div class="kanban">${colunas}</div>` : `<div class="empty" style="padding:30px 10px">${flor()}<h2>Nenhuma peça ainda</h2><p>Use “Nova peça” para registrar o primeiro post, carrossel, reels ou story.</p></div>`}
+        ${lista.length ? `${seletorMes(ym)}<div class="kanban">${colunas}</div>` : `<div class="empty" style="padding:30px 10px">${flor()}<h2>Nenhuma peça ainda</h2><p>Use “Nova peça” para registrar o primeiro reels, carrossel, estático ou story.</p></div>`}
       </div>`;
   },
 
@@ -576,7 +592,8 @@ export default {
       toast(`${prontas.length} ${prontas.length === 1 ? 'ideia enviada' : 'ideias enviadas'} para aprovação`);
     },
     'filtro-tipo': (el) => { filtroTipo = el.dataset.tipo === filtroTipo ? '' : el.dataset.tipo; verLista = !!filtroTipo; recarregarTela(); },
-    'limpar-filtros': () => { filtroFunil = ''; filtroTipo = ''; recarregarTela(); },
+    'limpar-filtros': () => { filtroFunil = ''; filtroTipo = ''; filtroRede = ''; recarregarTela(); },
+    'filtro-rede': (el) => { filtroRede = el.dataset.rede === filtroRede ? '' : el.dataset.rede; verLista = !!filtroRede; recarregarTela(); },
     'filtro-funil': (el) => { filtroFunil = el.dataset.funil === filtroFunil ? '' : el.dataset.funil; verLista = !!filtroFunil; recarregarTela(); },
     'adicionar-lote': () => document.querySelector('[data-lote]')?.click(),
     'adicionar-pecas': (el) => escolherAdicionar(el.dataset.cliente),

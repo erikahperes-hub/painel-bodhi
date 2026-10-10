@@ -1,7 +1,7 @@
-import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=75';
-import { ic } from './icons.js?v=75';
-import { urlImagem, urlPlayer } from './drive.js?v=75';
-import { config } from './config.js?v=75';
+import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=76';
+import { ic } from './icons.js?v=76';
+import { urlImagem, urlPlayer } from './drive.js?v=76';
+import { config } from './config.js?v=76';
 
 // Visual de Instagram usado na prévia do painel e na página de aprovação do cliente.
 // Recebe os dados prontos, então funciona com ou sem login.
@@ -9,10 +9,11 @@ import { config } from './config.js?v=75';
 // Etapas que o cliente enxerga: só o que já foi enviado para aprovação.
 export const ETAPAS_CLIENTE = ['aprovacao', 'ajustes', 'aprovado', 'publicado'];
 
+// Nomes dos formatos como o cliente vê (o código interno do estático continua "feed").
 const FORMATO = {
-  feed: { nome: 'Feed', icone: null, vertical: false },
-  carrossel: { nome: 'Carrossel', icone: 'layers', vertical: false },
   reels: { nome: 'Reels', icone: 'play', vertical: true },
+  carrossel: { nome: 'Carrossel', icone: 'layers', vertical: false },
+  feed: { nome: 'Estático', icone: null, vertical: false },
   story: { nome: 'Story', icone: 'circle', vertical: true },
 };
 const STATUS = {

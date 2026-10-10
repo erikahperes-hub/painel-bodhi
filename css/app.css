@@ -288,6 +288,12 @@ button.card.clicavel:focus-visible{outline:2px solid var(--verde);outline-offset
 .filtros-linha{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}
 .filtros-linha .legenda{margin:0!important;justify-content:flex-end}
 .filtros-rot{font:700 11.5px var(--ui);letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+/* Cores das redes (etiqueta no cartão e botões do filtro Rede) */
+.rd-instagram{background:#F4D6E6;color:#8A2C5E}
+.rd-tiktok{background:#D9DBD8;color:#2B2D2F}
+.rd-facebook{background:#D6E2F7;color:#244C8F}
+.rd-pinterest{background:#EBD0C2;color:#7A3A1F}
+.rd-linkedin{background:#E0D8F1;color:#4B3A87}
 .funil-btn{border:0;cursor:pointer;font-family:inherit}
 .funil-btn:hover{filter:brightness(.95)}
 .funil-btn.on,.funil-btn.tipo-btn.on{background:var(--petroleo);color:var(--creme);box-shadow:none}

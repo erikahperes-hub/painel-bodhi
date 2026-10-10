@@ -9,6 +9,7 @@ const COLUNAS = [
   ['publicar', /^(data|dia|publicar|publicacao|data de publicacao)$/],
   ['formato', /^(formato|tipo|tipo de conteudo)$/],
   ['funil', /^(funil|etapa do funil|etapa funil)$/],
+  ['rede', /^(rede|rede social|plataforma|canal)$/],
   ['titulo', /^(titulo|tema|peca|nome da peca)$/],
   ['roteiro', /^(ideia e roteiro|roteiro|ideia|ideia roteiro|descricao)$/],
   ['legenda', /^(legenda|legenda pode ficar para depois|legenda pode ficar para depois )$/],
@@ -58,6 +59,16 @@ export function formatoDe(t) {
   if (/carross/.test(n)) return 'carrossel';
   if (/stor/.test(n)) return 'story';
   if (/feed|post|estatic|imagem|foto/.test(n)) return 'feed';
+  return '';
+}
+
+export function redeDe(t) {
+  const n = norm(t).replace(/ /g, '');
+  if (/^(instagram|insta|ig)$/.test(n)) return 'instagram';
+  if (/^(tiktok|tt)$/.test(n)) return 'tiktok';
+  if (/^(facebook|face|fb)$/.test(n)) return 'facebook';
+  if (n === 'pinterest') return 'pinterest';
+  if (n === 'linkedin') return 'linkedin';
   return '';
 }
 
@@ -133,6 +144,8 @@ export function lerTabela(texto, { clienteNome = '', hoje = new Date() } = {}) {
     };
     const funil = funilDe(v.funil);
     if (funil) peca.funil = funil;
+    const rede = redeDe(v.rede);
+    if (rede) peca.rede = rede;
     if (String(v.roteiro || '').trim()) peca.roteiro = v.roteiro.trim();
     if (String(v.legenda || '').trim() && !/^[-–—\s]*$/.test(v.legenda)) peca.legenda = v.legenda.trim();
     if (String(v.observacoes || '').trim()) peca.observacoes = v.observacoes.trim();
