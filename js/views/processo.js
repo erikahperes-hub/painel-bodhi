@@ -1,7 +1,7 @@
-import { store } from '../store.js?v=76';
-import { esc, toast } from '../util.js?v=76';
-import { ic, flor } from '../icons.js?v=76';
-import { formulario, confirmar } from '../ui.js?v=76';
+import { store } from '../store.js?v=77';
+import { esc, toast } from '../util.js?v=77';
+import { ic, flor } from '../icons.js?v=77';
+import { formulario, confirmar } from '../ui.js?v=77';
 
 const p = (titulo, detalhes = []) => ({ titulo, detalhes });
 
@@ -65,10 +65,88 @@ const PADRAO = {
   ],
 };
 
+// Fluxo de conteúdo: como cada peça anda no painel, do planejamento do mês até a publicação.
+const PADRAO_CONTEUDO = {
+  id: 'fluxo-conteudo',
+  titulo: 'Fluxo de conteúdo',
+  subtitulo: 'Do planejamento do mês à publicação: o cliente aprova as ideias, produzimos, ele aprova as artes e agendamos. Cada etapa tem o botão certo no painel.',
+  etapas: [
+    {
+      titulo: 'Planejamento do mês',
+      descricao: 'Definir as ideias do mês antes de produzir qualquer arte.',
+      passos: [
+        p('Rever o briefing e a estratégia do cliente', ['Datas importantes, promoções, metas do mês e o que já foi combinado.']),
+        p('Montar o planejamento do mês', ['Peça ao Claude a tabela: data, formato, funil, título, ideia e roteiro.', 'Distribua as ideias entre topo, meio e fundo de funil.']),
+        p('Adicionar as ideias no painel', ['Conteúdo > Adicionar em lote > Colar planejamento: cole a tabela inteira, com a linha “Cliente: …” em cima.', 'No Claude Code, quem tem a chave do painel pode subir direto, sem colar.', 'As ideias entram na coluna Planejamento.']),
+        p('Conferir na Prévia do cliente', ['A aba Planejamento mostra as ideias como o cliente vai ver. As que ainda não foram enviadas aparecem como “Ainda não enviado”.']),
+      ],
+      avisos: ['O texto de “Ideia e roteiro” fica visível para o cliente depois de enviado. Notas só da equipe vão em “Observações internas”.'],
+    },
+    {
+      titulo: 'Planejamento enviado ao cliente',
+      descricao: 'O cliente aprova as ideias antes de gastarmos tempo de produção.',
+      passos: [
+        p('Enviar o planejamento', ['Conteúdo > escolha o cliente > Enviar planejamento.', 'Todas as ideias da coluna Planejamento que ainda não foram enviadas vão para o link dele.']),
+        p('Mandar o link de aprovação ao cliente', ['Conteúdo > Link de aprovação: copie e envie no WhatsApp.', 'O link é fixo por cliente e abre sem senha.']),
+        p('Aguardar a resposta do cliente', ['Ele aprova uma a uma, pede alteração ou usa “Aprovar tudo deste mês”.', 'O pedido de alteração aparece no cartão e no sino do painel.']),
+        p('Ajustar as ideias que tiveram pedido de alteração', ['Abra a peça, corrija o roteiro ou a data e, em “Planejamento no link do cliente”, volte para “Aguardando aprovação” para o cliente ver de novo.']),
+      ],
+      avisos: ['Só entra em produção o que está com “Plano aprovado”.'],
+    },
+    {
+      titulo: 'Produção e edição',
+      descricao: 'Com a ideia aprovada, criamos a arte ou editamos o vídeo.',
+      passos: [
+        p('Criar a arte ou editar o vídeo', ['Exporte já com o nome padrão: AAAA-MM-DD_formato_titulo. A skill painel-conteudo, no Claude, cuida do nome e da pasta.']),
+        p('Salvar os arquivos no Drive', ['Pasta Aprovação / nome do cliente / AAAA-MM, compartilhada como “qualquer pessoa com o link”.']),
+        p('Escrever a legenda', ['Pode ir direto na peça ou num arquivo .txt com o mesmo nome do arquivo, na pasta.']),
+        p('Trazer os arquivos para o painel', ['Conteúdo > Adicionar em lote > Importar da pasta do Drive.', 'O painel liga os arquivos à peça do planejamento, sem apagar o roteiro.']),
+        p('Acompanhar o andamento no calendário', ['Use o círculo de concluir em cada peça para marcar o que já está feito.']),
+      ],
+      avisos: ['Reels e story: o texto da capa fica na faixa central. Feed e carrossel: textos e rostos longe das bordas.'],
+    },
+    {
+      titulo: 'Aprovação do conteúdo pelo cliente',
+      descricao: 'O cliente vê as artes prontas e aprova ou pede ajuste.',
+      passos: [
+        p('Passar as peças prontas para “Aguardando aprovação”', ['No cartão da peça, botão Enviar para aprovação.']),
+        p('Conferir na Prévia do cliente', ['Veja feed, stories e calendário do jeito que o cliente vê.']),
+        p('Enviar o link de aprovação ao cliente', ['É o mesmo link do planejamento: agora ele também vê as artes, na aba Feed, Stories e Calendário.']),
+        p('Aguardar a aprovação ou o pedido de ajuste', ['Aprovou: a peça vai para Aprovado.', 'Pediu alteração: a peça vai para Ajustes, e o pedido aparece no cartão e no sino.']),
+        p('Fazer os ajustes pedidos', ['Refaça a arte e use “Substituir arquivo existente” no Drive, para o arquivo manter o mesmo código.', 'Depois, botão Reenviar para aprovação.']),
+      ],
+      avisos: ['Se apagar o arquivo e subir de novo, o código muda e a peça precisa ser atualizada no painel.'],
+    },
+    {
+      titulo: 'Agendamento e publicação',
+      descricao: 'Com a arte aprovada, agendamos a publicação.',
+      passos: [
+        p('Conferir as peças em “Aprovado”', ['Use o calendário do mês para ver o que está pronto para ir ao ar.']),
+        p('Agendar a publicação', ['Agende na ferramenta de agendamento, na data e no horário combinados da peça.']),
+        p('Marcar como publicado', ['Botão Marcar como publicado: a peça fica concluída sozinha.']),
+        p('Fechar o mês', ['Confira o calendário: peças atrasadas ou em aberto precisam de uma data nova ou de uma decisão.']),
+      ],
+      avisos: ['O painel ainda não publica sozinho no Instagram: a publicação é manual ou agendada em outra ferramenta.'],
+    },
+  ],
+};
+
+// Processos que vêm prontos. Cada um pode ser editado (vira um processo salvo, com o mesmo código) ou excluído.
+const PADROES = [PADRAO, PADRAO_CONTEUDO];
+
 export function listaProcessos() {
   const regs = store.todos('processo').sort((a, b) => (a.criadoEm || '').localeCompare(b.criadoEm || ''));
-  if (regs.length) return regs;
-  return store.cfg('processos', {}).iniciado ? [] : [PADRAO];
+  const cfg = store.cfg('processos', {});
+  const ocultos = new Set(cfg.ocultos || []);
+  const proprios = new Set(regs.map((r) => r.id));
+  // Cada processo pronto vale por conta própria: aparece se não foi editado (aí vale o salvo) nem excluído.
+  // Estado antigo (antes da lista de excluídos): quem já tinha mexido nos processos e não tinha a Estratégia salva a tinha excluído.
+  const estrategiaExcluidaAntes = (d) => d.id === PADRAO.id && !cfg.ocultos && !!cfg.iniciado;
+  const prontos = PADROES
+    .filter((d) => !proprios.has(d.id) && !ocultos.has(d.id) && !estrategiaExcluidaAntes(d));
+  const doBanco = [...regs].sort((a, b) => (PADROES.findIndex((d) => d.id === a.id) + 1 || 99) - (PADROES.findIndex((d) => d.id === b.id) + 1 || 99));
+  const ordem = (x) => { const i = PADROES.findIndex((d) => d.id === x.id); return i < 0 ? 99 : i; };
+  return [...prontos, ...doBanco].sort((a, b) => ordem(a) - ordem(b));
 }
 
 function paraTexto(etapas) {
@@ -96,7 +174,15 @@ function deTexto(texto) {
   return etapas.filter((x) => x.titulo);
 }
 
-async function marcarIniciado() { await store.salvarCfg('processos', { iniciado: true }); }
+// Guarda que as sócias já mexeram nos processos; se for um dos prontos que foi excluído, ele não volta sozinho.
+async function marcarIniciado(excluidoId = '') {
+  const cfg = store.cfg('processos', {});
+  const ocultos = new Set(cfg.ocultos || []);
+  // Se a Estratégia já estava excluída no estado antigo, continua excluída ao passar para a lista nova.
+  if (!cfg.ocultos && cfg.iniciado && !store.obter('processo', PADRAO.id)) ocultos.add(PADRAO.id);
+  if (excluidoId && PADROES.some((d) => d.id === excluidoId)) ocultos.add(excluidoId);
+  await store.salvarCfg('processos', { ...cfg, iniciado: true, ocultos: [...ocultos] });
+}
 
 function abrirEditor(proc = null) {
   const base = proc || { titulo: '', subtitulo: '', etapas: [{ titulo: 'Primeira etapa', descricao: '', passos: [p('Primeiro passo')], avisos: [] }] };
@@ -122,7 +208,7 @@ function abrirEditor(proc = null) {
     aoExcluir: proc ? async (m) => {
       if (!(await confirmar('Excluir este processo do painel?', 'Excluir', true))) return;
       if (store.obter('processo', proc.id)) await store.remover('processo', proc.id);
-      await marcarIniciado();
+      await marcarIniciado(proc.id);
       m.fechar();
       toast('Processo excluído');
       location.hash = '#/processo';
