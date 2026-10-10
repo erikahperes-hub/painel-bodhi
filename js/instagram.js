@@ -1,7 +1,7 @@
-import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=68';
-import { ic } from './icons.js?v=68';
-import { urlImagem, urlPlayer } from './drive.js?v=68';
-import { config } from './config.js?v=68';
+import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=70';
+import { ic } from './icons.js?v=70';
+import { urlImagem, urlPlayer } from './drive.js?v=70';
+import { config } from './config.js?v=70';
 
 // Visual de Instagram usado na prévia do painel e na página de aprovação do cliente.
 // Recebe os dados prontos, então funciona com ou sem login.
@@ -59,7 +59,9 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
   // Feed, stories e calendário mostram só o que já foi enviado para aprovação do conteúdo.
   // A aba Planejamento mostra as ideias que a Bôdhi enviou para aprovar antes da produção.
   const lista = todas.filter((p) => ETAPAS_CLIENTE.includes(p.etapa));
-  const plano = todas.filter((p) => PLANO_ST[p.planejamento]);
+  // _rascunho: ideia ainda não enviada, que só aparece na prévia do painel (nunca na página do cliente).
+  const plano = todas.filter((p) => PLANO_ST[p.planejamento] || p._rascunho);
+  const stPlano = (p) => (p._rascunho ? ['mute', 'Ainda não enviado'] : PLANO_ST[p.planejamento]);
   const handle = String(cliente.instagram || '').replace(/^@/, '').trim() || String(cliente.nome || '').trim();
   const avatar = (grande = false) => `<span class="ig-av${grande ? ' lg' : ''}">${cliente.imagem ? `<img src="${esc(cliente.imagem)}" alt="">` : esc(iniciais(cliente.nome))}</span>`;
   let overlay = null;
@@ -129,7 +131,7 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
 
   /* ---------- Planejamento (ideias antes da produção) ---------- */
   function cardPlano(p) {
-    const st = PLANO_ST[p.planejamento];
+    const st = stPlano(p);
     const f = fmt(p);
     const id = esc(p.id);
     let quando = '<span class="ig-pl-d"><b>?</b><small>sem data</small></span>';
@@ -143,10 +145,10 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
       <h4>${esc(p.titulo || 'Peça')}</h4>
       ${r ? `<details class="ig-det"${r.length <= 420 ? ' open' : ''}><summary>Ideia e roteiro</summary><div class="ig-pl-r">${texto(r)}</div></details>` : '<p class="lbl">Ainda sem roteiro escrito.</p>'}
       ${p.planejamento === 'ajustes' && p.ajustePlano ? `<p class="ig-msg warn">Você pediu: “${esc(p.ajustePlano)}”</p>` : ''}
-      <div class="ig-pl-a">
+      ${p._rascunho ? '<div class="ig-pl-a"><span class="ig-msg" style="margin:0">Prévia: esta ideia ainda não foi enviada. Use “Enviar planejamento” para ela aparecer no link do cliente.</span></div>' : `<div class="ig-pl-a">
         ${p.planejamento === 'aprovado' ? '<span class="ig-msg ok" style="margin:0">Você aprovou esta ideia.</span>' : `<button class="btn verde sm" data-ig-pl-aprovar="${id}">${ic('check')}Aprovar</button>`}
         <button class="btn sec sm" data-ig-pl-ajustar="${id}">${ic('edit')}Pedir alteração</button>
-      </div>
+      </div>`}
       <form class="ig-aj" data-ig-pl-form="${id}" hidden><label>O que você gostaria de mudar nesta ideia?</label><textarea rows="3" maxlength="1500" placeholder="Ex.: trocar o tema ou mudar a data"></textarea>
         <div class="actions"><button class="btn pri sm" type="submit">Enviar pedido</button><button class="btn ghost sm" type="button" data-ig-pl-cancelar>Cancelar</button></div></form>
       <p class="ig-erro" hidden></p>
@@ -161,10 +163,10 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
   const funilTxt = (p) => (FUNIL_CLIENTE[p.funil] ? FUNIL_CLIENTE[p.funil][1] : '');
 
   function itemPlano(p) {
-    const st = PLANO_ST[p.planejamento];
+    const st = stPlano(p);
     const f = fmt(p);
     const quando = p.publicar ? `<span class="ig-pl-d"><b>${esc(ddmm(p.publicar))}</b><small>${esc(diaSemana(p.publicar))}</small></span>` : '<span class="ig-pl-d"><b>?</b><small>sem data</small></span>';
-    return `<button class="ig-pl-item" data-ig-pl-abrir="${esc(p.id)}">${quando}<span class="ig-pl-it"><b>${esc(p.titulo || 'Peça')}</b><small><i class="fm-dot fm-${fmId(p)}"></i>${esc([f.nome, funilTxt(p)].filter(Boolean).join(' · '))}</small></span><span class="chip cor-${st[0]}">${esc(PLANO_CURTO[p.planejamento])}</span></button>`;
+    return `<button class="ig-pl-item" data-ig-pl-abrir="${esc(p.id)}">${quando}<span class="ig-pl-it"><b>${esc(p.titulo || 'Peça')}</b><small><i class="fm-dot fm-${fmId(p)}"></i>${esc([f.nome, funilTxt(p)].filter(Boolean).join(' · '))}</small></span><span class="chip cor-${st[0]}">${esc(p._rascunho ? 'Não enviada' : PLANO_CURTO[p.planejamento])}</span></button>`;
   }
 
   function calendarioPlano(itens) {
@@ -178,7 +180,7 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
       const d = new Date(a, m - 1, 1 - primeiro + i);
       const iso = isoDia(d);
       const chips = (dias[iso] || []).map((p) => {
-        const st = PLANO_ST[p.planejamento];
+        const st = stPlano(p);
         return `<button class="ig-pl-chip fm-${fmId(p)}" data-ig-pl-abrir="${esc(p.id)}" title="${esc(`${p.titulo || 'Peça'} · ${fmt(p).nome} · ${st[1]}`)}"><i class="st-${st[0]}"></i><span>${esc(p.titulo || 'Peça')}</span></button>`;
       }).join('');
       return `<div class="ig-dia${d.getMonth() !== m - 1 ? ' fora' : ''}${iso === hoje ? ' hoje' : ''}"><span>${d.getDate()}</span><div>${chips}</div></div>`;
@@ -191,7 +193,8 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
     const semDataP = plano.filter((p) => !p.publicar);
     const cont = (s) => doMesP.filter((p) => p.planejamento === s).length;
     const pend = cont('aprovacao');
-    const resumo = `<div class="ig-pl-res"><span class="chip cor-ok">Aprovadas ${cont('aprovado')}</span><span class="chip cor-creme">Aguardando ${pend}</span><span class="chip cor-warn">Com alteração ${cont('ajustes')}</span></div>`;
+    const naoEnv = doMesP.filter((p) => p._rascunho).length;
+    const resumo = `<div class="ig-pl-res"><span class="chip cor-ok">Aprovadas ${cont('aprovado')}</span><span class="chip cor-creme">Aguardando ${pend}</span><span class="chip cor-warn">Com alteração ${cont('ajustes')}</span>${naoEnv ? `<span class="chip cor-mute">Ainda não enviadas ${naoEnv}</span>` : ''}</div>`;
     const tudo = pend ? `<button class="btn verde sm" data-ig-pl-todas>${ic('check')}Aprovar tudo deste mês</button>` : '';
     const itens = [...doMesP, ...semDataP].map(itemPlano).join('') || '<div class="ig-nada"><p>Nenhuma ideia neste mês. Use as setas para ver outros meses.</p></div>';
     return `<div class="ig-plgrid">

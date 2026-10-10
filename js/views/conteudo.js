@@ -1,12 +1,12 @@
-import { store } from '../store.js?v=68';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=68';
-import { ic, flor } from '../icons.js?v=68';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=68';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=68';
-import { idDrive, urlAbrir } from '../drive.js?v=68';
-import { lerPasta } from '../drive-pasta.js?v=68';
-import { lerTabela } from '../planejamento.js?v=68';
-import { config } from '../config.js?v=68';
+import { store } from '../store.js?v=70';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=70';
+import { ic, flor } from '../icons.js?v=70';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=70';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=70';
+import { idDrive, urlAbrir } from '../drive.js?v=70';
+import { lerPasta } from '../drive-pasta.js?v=70';
+import { lerTabela } from '../planejamento.js?v=70';
+import { config } from '../config.js?v=70';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a peça ser produzida.
@@ -509,14 +509,14 @@ export default {
       </section>`;
     }).join('');
 
-    return abas + `<div class="grid" style="margin-bottom:16px">
+    return abas + `<div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>
+
+      <div class="grid" style="margin-bottom:16px">
         <div class="card stat tone-verde"><div><div class="lbl">Em produção</div><div class="big num">${em('briefing', 'criacao').length}</div><div class="hint">Planejamento e criação</div></div><span class="stat-ic">${ic('grid')}</span></div>
         <div class="card stat tone-creme"><div><div class="lbl">Aguardando aprovação</div><div class="big num">${em('aprovacao').length}</div><div class="hint">Com o cliente</div></div><span class="stat-ic">${ic('send')}</span></div>
         <div class="card stat tone-coral"><div><div class="lbl">Pedidos de ajuste</div><div class="big num">${em('ajustes').length}</div><div class="hint">Para refazer</div></div><span class="stat-ic">${ic('edit')}</span></div>
         <div class="card stat tone-coral"><div><div class="lbl">Atrasadas</div><div class="big num">${lista.filter(atrasada).length}</div><div class="hint">Passaram da data de publicação</div></div><span class="stat-ic">${ic('calendar')}</span></div>
       </div>
-
-      <div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>
 
       <div class="card">
         <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2></div>
