@@ -1,7 +1,7 @@
-import { store } from '../store.js?v=78';
-import { esc, toast } from '../util.js?v=78';
-import { ic, flor } from '../icons.js?v=78';
-import { formulario, confirmar } from '../ui.js?v=78';
+import { store } from '../store.js?v=79';
+import { esc, toast } from '../util.js?v=79';
+import { ic, flor } from '../icons.js?v=79';
+import { formulario, confirmar } from '../ui.js?v=79';
 
 const p = (titulo, detalhes = []) => ({ titulo, detalhes });
 
@@ -76,8 +76,8 @@ const PADRAO_CONTEUDO = {
       descricao: 'Definir as ideias do mês antes de produzir qualquer arte.',
       passos: [
         p('Rever o briefing e a estratégia do cliente', ['Datas importantes, promoções, metas do mês e o que já foi combinado.']),
-        p('Montar o planejamento do mês', ['Peça ao Claude a tabela: data, formato, funil, título, ideia e roteiro.', 'Distribua as ideias entre topo, meio e fundo de funil.']),
-        p('Adicionar as ideias no painel', ['Conteúdo > Adicionar em lote > Colar planejamento: cole a tabela inteira, com a linha “Cliente: …” em cima.', 'No Claude Code, quem tem a chave do painel pode subir direto, sem colar.', 'As ideias entram na coluna Planejamento.']),
+        p('Montar o planejamento do mês', ['Há três jeitos. Use o mais prático para o dia:', 'No Claude (chat), com a skill painel-conteudo: peça o planejamento do cliente e ele entrega a tabela num bloco com o botão Copiar.', 'No Claude Code: peça o mesmo. Quem tem a chave do painel já recebe as ideias lá dentro, sem copiar nada.', 'À mão: monte uma tabela ou planilha com as colunas Data, Formato, Funil, Título, Ideia e roteiro (e Legenda, se já tiver).', 'Em qualquer jeito, distribua as ideias entre topo, meio e fundo de funil.']),
+        p('Adicionar as ideias no painel', ['Se o Claude Code já subiu direto, só confira: as ideias aparecem na coluna Planejamento depois de atualizar a página.', 'Se você tem a tabela: Conteúdo > Adicionar em lote > Colar planejamento. Cole a tabela inteira, com a linha “Cliente: …” em cima. O painel mostra o resumo do que vai criar antes de adicionar.', 'As ideias entram na coluna Planejamento.']),
         p('Conferir na Prévia do cliente', ['A aba Planejamento mostra as ideias como o cliente vai ver. As que ainda não foram enviadas aparecem como “Ainda não enviado”.']),
       ],
       avisos: ['O texto de “Ideia e roteiro” fica visível para o cliente depois de enviado. Notas só da equipe vão em “Observações internas”.'],
@@ -88,10 +88,10 @@ const PADRAO_CONTEUDO = {
       passos: [
         p('Enviar o planejamento', ['Conteúdo > escolha o cliente > Enviar planejamento.', 'Todas as ideias da coluna Planejamento que ainda não foram enviadas vão para o link dele.']),
         p('Mandar o link de aprovação ao cliente', ['Conteúdo > Link de aprovação: copie e envie no WhatsApp.', 'O link é fixo por cliente e abre sem senha.']),
-        p('Aguardar a resposta do cliente', ['Ele aprova uma a uma, pede alteração ou usa “Aprovar tudo deste mês”.', 'O pedido de alteração aparece no cartão e no sino do painel.']),
+        p('Aguardar a resposta do cliente', ['Ele aprova uma a uma, pede alteração ou usa “Aprovar tudo deste mês”.', 'No cartão da peça aparece a marca “Plano enviado”, depois “Plano aprovado” ou “Plano: ajuste”.', 'O pedido de alteração aparece no cartão e no sino do painel.']),
         p('Ajustar as ideias que tiveram pedido de alteração', ['Abra a peça, corrija o roteiro ou a data e, em “Planejamento no link do cliente”, volte para “Aguardando aprovação” para o cliente ver de novo.']),
       ],
-      avisos: ['Só entra em produção o que está com “Plano aprovado”.'],
+      avisos: ['Passe para a produção só as ideias que o cliente aprovou: elas ficam com a marca “Plano aprovado” no cartão. Para começar a produzir, use o botão “Iniciar criação” da peça.'],
     },
     {
       titulo: 'Produção e edição',
