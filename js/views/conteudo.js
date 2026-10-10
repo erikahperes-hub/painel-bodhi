@@ -1,12 +1,12 @@
-import { store } from '../store.js?v=71';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=71';
-import { ic, flor } from '../icons.js?v=71';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=71';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=71';
-import { idDrive, urlAbrir } from '../drive.js?v=71';
-import { lerPasta } from '../drive-pasta.js?v=71';
-import { lerTabela } from '../planejamento.js?v=71';
-import { config } from '../config.js?v=71';
+import { store } from '../store.js?v=72';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=72';
+import { ic, flor } from '../icons.js?v=72';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=72';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=72';
+import { idDrive, urlAbrir } from '../drive.js?v=72';
+import { lerPasta } from '../drive-pasta.js?v=72';
+import { lerTabela } from '../planejamento.js?v=72';
+import { config } from '../config.js?v=72';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a peça ser produzida.
@@ -438,6 +438,8 @@ function calendario({ filtro, lista, chipsClientes }) {
   const porDia = {};
   lista.forEach((p) => { if (p.publicar) (porDia[p.publicar.slice(0, 10)] ||= []).push(p); });
   const semData = lista.filter((p) => !p.publicar && p.etapa !== 'publicado');
+  // Contadores, filtros de Tipo e Funil e a lista abaixo do calendário valem só para o mês mostrado.
+  const listaMes = lista.filter((p) => !!p.publicar && p.publicar.slice(0, 7) === ym);
 
   const celulas = Array.from({ length: semanas * 7 }, (_, i) => {
     const d = new Date(a, m - 1, 1 - primeiroDia + i);
@@ -450,7 +452,7 @@ function calendario({ filtro, lista, chipsClientes }) {
 
   return `<div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>
   <div class="card">
-    <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2><p class="sub">${lista.length} ${lista.length === 1 ? 'peça' : 'peças'} no total. Clique em uma peça para abrir ou arraste para outro dia para mudar a data de publicação.</p></div>
+    <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2><p class="sub">${listaMes.length} ${listaMes.length === 1 ? 'peça' : 'peças'} em ${nomeMes}. Clique em uma peça para abrir ou arraste para outro dia para mudar a data de publicação.</p></div>
       ${botoesCabecalho(filtro)}</div>
     <div class="toolbar" style="margin-bottom:12px">
       <div class="mes"><button class="iconbtn" data-act="cal-mes" data-passo="-1" aria-label="Mês anterior"><span style="display:grid;transform:scaleX(-1)">${ic('chev')}</span></button>
@@ -459,8 +461,8 @@ function calendario({ filtro, lista, chipsClientes }) {
       
     </div>
     <div class="calbox"><div class="calgrid">${DIAS_SEMANA.map((d) => `<div class="dow">${d}</div>`).join('')}${celulas}</div></div>
-    <div class="filtros-cal${filtroTipo && filtroFunil ? ' juntos' : ''}"${filtroTipo && filtroFunil ? ' title="Os dois filtros estão ligados ao mesmo tempo"' : ''}><div class="filtros-linha"><span class="filtros-rot">Tipo</span><div class="legenda" title="Clique em um tipo para ver só as peças dele. A cor é o tipo de conteúdo">${Object.entries(FORMATOS).map(([id, f]) => `<button type="button" class="chip fm-${id} funil-btn tipo-btn${filtroTipo === id ? ' on' : ''}" data-act="filtro-tipo" data-tipo="${id}" aria-pressed="${filtroTipo === id}">${ic(f.icone)}${esc(f.nome)} ${lista.filter((p) => (FORMATOS[p.formato] ? p.formato : 'feed') === id).length}</button>`).join('')}</div></div>${linhaFunil(lista)}</div>
-    ${listaFunil(lista, !filtro)}
+    <div class="filtros-cal${filtroTipo && filtroFunil ? ' juntos' : ''}"${filtroTipo && filtroFunil ? ' title="Os dois filtros estão ligados ao mesmo tempo"' : ''}><div class="filtros-linha"><span class="filtros-rot">Tipo</span><div class="legenda" title="Clique em um tipo para ver só as peças dele. A cor é o tipo de conteúdo">${Object.entries(FORMATOS).map(([id, f]) => `<button type="button" class="chip fm-${id} funil-btn tipo-btn${filtroTipo === id ? ' on' : ''}" data-act="filtro-tipo" data-tipo="${id}" aria-pressed="${filtroTipo === id}">${ic(f.icone)}${esc(f.nome)} ${listaMes.filter((p) => (FORMATOS[p.formato] ? p.formato : 'feed') === id).length}</button>`).join('')}</div></div>${linhaFunil(listaMes)}</div>
+    ${listaFunil(listaMes, !filtro)}
     ${semData.length ? `<div class="semdata"><h3>Sem data de publicação</h3><p class="lbl">Abra a peça e escolha a data para ela aparecer no calendário.</p><div class="semdata-l">${semData.map((p) => blocoPeca(p, !filtro)).join('')}</div></div>` : ''}
   </div>`;
 }
