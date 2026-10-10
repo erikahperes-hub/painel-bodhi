@@ -1,6 +1,6 @@
-import { store } from './store.js?v=66';
-import { sum, diasAte, diasTxt, dataBR } from './util.js?v=66';
-import { atrasada } from './conteudo.js?v=66';
+import { store } from './store.js?v=67';
+import { sum, diasAte, diasTxt, dataBR } from './util.js?v=67';
+import { atrasada } from './conteudo.js?v=67';
 
 export function faixaProposta(p) {
   const valores = (p.pacotes || []).map((x) => Number(x.preco) || 0).filter((v) => v > 0);

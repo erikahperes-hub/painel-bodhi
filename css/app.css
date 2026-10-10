@@ -244,6 +244,14 @@ button.card.clicavel:focus-visible{outline:2px solid var(--verde);outline-offset
 .kol-vazio{color:var(--ink-3);font:400 13px var(--ui);text-align:center;padding:14px 0}
 .peca{background:var(--card);border-radius:16px;padding:12px 14px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:8px}
 .peca{cursor:grab}
+/* Escolha de "Adicionar peças" */
+.opcoes-add{display:grid;gap:10px;margin-top:6px}
+.opcao-add{display:flex;gap:14px;align-items:flex-start;text-align:left;width:100%;border:1.5px solid var(--line);background:var(--card);border-radius:18px;padding:14px 16px;cursor:pointer;font-family:inherit;color:var(--ink);transition:border-color .12s,background .12s}
+.opcao-add:hover,.opcao-add:focus-visible{border-color:var(--verde);background:#F2FAF6}
+.opcao-add b{display:block;font:700 15px var(--ui)}
+.opcao-add small{display:block;font:400 13px/1.4 var(--ui);color:var(--ink-2);margin-top:3px}
+.opcao-ic{flex:none;width:36px;height:36px;border-radius:50%;background:var(--verde-s);color:var(--verde-ink);display:grid;place-items:center}
+.opcao-ic svg{width:18px;height:18px}
 /* Botão de concluir (como no Asana): círculo que vira verde com o visto */
 .chk{flex:none;width:20px;height:20px;border-radius:50%;border:1.6px solid var(--ink-3);background:transparent;color:transparent;display:inline-grid;place-items:center;padding:0;cursor:pointer;transition:background .12s,border-color .12s,color .12s}
 .chk svg{width:12px;height:12px;stroke-width:2.6}
