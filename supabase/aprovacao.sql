@@ -1,5 +1,5 @@
 -- Página de aprovação do cliente (aprovar.html). Cole no "SQL Editor" do Supabase e clique em Run.
--- Pode rodar de novo sem problema (versão 3: o cliente só vê as peças de hoje em diante, mais as que aguardam resposta dele).
+-- Pode rodar de novo sem problema (versão 3: o cliente vê as peças do mês passado em diante, mais as que aguardam resposta dele).
 --
 -- Como funciona e por que é seguro:
 -- * A tabela "records" continua fechada: só as sócias leem e escrevem nela.
@@ -30,6 +30,8 @@ declare
   v_cli jsonb;
   v_pecas jsonb;
   v_hoje text := to_char(now() at time zone 'America/Sao_Paulo', 'YYYY-MM-DD');
+  -- o cliente vê o mês passado inteiro (para o calendário e o feed) e daí em diante
+  v_inicio text := to_char(date_trunc('month', now() at time zone 'America/Sao_Paulo') - interval '1 month', 'YYYY-MM-DD');
 begin
   select cliente_id into v_cliente from aprovacao_links where token = p_token and ativo;
   if v_cliente is null then return null; end if;
@@ -60,9 +62,12 @@ begin
       -- o que ainda precisa da resposta do cliente aparece sempre, mesmo que a data já tenha passado
       r.data->>'etapa' in ('aprovacao', 'ajustes')
       or r.data->>'planejamento' in ('aprovacao', 'ajustes')
-      -- o que já foi aprovado ou publicado só aparece de hoje em diante (o passado não polui nem pesa a página)
+      -- o que já foi aprovado ou publicado aparece do começo do mês passado em diante; mais antigo que isso não aparece
+      -- (não polui nem pesa a página). Do passado, só entra a peça que tem arte: sem arquivo não há o que mostrar no feed.
       or ((r.data->>'etapa' in ('aprovado', 'publicado') or r.data->>'planejamento' = 'aprovado')
           and (coalesce(r.data->>'publicar', '') >= v_hoje
+               or (coalesce(r.data->>'publicar', '') >= v_inicio
+                   and (jsonb_array_length(coalesce(r.data->'midias', '[]'::jsonb)) > 0 or coalesce(r.data->>'capa', '') <> ''))
                or (r.data->>'etapa' = 'aprovado' and coalesce(r.data->>'publicar', '') = '')))
     );
 
