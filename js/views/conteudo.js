@@ -1,12 +1,12 @@
-import { store } from '../store.js?v=73';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=73';
-import { ic, flor } from '../icons.js?v=73';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=73';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=73';
-import { idDrive, urlAbrir } from '../drive.js?v=73';
-import { lerPasta } from '../drive-pasta.js?v=73';
-import { lerTabela } from '../planejamento.js?v=73';
-import { config } from '../config.js?v=73';
+import { store } from '../store.js?v=74';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=74';
+import { ic, flor } from '../icons.js?v=74';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=74';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=74';
+import { idDrive, urlAbrir } from '../drive.js?v=74';
+import { lerPasta } from '../drive-pasta.js?v=74';
+import { lerTabela } from '../planejamento.js?v=74';
+import { config } from '../config.js?v=74';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a peça ser produzida.
@@ -490,8 +490,12 @@ export default {
     const lista = filtro ? todas.filter((p) => p.clienteId === filtro) : todas;
     const em = (...ids) => lista.filter((p) => ids.includes(p.etapa));
 
-    const chipsClientes = [`<button class="cbtn ${filtro ? '' : 'on'}" data-act="ir" data-rota="conteudo">Todos · ${todas.length}</button>`,
-      ...clientes.map((c) => `<button class="cbtn ${c.id === filtro ? 'on' : ''}" data-act="ir" data-rota="conteudo" data-ref="${c.id}"><i></i>${esc(c.nome || '(sem nome)')} · ${todas.filter((p) => p.clienteId === c.id).length}</button>`)].join('');
+    // O número de cada cliente conta só as peças do mês mostrado (o do calendário; sem calendário aberto, o mês atual).
+    const ymChips = mesCal || hojeISO().slice(0, 7);
+    const doMesChips = todas.filter((p) => !!p.publicar && p.publicar.slice(0, 7) === ymChips);
+    const dicaMes = `Peças com publicação em ${mesNome(Number(ymChips.slice(5, 7)) - 1)}`;
+    const chipsClientes = [`<button class="cbtn ${filtro ? '' : 'on'}" data-act="ir" data-rota="conteudo" title="${esc(dicaMes)}">Todos · ${doMesChips.length}</button>`,
+      ...clientes.map((c) => `<button class="cbtn ${c.id === filtro ? 'on' : ''}" data-act="ir" data-rota="conteudo" data-ref="${c.id}" title="${esc(dicaMes)}"><i></i>${esc(c.nome || '(sem nome)')} · ${doMesChips.filter((p) => p.clienteId === c.id).length}</button>`)].join('');
 
     const abas = `<div class="tabs" role="tablist" aria-label="Visões de conteúdo">
       <button class="tab ${aba === 'status' ? 'on' : ''}" role="tab" aria-selected="${aba === 'status'}" data-act="aba-conteudo" data-aba="status">${ic('grid')}Status</button>
