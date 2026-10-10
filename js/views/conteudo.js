@@ -1,12 +1,12 @@
-import { store } from '../store.js?v=65';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=65';
-import { ic, flor } from '../icons.js?v=65';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=65';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=65';
-import { idDrive, urlAbrir } from '../drive.js?v=65';
-import { lerPasta } from '../drive-pasta.js?v=65';
-import { lerTabela } from '../planejamento.js?v=65';
-import { config } from '../config.js?v=65';
+import { store } from '../store.js?v=66';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=66';
+import { ic, flor } from '../icons.js?v=66';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=66';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=66';
+import { idDrive, urlAbrir } from '../drive.js?v=66';
+import { lerPasta } from '../drive-pasta.js?v=66';
+import { lerTabela } from '../planejamento.js?v=66';
+import { config } from '../config.js?v=66';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a peça ser produzida.
@@ -86,6 +86,7 @@ function abrirPeca(p = null, padrao = {}) {
       { nome: 'funil', rotulo: 'Etapa do funil', tipo: 'select', opcoes: Object.entries(FUNIL).map(([v, t]) => ({ v, t })) },
       { nome: 'etapa', rotulo: 'Etapa', tipo: 'select', opcoes: ETAPAS.map((e) => ({ v: e.id, t: e.nome })) },
       { nome: 'publicar', rotulo: 'Data de publicação', tipo: 'data' },
+      { nome: 'concluida', rotulo: 'Tarefa', tipo: 'select', opcoes: [{ v: '', t: 'Em aberto' }, { v: 'sim', t: 'Concluída' }] },
       { nome: 'responsavel', rotulo: 'Responsável', tipo: 'select', opcoes: [{ v: '', t: 'Sem responsável' }, ...RESPONSAVEIS.map((r) => ({ v: r, t: r }))] },
       { nome: 'roteiro', rotulo: 'Ideia e roteiro', tipo: 'area', cheio: true, linhas: 7, ajuda: 'O cliente lê este texto quando o planejamento é enviado para aprovação, então escreva sem comentário interno. Notas só da equipe vão em “Observações internas”.' },
       { nome: 'planejamento', rotulo: 'Planejamento no link do cliente', tipo: 'select', cheio: true, opcoes: Object.entries(PLANO).map(([v, t]) => ({ v, t })), ajuda: 'Escolha “Aguardando aprovação” para o cliente ver esta ideia e o roteiro no link dele e aprovar antes da produção.' },
@@ -98,11 +99,12 @@ function abrirPeca(p = null, padrao = {}) {
       { nome: 'ajuste', rotulo: 'Pedido de ajuste do cliente', tipo: 'area', cheio: true, linhas: 3, ajuda: 'O que o cliente pediu para mudar. Aparece em destaque no cartão enquanto estiver em Ajustes.' },
       { nome: 'briefing', rotulo: 'Observações internas', tipo: 'area', cheio: true, linhas: 3 },
     ],
-    valores: p ? { ...p, ...padrao, capa: p.capa ? urlAbrir(p.capa) : '' } : { etapa: 'briefing', formato: 'feed', ...padrao },
+    valores: p ? { ...p, ...padrao, concluida: p.concluida ? 'sim' : '', capa: p.capa ? urlAbrir(p.capa) : '' } : { etapa: 'briefing', formato: 'feed', ...padrao },
     async aoSalvar(v) {
       if (v.link && !urlSegura(v.link)) { toast('O link precisa começar com http:// ou https://', true); return false; }
       if (v.capa && !idDrive(v.capa)) { toast('A capa precisa ser um link de arquivo do Google Drive.', true); return false; }
-      await store.salvar('conteudo', { ...(p || { criadoEm: new Date().toISOString() }), ...v, link: urlSegura(v.link), capa: idDrive(v.capa) });
+      const feita = v.concluida === 'sim';
+      await store.salvar('conteudo', { ...(p || { criadoEm: new Date().toISOString() }), ...v, concluida: feita, concluidaEm: feita ? (p?.concluidaEm || new Date().toISOString()) : '', link: urlSegura(v.link), capa: idDrive(v.capa) });
       toast('Peça salva');
     },
     aoExcluir: p ? async (m) => {
@@ -201,6 +203,7 @@ async function adicionarEmLote(arquivo, detalhe = '') {
       midias: (Array.isArray(p.midias) ? p.midias : []).map((m) => ({ tipo: m?.tipo === 'video' ? 'video' : 'imagem', id: idDrive(m?.id || m?.url) })).filter((m) => m.id),
       capa: idDrive(p.capa),
       ajuste: String(p.ajuste || ''),
+      ...(p.concluida === true || p.concluida === 'sim' ? { concluida: true, concluidaEm: String(p.concluidaEm || new Date().toISOString()) } : {}),
       briefing: String(p.observacoes || p.briefing || ''), // "observacoes" é o nome novo; "briefing" continua valendo (backups e dados antigos)
       responsavel: RESPONSAVEIS.includes(p.responsavel) ? p.responsavel : '',
       link: urlSegura(p.link),
@@ -346,7 +349,7 @@ function ligarArrastar(el) {
         if (p.etapa === etapa) return;
         // Ao mandar para Ajustes, abre a peça para já anotar o que o cliente pediu.
         if (etapa === 'ajustes') { abrirPeca(p, { etapa: 'ajustes' }); return; }
-        await store.salvar('conteudo', { ...p, etapa });
+        await store.salvar('conteudo', { ...p, etapa, ...(etapa === 'publicado' && !p.concluida ? { concluida: true, concluidaEm: new Date().toISOString() } : {}) });
         toast(`Movida para ${etapaDe({ etapa }).nome}`);
       } else {
         const dia = alvo.dataset.dia;
@@ -358,14 +361,25 @@ function ligarArrastar(el) {
   });
 }
 
+// Botão de concluir, como no Asana: um círculo que vira verde com o visto. No calendário o bloco já é um <button>,
+// e botão dentro de botão não vale em HTML, então lá o círculo é um <span> com papel de caixa de seleção.
+function botaoConcluir(p, noCalendario = false) {
+  const on = !!p.concluida;
+  const rotulo = on ? 'Marcar como em aberto' : 'Marcar como concluída';
+  const comum = `class="chk${on ? ' on' : ''}" data-act="concluir-peca" data-id="${p.id}" title="${rotulo}" aria-label="${rotulo}: ${esc(p.titulo || 'peça')}"`;
+  return noCalendario
+    ? `<span ${comum} role="checkbox" tabindex="0" aria-checked="${on}">${ic('check')}</span>`
+    : `<button type="button" ${comum} aria-pressed="${on}">${ic('check')}</button>`;
+}
+
 function cartao(p, mostrarCliente) {
   const f = FORMATOS[p.formato] || FORMATOS.feed;
   const cli = store.obter('cliente', p.clienteId);
   const meta = [mostrarCliente ? (cli?.nome || 'Cliente removido') : '', p.publicar ? dataBR(p.publicar).slice(0, 5) : 'Sem data', p.responsavel].filter(Boolean).join(' · ');
   const atras = atrasada(p);
   const botoes = (PROXIMOS[p.etapa] || []).map(([para, texto, estilo]) => `<button class="btn ${estilo || 'sec'} sm" data-act="mover-peca" data-id="${p.id}" data-para="${para}">${esc(texto)}</button>`).join('');
-  return `<div class="peca${enviadaNoPlano(p) ? ' enviado' : ''}" draggable="true" data-peca="${p.id}">
-    <div class="actions" style="gap:6px"><span class="chip ${fmCls(p)}">${ic(f.icone)}${esc(f.nome)}</span>${funilChip(p)}${atras ? '<span class="chip warn">Atrasada</span>' : ''}${p.link && urlSegura(p.link) ? `<a class="chip mute" href="${esc(urlSegura(p.link))}" target="_blank" rel="noopener noreferrer" title="Abrir a arte">${ic('file')}Arte</a>` : ''}</div>
+  return `<div class="peca${enviadaNoPlano(p) ? ' enviado' : ''}${p.concluida ? ' feita' : ''}" draggable="true" data-peca="${p.id}">
+    <div class="actions" style="gap:6px">${botaoConcluir(p)}<span class="chip ${fmCls(p)}">${ic(f.icone)}${esc(f.nome)}</span>${funilChip(p)}${atras ? '<span class="chip warn">Atrasada</span>' : ''}${p.link && urlSegura(p.link) ? `<a class="chip mute" href="${esc(urlSegura(p.link))}" target="_blank" rel="noopener noreferrer" title="Abrir a arte">${ic('file')}Arte</a>` : ''}</div>
     <button class="peca-t" data-act="editar-peca" data-id="${p.id}">${esc(p.titulo || '(sem título)')}</button>
     <div class="peca-m">${esc(meta)}</div>
     ${faltas(p)}
@@ -388,8 +402,8 @@ function blocoPeca(p, mostrarCliente) {
   const f = FORMATOS[p.formato] || FORMATOS.feed;
   const e = etapaDe(p);
   const cli = store.obter('cliente', p.clienteId)?.nome || '';
-  return `<button class="cal-p ${fmCls(p)}${atrasada(p) ? ' atras' : ''}${casaFunil(p) && casaTipo(p) ? '' : ' apagado'}" data-act="editar-peca" data-id="${p.id}" draggable="true" data-peca="${p.id}" title="${esc([p.titulo, cli, f.nome, e.nome].filter(Boolean).join(' · '))}">
-    <i class="cal-dot cor-${e.cor}" title="${esc(e.nome)}"></i>${ic(f.icone)}<span><b>${esc(p.titulo || '(sem título)')}</b>${mostrarCliente && cli ? `<small>${esc(cli)}</small>` : ''}</span></button>`;
+  return `<button class="cal-p ${fmCls(p)}${atrasada(p) ? ' atras' : ''}${p.concluida ? ' feita' : ''}${casaFunil(p) && casaTipo(p) ? '' : ' apagado'}" data-act="editar-peca" data-id="${p.id}" draggable="true" data-peca="${p.id}" title="${esc([p.titulo, cli, f.nome, e.nome, p.concluida ? 'Concluída' : ''].filter(Boolean).join(' · '))}">
+    ${botaoConcluir(p, true)}<i class="cal-dot cor-${e.cor}" title="${esc(e.nome)}"></i>${ic(f.icone)}<span><b>${esc(p.titulo || '(sem título)')}</b>${mostrarCliente && cli ? `<small>${esc(cli)}</small>` : ''}</span></button>`;
 }
 
 function calendario({ filtro, lista, chipsClientes }) {
@@ -491,6 +505,15 @@ export default {
 
   montar(el) {
     ligarArrastar(el);
+    // O círculo de concluir no calendário é um <span>: Enter ou Espaço também funcionam.
+    // A tela é redesenhada sem trocar este elemento: registra o ouvinte uma vez só (senão dois se cancelam).
+    if (!el.dataset.chkTeclado) {
+      el.dataset.chkTeclado = '1';
+      el.addEventListener('keydown', (ev) => {
+        const c = ev.target.closest?.('.chk[role=checkbox]');
+        if (c && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); ev.stopPropagation(); c.click(); }
+      });
+    }
     if (verLista) {
       verLista = false;
       el.querySelector('.funil-lista')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -565,8 +588,16 @@ export default {
       if (!p) return;
       // Ao pedir ajuste, abre a ficha para já anotar o que o cliente pediu.
       if (el.dataset.para === 'ajustes') { abrirPeca(p, { etapa: 'ajustes' }); return; }
-      await store.salvar('conteudo', { ...p, etapa: el.dataset.para });
+      await store.salvar('conteudo', { ...p, etapa: el.dataset.para, ...(el.dataset.para === 'publicado' && !p.concluida ? { concluida: true, concluidaEm: new Date().toISOString() } : {}) });
       toast(`Movida para ${etapaDe({ etapa: el.dataset.para }).nome}`);
+    },
+    // Concluir ou reabrir a tarefa, como no Asana. Não muda a etapa da peça.
+    'concluir-peca': async (el) => {
+      const p = store.obter('conteudo', el.dataset.id);
+      if (!p) return;
+      const feita = !p.concluida;
+      await store.salvar('conteudo', { ...p, concluida: feita, concluidaEm: feita ? new Date().toISOString() : '' });
+      toast(feita ? 'Marcada como concluída' : 'Voltou para em aberto');
     },
   },
 };

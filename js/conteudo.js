@@ -1,5 +1,5 @@
-import { store } from './store.js?v=65';
-import { diasAte } from './util.js?v=65';
+import { store } from './store.js?v=66';
+import { diasAte } from './util.js?v=66';
 
 // Etapas do caminho de cada peça de conteúdo, na ordem em que acontecem.
 export const ETAPAS = [
@@ -21,7 +21,8 @@ export const FORMATOS = {
 export const etapaDe = (p) => ETAPAS.find((e) => e.id === p.etapa) || ETAPAS[0];
 
 // Atrasada: passou a data de publicação e a peça ainda não foi publicada.
-export const atrasada = (p) => !!p.publicar && p.etapa !== 'publicado' && diasAte(p.publicar) !== null && diasAte(p.publicar) < 0;
+// Peça concluída (botão de concluir) ou já publicada não conta como atrasada.
+export const atrasada = (p) => !!p.publicar && p.etapa !== 'publicado' && !p.concluida && diasAte(p.publicar) !== null && diasAte(p.publicar) < 0;
 
 export const pecas = () => store.todos('conteudo');
 export const pecasDoCliente = (clienteId) => pecas().filter((p) => p.clienteId === clienteId);

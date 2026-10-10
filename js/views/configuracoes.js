@@ -1,9 +1,9 @@
-import { store } from '../store.js?v=65';
-import { esc, toast, baixar, hojeISO } from '../util.js?v=65';
-import { ic } from '../icons.js?v=65';
-import { formulario, abrirModal, confirmar } from '../ui.js?v=65';
-import { modeloAtual } from '../docs/contrato.js?v=65';
-import { CLAUSULAS_PADRAO, PREAMBULO_PADRAO, VARIAVEIS } from '../docs/modeloContrato.js?v=65';
+import { store } from '../store.js?v=66';
+import { esc, toast, baixar, hojeISO } from '../util.js?v=66';
+import { ic } from '../icons.js?v=66';
+import { formulario, abrirModal, confirmar } from '../ui.js?v=66';
+import { modeloAtual } from '../docs/contrato.js?v=66';
+import { CLAUSULAS_PADRAO, PREAMBULO_PADRAO, VARIAVEIS } from '../docs/modeloContrato.js?v=66';
 
 function editarModelo() {
   const modelo = modeloAtual();
