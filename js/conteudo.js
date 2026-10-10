@@ -1,5 +1,5 @@
-import { store } from './store.js?v=67';
-import { diasAte } from './util.js?v=67';
+import { store } from './store.js?v=68';
+import { diasAte } from './util.js?v=68';
 
 // Etapas do caminho de cada peça de conteúdo, na ordem em que acontecem.
 export const ETAPAS = [

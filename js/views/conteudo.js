@@ -1,12 +1,12 @@
-import { store } from '../store.js?v=67';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=67';
-import { ic, flor } from '../icons.js?v=67';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=67';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=67';
-import { idDrive, urlAbrir } from '../drive.js?v=67';
-import { lerPasta } from '../drive-pasta.js?v=67';
-import { lerTabela } from '../planejamento.js?v=67';
-import { config } from '../config.js?v=67';
+import { store } from '../store.js?v=68';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=68';
+import { ic, flor } from '../icons.js?v=68';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=68';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=68';
+import { idDrive, urlAbrir } from '../drive.js?v=68';
+import { lerPasta } from '../drive-pasta.js?v=68';
+import { lerTabela } from '../planejamento.js?v=68';
+import { config } from '../config.js?v=68';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a peça ser produzida.
@@ -113,7 +113,7 @@ function abrirPeca(p = null, padrao = {}) {
   });
 }
 
-// "Adicionar peças": um só botão no topo que abre a escolha entre as três formas de trazer várias peças de uma vez.
+// "Adicionar em lote": um só botão no topo que abre a escolha entre as três formas de trazer várias peças de uma vez.
 // (Para criar uma peça só, usa-se "Nova peça".)
 function escolherAdicionar(clienteId = '') {
   const opcoes = [
@@ -122,8 +122,8 @@ function escolherAdicionar(clienteId = '') {
     ['arquivo', 'file', 'Arquivo de peças (.json)', 'Para casos especiais, como trazer o histórico de outra ferramenta. É um arquivo preparado pelo Claude.'],
   ];
   const m = abrirModal({
-    titulo: 'Adicionar peças',
-    subtitulo: 'De onde vêm as peças? O painel mostra o que vai criar e pede confirmação antes. Nada do que já existe é apagado.',
+    titulo: 'Adicionar em lote',
+    subtitulo: 'Para trazer várias peças de uma vez. De onde elas vêm? O painel mostra o que vai criar e pede confirmação antes. Nada do que já existe é apagado.',
     corpo: `<div class="opcoes-add">${opcoes.map(([id, icone, t, d]) => `<button type="button" class="opcao-add" data-opcao="${id}"><span class="opcao-ic">${ic(icone)}</span><span><b>${esc(t)}</b><small>${esc(d)}</small></span></button>`).join('')}</div>`,
   });
   m.el.addEventListener('click', (ev) => {
@@ -140,7 +140,7 @@ function escolherAdicionar(clienteId = '') {
 // Botões do topo do cartão, iguais nas abas Status e Calendário.
 function botoesCabecalho(filtro) {
   return `<div class="actions">${filtro ? `<button class="btn sec sm" data-act="ir" data-rota="previa" data-ref="${esc(filtro)}">${ic('image')}Prévia do cliente</button><button class="btn sec sm" data-act="enviar-planejamento" data-cliente="${esc(filtro)}">${ic('send')}Enviar planejamento</button><button class="btn sec sm" data-act="link-aprovacao" data-cliente="${esc(filtro)}">${ic('link')}Link de aprovação</button>` : ''}
-    <button class="btn sec sm" data-act="adicionar-pecas" data-cliente="${esc(filtro)}">${ic('upload')}Adicionar peças</button>
+    <button class="btn sec sm" data-act="adicionar-pecas" data-cliente="${esc(filtro)}">${ic('upload')}Adicionar em lote</button>
     <button class="btn pri sm" data-act="nova-peca" data-cliente="${esc(filtro)}">${ic('plus')}Nova peça</button>
     <input type="file" accept="application/json,.json" hidden data-lote></div>`;
 }
