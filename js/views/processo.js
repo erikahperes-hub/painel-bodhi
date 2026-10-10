@@ -1,7 +1,7 @@
-import { store } from '../store.js?v=79';
-import { esc, toast } from '../util.js?v=79';
-import { ic, flor } from '../icons.js?v=79';
-import { formulario, confirmar } from '../ui.js?v=79';
+import { store } from '../store.js?v=80';
+import { esc, toast } from '../util.js?v=80';
+import { ic, flor } from '../icons.js?v=80';
+import { formulario, confirmar } from '../ui.js?v=80';
 
 const p = (titulo, detalhes = []) => ({ titulo, detalhes });
 
@@ -65,7 +65,7 @@ const PADRAO = {
   ],
 };
 
-// Fluxo de conteúdo: como cada peça anda no painel, do planejamento do mês até a publicação.
+// Fluxo de conteúdo: como cada tarefa anda no painel, do planejamento do mês até a publicação.
 const PADRAO_CONTEUDO = {
   id: 'fluxo-conteudo',
   titulo: 'Fluxo de conteúdo',
@@ -88,10 +88,10 @@ const PADRAO_CONTEUDO = {
       passos: [
         p('Enviar o planejamento', ['Conteúdo > escolha o cliente > Enviar planejamento.', 'Todas as ideias da coluna Planejamento que ainda não foram enviadas vão para o link dele.']),
         p('Mandar o link de aprovação ao cliente', ['Conteúdo > Link de aprovação: copie e envie no WhatsApp.', 'O link é fixo por cliente e abre sem senha.']),
-        p('Aguardar a resposta do cliente', ['Ele aprova uma a uma, pede alteração ou usa “Aprovar tudo deste mês”.', 'No cartão da peça aparece a marca “Plano enviado”, depois “Plano aprovado” ou “Plano: ajuste”.', 'O pedido de alteração aparece no cartão e no sino do painel.']),
-        p('Ajustar as ideias que tiveram pedido de alteração', ['Abra a peça, corrija o roteiro ou a data e, em “Planejamento no link do cliente”, volte para “Aguardando aprovação” para o cliente ver de novo.']),
+        p('Aguardar a resposta do cliente', ['Ele aprova uma a uma, pede alteração ou usa “Aprovar tudo deste mês”.', 'No cartão da tarefa aparece a marca “Plano enviado”, depois “Plano aprovado” ou “Plano: ajuste”.', 'O pedido de alteração aparece no cartão e no sino do painel.']),
+        p('Ajustar as ideias que tiveram pedido de alteração', ['Abra a tarefa, corrija o roteiro ou a data e, em “Planejamento no link do cliente”, volte para “Aguardando aprovação” para o cliente ver de novo.']),
       ],
-      avisos: ['Passe para a produção só as ideias que o cliente aprovou: elas ficam com a marca “Plano aprovado” no cartão. Para começar a produzir, use o botão “Iniciar criação” da peça.'],
+      avisos: ['Passe para a produção só as ideias que o cliente aprovou: elas ficam com a marca “Plano aprovado” no cartão. Para começar a produzir, use o botão “Iniciar criação” da tarefa.'],
     },
     {
       titulo: 'Produção e edição',
@@ -99,9 +99,9 @@ const PADRAO_CONTEUDO = {
       passos: [
         p('Criar a arte ou editar o vídeo', ['Exporte já com o nome padrão: AAAA-MM-DD_formato_titulo. A skill painel-conteudo, no Claude, cuida do nome e da pasta.']),
         p('Salvar os arquivos no Drive', ['Pasta Aprovação / nome do cliente / AAAA-MM, compartilhada como “qualquer pessoa com o link”.']),
-        p('Escrever a legenda', ['Pode ir direto na peça ou num arquivo .txt com o mesmo nome do arquivo, na pasta.']),
-        p('Trazer os arquivos para o painel', ['Conteúdo > Adicionar em lote > Importar da pasta do Drive.', 'O painel liga os arquivos à peça do planejamento, sem apagar o roteiro.']),
-        p('Acompanhar o andamento no calendário', ['Use o círculo de concluir em cada peça para marcar o que já está feito.']),
+        p('Escrever a legenda', ['Pode ir direto na tarefa ou num arquivo .txt com o mesmo nome do arquivo, na pasta.']),
+        p('Trazer os arquivos para o painel', ['Conteúdo > Adicionar em lote > Importar da pasta do Drive.', 'O painel liga os arquivos à tarefa do planejamento, sem apagar o roteiro.']),
+        p('Acompanhar o andamento no calendário', ['Use o círculo de concluir em cada tarefa para marcar o que já está feito.']),
       ],
       avisos: ['Reels e story: o texto da capa fica na faixa central. Feed e carrossel: textos e rostos longe das bordas.'],
     },
@@ -109,22 +109,22 @@ const PADRAO_CONTEUDO = {
       titulo: 'Aprovação do conteúdo pelo cliente',
       descricao: 'O cliente vê as artes prontas e aprova ou pede ajuste.',
       passos: [
-        p('Passar as peças prontas para “Aguardando aprovação”', ['No cartão da peça, botão Enviar para aprovação.']),
+        p('Passar as tarefas prontas para “Aguardando aprovação”', ['No cartão da tarefa, botão Enviar para aprovação.']),
         p('Conferir na Prévia do cliente', ['Veja feed, stories e calendário do jeito que o cliente vê.']),
         p('Enviar o link de aprovação ao cliente', ['É o mesmo link do planejamento: agora ele também vê as artes, na aba Feed, Stories e Calendário.']),
-        p('Aguardar a aprovação ou o pedido de ajuste', ['Aprovou: a peça vai para Aprovado.', 'Pediu alteração: a peça vai para Ajustes, e o pedido aparece no cartão e no sino.']),
+        p('Aguardar a aprovação ou o pedido de ajuste', ['Aprovou: a tarefa vai para Aprovado.', 'Pediu alteração: a tarefa vai para Ajustes, e o pedido aparece no cartão e no sino.']),
         p('Fazer os ajustes pedidos', ['Refaça a arte e use “Substituir arquivo existente” no Drive, para o arquivo manter o mesmo código.', 'Depois, botão Reenviar para aprovação.']),
       ],
-      avisos: ['Se apagar o arquivo e subir de novo, o código muda e a peça precisa ser atualizada no painel.'],
+      avisos: ['Se apagar o arquivo e subir de novo, o código muda e a tarefa precisa ser atualizada no painel.'],
     },
     {
       titulo: 'Agendamento e publicação',
       descricao: 'Com a arte aprovada, agendamos a publicação.',
       passos: [
-        p('Conferir as peças em “Aprovado”', ['Use o calendário do mês para ver o que está pronto para ir ao ar.']),
-        p('Agendar a publicação', ['Agende na ferramenta de agendamento, na data e no horário combinados da peça.']),
-        p('Marcar como publicado', ['Botão Marcar como publicado: a peça fica concluída sozinha.']),
-        p('Fechar o mês', ['Confira o calendário: peças atrasadas ou em aberto precisam de uma data nova ou de uma decisão.']),
+        p('Conferir as tarefas em “Aprovado”', ['Use o calendário do mês para ver o que está pronto para ir ao ar.']),
+        p('Agendar a publicação', ['Agende na ferramenta de agendamento, na data e no horário combinados da tarefa.']),
+        p('Marcar como publicado', ['Botão Marcar como publicado: a tarefa fica concluída sozinha.']),
+        p('Fechar o mês', ['Confira o calendário: tarefas atrasadas ou em aberto precisam de uma data nova ou de uma decisão.']),
       ],
       avisos: ['O painel ainda não publica sozinho no Instagram: a publicação é manual ou agendada em outra ferramenta.'],
     },

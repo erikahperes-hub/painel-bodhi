@@ -10,7 +10,7 @@ const COLUNAS = [
   ['formato', /^(formato|tipo|tipo de conteudo)$/],
   ['funil', /^(funil|etapa do funil|etapa funil)$/],
   ['rede', /^(rede|rede social|plataforma|canal)$/],
-  ['titulo', /^(titulo|tema|peca|nome da peca)$/],
+  ['titulo', /^(titulo|tema|peca|nome da peca|tarefa|nome da tarefa)$/],
   ['roteiro', /^(ideia e roteiro|roteiro|ideia|ideia roteiro|descricao)$/],
   ['legenda', /^(legenda|legenda pode ficar para depois|legenda pode ficar para depois )$/],
   ['observacoes', /^(observacoes|observacoes internas|obs|notas)$/],

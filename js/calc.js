@@ -1,6 +1,6 @@
-import { store } from './store.js?v=79';
-import { sum, diasAte, diasTxt, dataBR } from './util.js?v=79';
-import { atrasada } from './conteudo.js?v=79';
+import { store } from './store.js?v=80';
+import { sum, diasAte, diasTxt, dataBR } from './util.js?v=80';
+import { atrasada } from './conteudo.js?v=80';
 
 export function faixaProposta(p) {
   const valores = (p.pacotes || []).map((x) => Number(x.preco) || 0).filter((v) => v > 0);
@@ -111,13 +111,13 @@ export function alertas() {
     const nome = cli(p.clienteId)?.nome || 'Cliente';
     if (p.planejamento === 'ajustes') {
       lista.push({ nivel: 1, tipo: 'warn', tag: 'Ajuste no planejamento', icone: 'edit', rota: 'conteudo', ref: p.clienteId,
-        titulo: `${nome}: ${p.titulo}`, texto: p.ajustePlano ? `pediu ajuste no planejamento: ${p.ajustePlano}` : 'o cliente pediu ajuste no planejamento desta peça.' });
+        titulo: `${nome}: ${p.titulo}`, texto: p.ajustePlano ? `pediu ajuste no planejamento: ${p.ajustePlano}` : 'o cliente pediu ajuste no planejamento desta tarefa.' });
     }
     if (p.etapa === 'ajustes') {
       lista.push({ nivel: 1, tipo: 'warn', tag: 'Ajuste pedido', icone: 'edit', rota: 'conteudo', ref: p.clienteId,
-        titulo: `${nome}: ${p.titulo}`, texto: p.ajuste ? `pediu ajuste: ${p.ajuste}` : 'o cliente pediu ajuste nesta peça.' });
+        titulo: `${nome}: ${p.titulo}`, texto: p.ajuste ? `pediu ajuste: ${p.ajuste}` : 'o cliente pediu ajuste nesta tarefa.' });
     } else if (atrasada(p)) {
-      lista.push({ nivel: 1, tipo: 'warn', tag: 'Peça atrasada', icone: 'calendar', rota: 'conteudo', ref: p.clienteId,
+      lista.push({ nivel: 1, tipo: 'warn', tag: 'Tarefa atrasada', icone: 'calendar', rota: 'conteudo', ref: p.clienteId,
         titulo: `${nome}: ${p.titulo}`, texto: `passou da data de publicação (${dataBR(p.publicar)}).` });
     }
   });

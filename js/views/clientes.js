@@ -1,8 +1,8 @@
-import { store } from '../store.js?v=79';
-import { brl, esc, iniciais, toast, dataBR, mesAno, mesesEntre, mesesTxt, urlSegura, norm } from '../util.js?v=79';
-import { ic, flor } from '../icons.js?v=79';
-import { formulario, confirmar } from '../ui.js?v=79';
-import { ETAPAS, pecasDoCliente } from '../conteudo.js?v=79';
+import { store } from '../store.js?v=80';
+import { brl, esc, iniciais, toast, dataBR, mesAno, mesesEntre, mesesTxt, urlSegura, norm } from '../util.js?v=80';
+import { ic, flor } from '../icons.js?v=80';
+import { formulario, confirmar } from '../ui.js?v=80';
+import { ETAPAS, pecasDoCliente } from '../conteudo.js?v=80';
 
 const STATUS = {
   ativo: ['ok', 'Ativo'],
@@ -183,9 +183,9 @@ export default {
         </div>
 
         ${c.status !== 'inativo' ? `<div class="card">
-          <div class="card-h"><div><h2>Conteúdo</h2><p class="sub">Peças em andamento para este cliente</p></div>
-            <div class="actions"><button class="btn sec sm" data-act="nova-peca" data-cliente="${c.id}">${ic('plus')}Nova peça</button><button class="btn sec sm" data-act="ir" data-rota="conteudo" data-ref="${c.id}">Ver tudo</button></div></div>
-          ${pecasCliente.length ? `<div class="actions">${ETAPAS.map((e) => ({ e, n: pecasCliente.filter((x) => x.etapa === e.id).length })).filter((x) => x.n).map((x) => `<span class="chip ${x.e.chip}">${esc(x.e.nome)}: ${x.n}</span>`).join('')}</div>` : '<p class="lbl">Nenhuma peça cadastrada ainda.</p>'}
+          <div class="card-h"><div><h2>Conteúdo</h2><p class="sub">Tarefas em andamento para este cliente</p></div>
+            <div class="actions"><button class="btn sec sm" data-act="nova-peca" data-cliente="${c.id}">${ic('plus')}Nova tarefa</button><button class="btn sec sm" data-act="ir" data-rota="conteudo" data-ref="${c.id}">Ver tudo</button></div></div>
+          ${pecasCliente.length ? `<div class="actions">${ETAPAS.map((e) => ({ e, n: pecasCliente.filter((x) => x.etapa === e.id).length })).filter((x) => x.n).map((x) => `<span class="chip ${x.e.chip}">${esc(x.e.nome)}: ${x.n}</span>`).join('')}</div>` : '<p class="lbl">Nenhuma tarefa cadastrada ainda.</p>'}
         </div>` : ''}
 
         <div class="grid" style="grid-template-columns:repeat(2,minmax(0,1fr))">

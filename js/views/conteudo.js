@@ -1,16 +1,16 @@
-import { store } from '../store.js?v=79';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=79';
-import { ic, flor } from '../icons.js?v=79';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=79';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=79';
-import { idDrive, urlAbrir } from '../drive.js?v=79';
-import { lerPasta } from '../drive-pasta.js?v=79';
-import { lerTabela } from '../planejamento.js?v=79';
-import { config } from '../config.js?v=79';
+import { store } from '../store.js?v=80';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=80';
+import { ic, flor } from '../icons.js?v=80';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=80';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=80';
+import { idDrive, urlAbrir } from '../drive.js?v=80';
+import { lerPasta } from '../drive-pasta.js?v=80';
+import { lerTabela } from '../planejamento.js?v=80';
+import { config } from '../config.js?v=80';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
-// Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a peça ser produzida.
-// Etapa do funil de cada peça: topo (atrair), meio (considerar) e fundo (converter).
+// Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
+// Etapa do funil de cada tarefa: topo (atrair), meio (considerar) e fundo (converter).
 const FUNIL = { '': 'Sem etapa de funil', topo: 'Topo de funil', meio: 'Meio de funil', fundo: 'Fundo de funil' };
 const FUNIL_COR = { topo: 'cor-mute', meio: 'cor-mute', fundo: 'cor-mute' };
 // Cor por tipo de conteúdo: Reels, Carrossel, Estático e Story têm cada um a sua.
@@ -27,33 +27,33 @@ const nFiltros = () => [filtroTipo, filtroFunil, filtroRede].filter(Boolean).len
 // Etiqueta da rede no cartão (cada rede tem a sua cor).
 const redeChip = (p) => (REDES[p.rede] ? `<span class="chip rd-${p.rede}">${esc(REDES[p.rede].nome)}</span>` : '');
 
-// Linha "Rede" dos filtros que ficam abaixo do calendário (só aparece se alguma peça do mês tem rede).
+// Linha "Rede" dos filtros que ficam abaixo do calendário (só aparece se alguma tarefa do mês tem rede).
 function linhaRede(lista) {
   const n = (k) => lista.filter((p) => p.rede === k).length;
   const sem = lista.filter((p) => !REDES[p.rede]).length;
   if (!Object.keys(REDES).some((k) => n(k))) return '';
   const botao = (k, texto, qtd, cls) => `<button type="button" class="chip ${cls} funil-btn rede-btn${filtroRede === k ? ' on' : ''}" data-act="filtro-rede" data-rede="${k}" aria-pressed="${filtroRede === k}">${esc(texto)} ${qtd}</button>`;
   const botoes = `${Object.entries(REDES).filter(([k]) => n(k)).map(([k, r]) => botao(k, r.nome, n(k), `rd-${k}`)).join('')}${sem ? botao('sem', 'Sem rede', sem, 'cor-mute') : ''}`;
-  return `<div class="filtros-linha"><span class="filtros-rot">Rede</span><div class="legenda" title="Clique para ver só as peças de cada rede">${botoes}</div></div>`;
+  return `<div class="filtros-linha"><span class="filtros-rot">Rede</span><div class="legenda" title="Clique para ver só as tarefas de cada rede">${botoes}</div></div>`;
 }
 
-// Resumo "Topo 3 · Meio 4 · Fundo 2": cada um é um botão que mostra a lista das peças daquele grupo.
+// Resumo "Topo 3 · Meio 4 · Fundo 2": cada um é um botão que mostra a lista das tarefas daquele grupo.
 function resumoFunil(lista, cru = false) {
   const n = (k) => lista.filter((p) => p.funil === k).length;
   const sem = lista.filter((p) => !FUNIL_COR[p.funil]).length;
   if (n('topo') + n('meio') + n('fundo') === 0) return '';
   const botao = (k, texto, qtd) => `<button type="button" class="chip cor-mute funil-btn${filtroFunil === k ? ' on' : ''}" data-act="filtro-funil" data-funil="${k}" aria-pressed="${filtroFunil === k}">${texto} ${qtd}</button>`;
   const botoes = `${['topo', 'meio', 'fundo'].map((k) => botao(k, FUNIL[k].replace(' de funil', ''), n(k))).join('')}${sem ? botao('sem', 'Sem funil', sem) : ''}`;
-  return cru ? botoes : `<div class="legenda" style="margin:-4px 0 14px" title="Clique para ver só as peças de cada etapa do funil">${botoes}</div>`;
+  return cru ? botoes : `<div class="legenda" style="margin:-4px 0 14px" title="Clique para ver só as tarefas de cada etapa do funil">${botoes}</div>`;
 }
 
 // Linha "Funil" dos filtros que ficam abaixo do calendário.
 function linhaFunil(lista) {
   const botoes = resumoFunil(lista, true);
-  return botoes ? `<div class="filtros-linha"><span class="filtros-rot">Funil</span><div class="legenda" title="Clique para ver só as peças de cada etapa do funil">${botoes}</div></div>` : '';
+  return botoes ? `<div class="filtros-linha"><span class="filtros-rot">Funil</span><div class="legenda" title="Clique para ver só as tarefas de cada etapa do funil">${botoes}</div></div>` : '';
 }
 
-// Lista das peças do grupo escolhido no funil, logo abaixo do calendário.
+// Lista das tarefas do grupo escolhido no funil, logo abaixo do calendário.
 function listaFunil(lista, mostrarCliente) {
   if (!nFiltros()) return '';
   const itens = ordenarPecas(lista.filter((p) => casaFunil(p) && casaTipo(p) && casaRede(p)));
@@ -65,7 +65,7 @@ function listaFunil(lista, mostrarCliente) {
     const meta = [p.publicar ? dataBR(p.publicar).slice(0, 5) : 'Sem data', f.nome, mostrarCliente ? cli : ''].filter(Boolean).join(' · ');
     return `<div class="li click" data-act="editar-peca" data-id="${p.id}"><span class="chip ${fmCls(p)}" style="min-width:34px;justify-content:center">${ic(f.icone)}</span><div class="li-t"><b>${esc(p.titulo || '(sem título)')}</b><span>${esc(meta)}</span></div><span class="chip cor-${e.cor}">${esc(e.nome)}</span></div>`;
   };
-  return `<div class="funil-lista"><div class="card-h" style="margin-bottom:6px"><div><h3 style="font:700 16px var(--ui)">${esc(nome)} · ${itens.length}</h3><p class="sub" style="margin:2px 0 0">Clique em uma peça para abrir.</p></div><button type="button" class="btn ghost sm" data-act="limpar-filtros">Limpar filtros</button></div><div class="list">${itens.map(linha).join('') || '<p class="lbl">Nenhuma peça com este filtro.</p>'}</div></div>`;
+  return `<div class="funil-lista"><div class="card-h" style="margin-bottom:6px"><div><h3 style="font:700 16px var(--ui)">${esc(nome)} · ${itens.length}</h3><p class="sub" style="margin:2px 0 0">Clique em uma tarefa para abrir.</p></div><button type="button" class="btn ghost sm" data-act="limpar-filtros">Limpar filtros</button></div><div class="list">${itens.map(linha).join('') || '<p class="lbl">Nenhuma tarefa com este filtro.</p>'}</div></div>`;
 }
 
 const PLANO = { '': 'Não enviado ao cliente', aprovacao: 'Aguardando aprovação do cliente', ajustes: 'Alteração pedida pelo cliente', aprovado: 'Aprovado pelo cliente' };
@@ -91,12 +91,12 @@ function abrirPeca(p = null, padrao = {}) {
   const atual = p ? store.obter('cliente', p.clienteId) : null;
   if (atual && !clientes.includes(atual)) clientes.push(atual);
   formulario({
-    titulo: p ? 'Editar peça' : 'Nova peça de conteúdo',
-    subtitulo: 'Cada reels, carrossel, estático ou story do cliente vira uma peça acompanhada daqui.',
+    titulo: p ? 'Editar tarefa' : 'Nova tarefa de conteúdo',
+    subtitulo: 'Cada reels, carrossel, estático ou story do cliente vira uma tarefa acompanhada daqui.',
     largo: true,
     campos: [
       { nome: 'clienteId', rotulo: 'Cliente', tipo: 'select', obrigatorio: true, opcoes: [{ v: '', t: 'Escolha o cliente' }, ...clientes.map((c) => ({ v: c.id, t: c.nome || '(sem nome)' }))] },
-      { nome: 'titulo', rotulo: 'Título da peça', obrigatorio: true, placeholder: 'Ex.: Post de lançamento da coleção' },
+      { nome: 'titulo', rotulo: 'Título da tarefa', obrigatorio: true, placeholder: 'Ex.: Post de lançamento da coleção' },
       { nome: 'formato', rotulo: 'Formato', tipo: 'select', opcoes: Object.entries(FORMATOS).map(([v, f]) => ({ v, t: f.nome })) },
       { nome: 'rede', rotulo: 'Rede', tipo: 'select', opcoes: [{ v: '', t: 'Sem rede definida' }, ...Object.entries(REDES).map(([v, r]) => ({ v, t: r.nome }))] },
       { nome: 'funil', rotulo: 'Etapa do funil', tipo: 'select', opcoes: Object.entries(FUNIL).map(([v, t]) => ({ v, t })) },
@@ -109,7 +109,7 @@ function abrirPeca(p = null, padrao = {}) {
       { nome: 'ajustePlano', rotulo: 'Pedido de alteração no planejamento', tipo: 'area', cheio: true, linhas: 2, ajuda: 'O que o cliente pediu para mudar na ideia ou no roteiro.' },
       { nome: 'legenda', rotulo: 'Legenda', tipo: 'area', cheio: true, linhas: 6, ajuda: 'É o texto que o cliente vai ver junto com a arte na hora de aprovar.' },
       { nome: 'secao', tipo: 'secao', rotulo: 'Arquivos para o cliente aprovar' },
-      { nome: 'midias', rotulo: 'Arquivos da peça', tipo: 'midias', cheio: true, ajuda: 'Cole o link de cada arquivo da pasta de aprovação no Drive. Carrossel: uma imagem por linha, na ordem dos slides. Reels e story em vídeo: escolha “Vídeo”.' },
+      { nome: 'midias', rotulo: 'Arquivos da tarefa', tipo: 'midias', cheio: true, ajuda: 'Cole o link de cada arquivo da pasta de aprovação no Drive. Carrossel: uma imagem por linha, na ordem dos slides. Reels e story em vídeo: escolha “Vídeo”.' },
       { nome: 'capa', rotulo: 'Capa (imagem)', cheio: true, placeholder: 'Link da imagem de capa no Drive', ajuda: 'Aparece na grade do feed e antes de o vídeo tocar. Se vazio, usa a primeira imagem.' },
       { nome: 'link', rotulo: 'Link do arquivo editável (uso interno)', cheio: true, placeholder: 'Canva, Drive ou onde estiver', ajuda: 'Só vocês veem. Não aparece para o cliente.' },
       { nome: 'ajuste', rotulo: 'Pedido de ajuste do cliente', tipo: 'area', cheio: true, linhas: 3, ajuda: 'O que o cliente pediu para mudar. Aparece em destaque no cartão enquanto estiver em Ajustes.' },
@@ -121,25 +121,25 @@ function abrirPeca(p = null, padrao = {}) {
       if (v.capa && !idDrive(v.capa)) { toast('A capa precisa ser um link de arquivo do Google Drive.', true); return false; }
       const feita = v.concluida === 'sim';
       await store.salvar('conteudo', { ...(p || { criadoEm: new Date().toISOString() }), ...v, concluida: feita, concluidaEm: feita ? (p?.concluidaEm || new Date().toISOString()) : '', link: urlSegura(v.link), capa: idDrive(v.capa) });
-      toast('Peça salva');
+      toast('Tarefa salva');
     },
     aoExcluir: p ? async (m) => {
-      if (await confirmar(`Excluir a peça “${p.titulo}”?`, 'Excluir', true)) { await store.remover('conteudo', p.id); m.fechar(); toast('Peça excluída'); }
+      if (await confirmar(`Excluir a tarefa “${p.titulo}”?`, 'Excluir', true)) { await store.remover('conteudo', p.id); m.fechar(); toast('Tarefa excluída'); }
     } : null,
   });
 }
 
-// "Adicionar em lote": um só botão no topo que abre a escolha entre as três formas de trazer várias peças de uma vez.
-// (Para criar uma peça só, usa-se "Nova peça".)
+// "Adicionar em lote": um só botão no topo que abre a escolha entre as três formas de trazer várias tarefas de uma vez.
+// (Para criar uma tarefa só, usa-se "Nova tarefa".)
 function escolherAdicionar(clienteId = '') {
   const opcoes = [
     ['planejamento', 'edit', 'Colar planejamento', 'Cole a tabela de ideias do mês (a que o Claude entrega). Cada linha vira uma ideia na coluna Planejamento.'],
-    ['pasta', 'download', 'Importar da pasta do Drive', 'Lê as artes e os vídeos de uma pasta do Drive pelo nome do arquivo e liga às peças.'],
-    ['arquivo', 'file', 'Arquivo de peças (.json)', 'Para casos especiais, como trazer o histórico de outra ferramenta. É um arquivo preparado pelo Claude.'],
+    ['pasta', 'download', 'Importar da pasta do Drive', 'Lê as artes e os vídeos de uma pasta do Drive pelo nome do arquivo e liga às tarefas.'],
+    ['arquivo', 'file', 'Arquivo de tarefas (.json)', 'Para casos especiais, como trazer o histórico de outra ferramenta. É um arquivo preparado pelo Claude.'],
   ];
   const m = abrirModal({
     titulo: 'Adicionar em lote',
-    subtitulo: 'Para trazer várias peças de uma vez. De onde elas vêm? O painel mostra o que vai criar e pede confirmação antes. Nada do que já existe é apagado.',
+    subtitulo: 'Para trazer várias tarefas de uma vez. De onde elas vêm? O painel mostra o que vai criar e pede confirmação antes. Nada do que já existe é apagado.',
     corpo: `<div class="opcoes-add">${opcoes.map(([id, icone, t, d]) => `<button type="button" class="opcao-add" data-opcao="${id}"><span class="opcao-ic">${ic(icone)}</span><span><b>${esc(t)}</b><small>${esc(d)}</small></span></button>`).join('')}</div>`,
   });
   m.el.addEventListener('click', (ev) => {
@@ -157,13 +157,13 @@ function escolherAdicionar(clienteId = '') {
 function botoesCabecalho(filtro) {
   return `<div class="actions">${filtro ? `<button class="btn sec sm" data-act="ir" data-rota="previa" data-ref="${esc(filtro)}">${ic('image')}Prévia do cliente</button><button class="btn sec sm" data-act="enviar-planejamento" data-cliente="${esc(filtro)}">${ic('send')}Enviar planejamento</button><button class="btn sec sm" data-act="link-aprovacao" data-cliente="${esc(filtro)}">${ic('link')}Link de aprovação</button>` : ''}
     <button class="btn sec sm" data-act="adicionar-pecas" data-cliente="${esc(filtro)}">${ic('upload')}Adicionar em lote</button>
-    <button class="btn pri sm" data-act="nova-peca" data-cliente="${esc(filtro)}">${ic('plus')}Nova peça</button>
+    <button class="btn pri sm" data-act="nova-peca" data-cliente="${esc(filtro)}">${ic('plus')}Nova tarefa</button>
     <input type="file" accept="application/json,.json" hidden data-lote></div>`;
 }
 
 const DATA_ISO = /^\d{4}-\d{2}-\d{2}$/;
 
-// O tipo da peça (reels, carrossel, estático, story) já aparece pela cor e pelo ícone, então o título não precisa repeti-lo.
+// O tipo da tarefa (reels, carrossel, estático, story) já aparece pela cor e pelo ícone, então o título não precisa repeti-lo.
 const PALAVRA_DO_TIPO = { reels: /^reels?$/i, carrossel: /^(carrossel|carross[eé]is)$/i, story: /^(story|stories)$/i, feed: /^(feed|est[aá]ticos?)$/i };
 function semTipoNoTitulo(titulo, formato) {
   const m = titulo.match(/^\s*(reels?|carrossel|carross[eé]is|stories|story|feed|est[aá]ticos?)\s*(?:([:\-–])\s*|((?:de|do|da)\s+))?/i);
@@ -175,10 +175,10 @@ function semTipoNoTitulo(titulo, formato) {
   return resto[0].toUpperCase() + resto.slice(1);
 }
 
-// "Adicionar em lote": lê um arquivo de peças (preparado pelo Claude) e cria as que ainda não existem.
+// "Adicionar em lote": lê um arquivo de tarefas (preparado pelo Claude) e cria as que ainda não existem.
 // O arquivo pode trazer o cliente pelo nome ("clienteNome": "TRE Clinic") ou pelo código. Aceita
 // { "pecas": [ ... ] } ou o formato de backup { "registros": [ { "kind": "conteudo", ... } ] }.
-// Só entram campos de peça conhecidos, e o que já existe só tem campos vazios preenchidos (nada que vocês editaram é apagado).
+// Só entram campos de tarefa conhecidos, e o que já existe só tem campos vazios preenchidos (nada que vocês editaram é apagado).
 const palavrasDe = (t) => new Set(norm(t).split(/[^a-z0-9]+/).filter((w) => w.length > 3));
 const palavrasEmComum = (a, b) => { const B = palavrasDe(b); return [...palavrasDe(a)].filter((w) => B.has(w)).length; };
 
@@ -187,7 +187,7 @@ async function adicionarEmLote(arquivo, detalhe = '') {
     ...(Array.isArray(arquivo?.registros) ? arquivo.registros.filter((r) => r?.kind === 'conteudo' && r.data).map((r) => ({ ...r.data, id: r.id || r.data.id })) : []),
     ...(Array.isArray(arquivo?.pecas) ? arquivo.pecas : []),
   ].filter((p) => p && typeof p === 'object');
-  if (!brutas.length) throw new Error('Este arquivo não tem peças para adicionar.');
+  if (!brutas.length) throw new Error('Este arquivo não tem tarefas para adicionar.');
 
   const clientes = store.todos('cliente');
   const achar = (p) => {
@@ -199,8 +199,8 @@ async function adicionarEmLote(arquivo, detalhe = '') {
   };
   const existentes = store.todos('conteudo');
   const usados = new Set();
-  // Liga a peça do arquivo a uma peça que já existe: mesma data e formato, ou mesmo título.
-  // Assim o planejamento (ideia e roteiro) e a versão completa (arquivos e legenda) viram uma peça só.
+  // Liga a tarefa do arquivo a uma tarefa que já existe: mesma data e formato, ou mesmo título.
+  // Assim o planejamento (ideia e roteiro) e a versão completa (arquivos e legenda) viram uma tarefa só.
   const acharExistente = (clienteId, titulo, publicar, formato) => {
     const livres = existentes.filter((x) => x.clienteId === clienteId && !usados.has(x.id));
     const mesmaData = publicar ? livres.filter((x) => x.publicar === publicar && x.formato === formato) : [];
@@ -250,19 +250,19 @@ async function adicionarEmLote(arquivo, detalhe = '') {
       _etapaExplicita: etapaExplicita,
     });
   }
-  if (!validas.length) throw new Error(`Nenhuma peça tem cliente cadastrado no painel (${[...semCliente].join(', ')}). Confira o nome do cliente no arquivo.`);
+  if (!validas.length) throw new Error(`Nenhuma tarefa tem cliente cadastrado no painel (${[...semCliente].join(', ')}). Confira o nome do cliente no arquivo.`);
 
   const novas = validas.filter((r) => !store.obter('conteudo', r.id)).length;
   const jaExistem = validas.length - novas;
   const plural = (n, s, p) => `${n} ${n === 1 ? s : p}`;
   const aviso = [
-    `Adicionar ${plural(novas, 'peça nova', 'peças novas')}?`,
+    `Adicionar ${plural(novas, 'tarefa nova', 'tarefas novas')}?`,
     jaExistem ? `${plural(jaExistem, 'já existe', 'já existem')} (mesma data e formato, ou mesmo título): só os campos vazios serão completados, sem apagar o que vocês editaram.` : '',
     semCliente.size ? `Ignoradas por cliente não encontrado: ${[...semCliente].join(', ')}.` : '',
     detalhe,
   ].filter(Boolean).join(' ');
   if (!(await confirmar(aviso, 'Adicionar'))) return;
-  // Peça que estava só no Planejamento e agora chegou com arquivos sai do Planejamento sozinha.
+  // Tarefa que estava só no Planejamento e agora chegou com arquivos sai do Planejamento sozinha.
   const rank = (e) => ETAPAS.findIndex((x) => x.id === e);
   const avancos = validas.map((d) => {
     const antes = store.obter('conteudo', d.id);
@@ -271,15 +271,15 @@ async function adicionarEmLote(arquivo, detalhe = '') {
   }).filter(Boolean);
   await store.importar({ registros: validas.map(({ _etapaExplicita, ...d }) => ({ kind: 'conteudo', id: d.id, data: d, mesclar: 'preencher' })) });
   for (const a of avancos) await store.salvar('conteudo', { ...store.obter('conteudo', a.id), etapa: a.etapa });
-  toast(novas ? `${plural(novas, 'peça adicionada', 'peças adicionadas')}` : (jaExistem ? 'Peças completadas' : 'Nada novo para adicionar'));
+  toast(novas ? `${plural(novas, 'tarefa adicionada', 'tarefas adicionadas')}` : (jaExistem ? 'Tarefas completadas' : 'Nada novo para adicionar'));
 }
 
 // "Importar da pasta": o usuário cola o link da pasta do cliente (ou do mês) no Drive; o painel lê os arquivos com o
-// nome padrão e passa as peças pelo mesmo caminho do "Adicionar em lote" (que pede confirmação e não apaga nada).
+// nome padrão e passa as tarefas pelo mesmo caminho do "Adicionar em lote" (que pede confirmação e não apaga nada).
 function importarDaPasta() {
   formulario({
     titulo: 'Importar da pasta do Drive',
-    subtitulo: 'O painel lê os arquivos da pasta pelo nome padrão (data_formato_titulo) e cria ou completa as peças.',
+    subtitulo: 'O painel lê os arquivos da pasta pelo nome padrão (data_formato_titulo) e cria ou completa as tarefas.',
     salvarTexto: 'Ler pasta',
     campos: [
       { nome: 'pasta', rotulo: 'Link da pasta no Drive', obrigatorio: true, cheio: true, placeholder: 'https://drive.google.com/drive/folders/…', ajuda: 'Use a pasta do cliente (ex.: Aprovação / TRE Clinic) ou a de um mês (ex.: 2026-10). Subpastas entram junto. Arquivos fora do padrão de nome são ignorados.' },
@@ -328,7 +328,7 @@ function colarPlanejamento(clienteId = '') {
   });
 }
 
-// O que ainda falta na peça: mostra o que precisa ser completado depois do planejamento.
+// O que ainda falta na tarefa: mostra o que precisa ser completado depois do planejamento.
 // Ideia que ainda está no Planejamento e já foi enviada ao cliente (aguardando, com alteração ou aprovada).
 const enviadaNoPlano = (p) => p.etapa === 'briefing' && !!p.planejamento;
 
@@ -341,7 +341,7 @@ function faltas(p) {
   return chips.length ? `<div class="actions" style="gap:5px">${chips.join('')}</div>` : '';
 }
 
-// Arrastar e soltar (computador): cartão entre as colunas muda a etapa; peça entre os dias do calendário muda a data.
+// Arrastar e soltar (computador): cartão entre as colunas muda a etapa; tarefa entre os dias do calendário muda a data.
 // No celular continuam valendo os botões de cada cartão.
 function ligarArrastar(el) {
   let arrastando = null;
@@ -386,7 +386,7 @@ function ligarArrastar(el) {
       if (alvo.dataset.etapa) {
         const etapa = alvo.dataset.etapa;
         if (p.etapa === etapa) return;
-        // Ao mandar para Ajustes, abre a peça para já anotar o que o cliente pediu.
+        // Ao mandar para Ajustes, abre a tarefa para já anotar o que o cliente pediu.
         if (etapa === 'ajustes') { abrirPeca(p, { etapa: 'ajustes' }); return; }
         await store.salvar('conteudo', { ...p, etapa, ...(etapa === 'publicado' && !p.concluida ? { concluida: true, concluidaEm: new Date().toISOString() } : {}) });
         toast(`Movida para ${etapaDe({ etapa }).nome}`);
@@ -405,7 +405,7 @@ function ligarArrastar(el) {
 function botaoConcluir(p, noCalendario = false) {
   const on = !!p.concluida;
   const rotulo = on ? 'Marcar como em aberto' : 'Marcar como concluída';
-  const comum = `class="chk${on ? ' on' : ''}" data-act="concluir-peca" data-id="${p.id}" title="${rotulo}" aria-label="${rotulo}: ${esc(p.titulo || 'peça')}"`;
+  const comum = `class="chk${on ? ' on' : ''}" data-act="concluir-peca" data-id="${p.id}" title="${rotulo}" aria-label="${rotulo}: ${esc(p.titulo || 'tarefa')}"`;
   return noCalendario
     ? `<span ${comum} role="checkbox" tabindex="0" aria-checked="${on}">${ic('check')}</span>`
     : `<button type="button" ${comum} aria-pressed="${on}">${ic('check')}</button>`;
@@ -474,18 +474,18 @@ function calendario({ filtro, lista, chipsClientes }) {
     const iso = isoDia(d);
     const pecasDia = porDia[iso] || [];
     return `<div class="dia${d.getMonth() !== m - 1 ? ' fora' : ''}${iso === hoje ? ' hoje' : ''}" data-dia="${iso}">
-      <div class="dia-h"><b>${d.getDate()}</b><button class="dia-add" data-act="nova-peca" data-data="${iso}" data-cliente="${esc(filtro)}" aria-label="Nova peça em ${dataBR(iso)}" title="Nova peça neste dia">+</button></div>
+      <div class="dia-h"><b>${d.getDate()}</b><button class="dia-add" data-act="nova-peca" data-data="${iso}" data-cliente="${esc(filtro)}" aria-label="Nova tarefa em ${dataBR(iso)}" title="Nova tarefa neste dia">+</button></div>
       ${pecasDia.map((p) => blocoPeca(p, !filtro)).join('')}</div>`;
   }).join('');
 
   return `<div class="card">
-    <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2><p class="sub">${listaMes.length} ${listaMes.length === 1 ? 'peça' : 'peças'} em ${nomeMes}.</p></div>
+    <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2><p class="sub">${listaMes.length} ${listaMes.length === 1 ? 'tarefa' : 'tarefas'} em ${nomeMes}.</p></div>
       ${botoesCabecalho(filtro)}</div>
     ${seletorMes(ym)}
     <div class="calbox"><div class="calgrid">${DIAS_SEMANA.map((d) => `<div class="dow">${d}</div>`).join('')}${celulas}</div></div>
-    <div class="filtros-cal${nFiltros() >= 2 ? ' juntos' : ''}"${nFiltros() >= 2 ? ' title="Mais de um filtro está ligado ao mesmo tempo"' : ''}><div class="filtros-linha"><span class="filtros-rot">Tipo</span><div class="legenda" title="Clique em um tipo para ver só as peças dele. A cor é o tipo de conteúdo">${Object.entries(FORMATOS).map(([id, f]) => `<button type="button" class="chip fm-${id} funil-btn tipo-btn${filtroTipo === id ? ' on' : ''}" data-act="filtro-tipo" data-tipo="${id}" aria-pressed="${filtroTipo === id}">${ic(f.icone)}${esc(f.nome)} ${listaMes.filter((p) => (FORMATOS[p.formato] ? p.formato : 'feed') === id).length}</button>`).join('')}</div></div>${linhaFunil(listaMes)}${linhaRede(listaMes)}</div>
+    <div class="filtros-cal${nFiltros() >= 2 ? ' juntos' : ''}"${nFiltros() >= 2 ? ' title="Mais de um filtro está ligado ao mesmo tempo"' : ''}><div class="filtros-linha"><span class="filtros-rot">Tipo</span><div class="legenda" title="Clique em um tipo para ver só as tarefas dele. A cor é o tipo de conteúdo">${Object.entries(FORMATOS).map(([id, f]) => `<button type="button" class="chip fm-${id} funil-btn tipo-btn${filtroTipo === id ? ' on' : ''}" data-act="filtro-tipo" data-tipo="${id}" aria-pressed="${filtroTipo === id}">${ic(f.icone)}${esc(f.nome)} ${listaMes.filter((p) => (FORMATOS[p.formato] ? p.formato : 'feed') === id).length}</button>`).join('')}</div></div>${linhaFunil(listaMes)}${linhaRede(listaMes)}</div>
     ${listaFunil(listaMes, !filtro)}
-    ${semData.length ? `<div class="semdata"><h3>Sem data de publicação</h3><p class="lbl">Abra a peça e escolha a data para ela aparecer no calendário.</p><div class="semdata-l">${semData.map((p) => blocoPeca(p, !filtro)).join('')}</div></div>` : ''}
+    ${semData.length ? `<div class="semdata"><h3>Sem data de publicação</h3><p class="lbl">Abra a tarefa e escolha a data para ela aparecer no calendário.</p><div class="semdata-l">${semData.map((p) => blocoPeca(p, !filtro)).join('')}</div></div>` : ''}
   </div>`;
 }
 
@@ -501,25 +501,25 @@ function ordenarPecas(lista, recentesPrimeiro = false) {
 
 export default {
   titulo: () => 'Conteúdo',
-  sub: () => 'O que está sendo criado para cada cliente e em que etapa está cada peça.',
+  sub: () => 'O que está sendo criado para cada cliente e em que etapa está cada tarefa.',
 
   render({ ref }) {
     const clientes = clientesDeTrabalho();
     if (!clientes.length) {
-      return `<div class="card empty">${flor()}<h2>Cadastre um cliente primeiro</h2><p>As peças de conteúdo ficam ligadas a um cliente. Cadastre o cliente e volte aqui.</p><button class="btn pri" data-act="ir" data-rota="clientes">Ir para Clientes</button></div>`;
+      return `<div class="card empty">${flor()}<h2>Cadastre um cliente primeiro</h2><p>As tarefas de conteúdo ficam ligadas a um cliente. Cadastre o cliente e volte aqui.</p><button class="btn pri" data-act="ir" data-rota="clientes">Ir para Clientes</button></div>`;
     }
     const filtro = store.obter('cliente', ref) ? ref : '';
     const todas = pecas();
     const lista = filtro ? todas.filter((p) => p.clienteId === filtro) : todas;
-    // Mês escolhido (vale no Status e no Calendário). Status e números mostram esse mês, mais as peças sem data (para não sumirem).
+    // Mês escolhido (vale no Status e no Calendário). Status e números mostram esse mês, mais as tarefas sem data (para não sumirem).
     const ym = mesCal || hojeISO().slice(0, 7);
     const listaV = lista.filter((p) => !p.publicar || p.publicar.slice(0, 7) === ym);
     const em = (...ids) => listaV.filter((p) => ids.includes(p.etapa));
 
-    // O número de cada cliente conta só as peças do mês mostrado.
+    // O número de cada cliente conta só as tarefas do mês mostrado.
     const ymChips = ym;
     const doMesChips = todas.filter((p) => !!p.publicar && p.publicar.slice(0, 7) === ymChips);
-    const dicaMes = `Peças com publicação em ${mesNome(Number(ymChips.slice(5, 7)) - 1)}`;
+    const dicaMes = `Tarefas com publicação em ${mesNome(Number(ymChips.slice(5, 7)) - 1)}`;
     const chipsClientes = [`<button class="cbtn ${filtro ? '' : 'on'}" data-act="ir" data-rota="conteudo" title="${esc(dicaMes)}">Todos · ${doMesChips.length}</button>`,
       ...clientes.map((c) => `<button class="cbtn ${c.id === filtro ? 'on' : ''}" data-act="ir" data-rota="conteudo" data-ref="${c.id}" title="${esc(dicaMes)}"><i></i>${esc(c.nome || '(sem nome)')} · ${doMesChips.filter((p) => p.clienteId === c.id).length}</button>`)].join('');
 
@@ -551,7 +551,7 @@ export default {
     return cabeca + `<div class="card">
         <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2></div>
           ${botoesCabecalho(filtro)}</div>
-        ${lista.length ? `${seletorMes(ym)}<div class="kanban">${colunas}</div>` : `<div class="empty" style="padding:30px 10px">${flor()}<h2>Nenhuma peça ainda</h2><p>Use “Nova peça” para registrar o primeiro reels, carrossel, estático ou story.</p></div>`}
+        ${lista.length ? `${seletorMes(ym)}<div class="kanban">${colunas}</div>` : `<div class="empty" style="padding:30px 10px">${flor()}<h2>Nenhuma tarefa ainda</h2><p>Use “Nova tarefa” para registrar o primeiro reels, carrossel, estático ou story.</p></div>`}
       </div>`;
   },
 
@@ -606,9 +606,9 @@ export default {
       let url = montar(await store.linkAprovacao(c.id));
       const m = abrirModal({
         titulo: `Link de aprovação: ${c.nome}`,
-        subtitulo: 'Envie este link ao cliente. Ele vê só as peças dele (as que estão em “Aguardando aprovação” ou depois) e não precisa de senha.',
+        subtitulo: 'Envie este link ao cliente. Ele vê só as tarefas dele (as que estão em “Aguardando aprovação” ou depois) e não precisa de senha.',
         corpo: `<div class="field"><label for="link-ap">Link do cliente</label><input id="link-ap" readonly value="${esc(url)}"></div>
-          <p class="lbl" style="margin-top:10px">Quem tem este link consegue ver e aprovar as peças de ${esc(c.nome)}. Se ele for parar em mãos erradas, gere um novo: o antigo deixa de funcionar.</p>
+          <p class="lbl" style="margin-top:10px">Quem tem este link consegue ver e aprovar as tarefas de ${esc(c.nome)}. Se ele for parar em mãos erradas, gere um novo: o antigo deixa de funcionar.</p>
           <div class="modal-f"><button class="btn ghost danger" data-renovar>Gerar novo link</button><div class="actions"><button class="btn sec" data-fechar-link>Fechar</button><button class="btn pri" data-copiar>${ic('link')}Copiar link</button></div></div>`,
       });
       const campo = m.el.querySelector('#link-ap');
@@ -645,7 +645,7 @@ export default {
       await store.salvar('conteudo', { ...p, etapa: el.dataset.para, ...(el.dataset.para === 'publicado' && !p.concluida ? { concluida: true, concluidaEm: new Date().toISOString() } : {}) });
       toast(`Movida para ${etapaDe({ etapa: el.dataset.para }).nome}`);
     },
-    // Concluir ou reabrir a tarefa, como no Asana. Não muda a etapa da peça.
+    // Concluir ou reabrir a tarefa, como no Asana. Não muda a etapa da tarefa.
     'concluir-peca': async (el) => {
       const p = store.obter('conteudo', el.dataset.id);
       if (!p) return;

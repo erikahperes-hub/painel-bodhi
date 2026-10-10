@@ -1,7 +1,7 @@
-import { store } from './store.js?v=79';
-import { diasAte } from './util.js?v=79';
+import { store } from './store.js?v=80';
+import { diasAte } from './util.js?v=80';
 
-// Etapas do caminho de cada peça de conteúdo, na ordem em que acontecem.
+// Etapas do caminho de cada tarefa de conteúdo, na ordem em que acontecem.
 export const ETAPAS = [
   { id: 'briefing', nome: 'Planejamento', chip: 'mute', cor: 'mute' },
   { id: 'criacao', nome: 'Em criação', chip: 'info', cor: 'info' },
@@ -11,7 +11,7 @@ export const ETAPAS = [
   { id: 'publicado', nome: 'Publicado', chip: 'mute', cor: 'mute' },
 ];
 
-// Os quatro formatos, na ordem de exibição. O código interno do estático continua "feed" (é o que já está guardado nas peças).
+// Os quatro formatos, na ordem de exibição. O código interno do estático continua "feed" (é o que já está guardado nas tarefas).
 export const FORMATOS = {
   reels: { nome: 'Reels', icone: 'play' },
   carrossel: { nome: 'Carrossel', icone: 'layers' },
@@ -19,7 +19,7 @@ export const FORMATOS = {
   story: { nome: 'Story', icone: 'circle' },
 };
 
-// Redes sociais onde a peça é publicada (campo "Rede", como no Asana). O código é o que fica guardado na peça.
+// Redes sociais onde a tarefa é publicada (campo "Rede", como no Asana). O código é o que fica guardado na tarefa.
 export const REDES = {
   instagram: { nome: 'Instagram' },
   tiktok: { nome: 'TikTok' },
@@ -51,8 +51,8 @@ export function formatoDe(texto) {
 
 export const etapaDe = (p) => ETAPAS.find((e) => e.id === p.etapa) || ETAPAS[0];
 
-// Atrasada: passou a data de publicação e a peça ainda não foi publicada.
-// Peça concluída (botão de concluir) ou já publicada não conta como atrasada.
+// Atrasada: passou a data de publicação e a tarefa ainda não foi publicada.
+// Tarefa concluída (botão de concluir) ou já publicada não conta como atrasada.
 export const atrasada = (p) => !!p.publicar && p.etapa !== 'publicado' && !p.concluida && diasAte(p.publicar) !== null && diasAte(p.publicar) < 0;
 
 export const pecas = () => store.todos('conteudo');

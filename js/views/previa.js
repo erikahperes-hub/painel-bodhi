@@ -1,7 +1,7 @@
-import { store } from '../store.js?v=79';
-import { esc, hojeISO } from '../util.js?v=79';
-import { ic, flor } from '../icons.js?v=79';
-import { montarFeed, ETAPAS_CLIENTE } from '../instagram.js?v=79';
+import { store } from '../store.js?v=80';
+import { esc, hojeISO } from '../util.js?v=80';
+import { ic, flor } from '../icons.js?v=80';
+import { montarFeed, ETAPAS_CLIENTE } from '../instagram.js?v=80';
 
 export default {
   titulo: () => 'Prévia do cliente',
@@ -21,8 +21,8 @@ export default {
     const alvo = el.querySelector('#ig-previa');
     const c = alvo && store.obter('cliente', alvo.dataset.cliente);
     if (!c) return;
-    // Igual ao que o banco entrega ao cliente (função aprovacao_ver): peças enviadas para aprovação do conteúdo ou do planejamento.
-    // O roteiro (interno) só vai nas peças enviadas para aprovação do planejamento.
+    // Igual ao que o banco entrega ao cliente (função aprovacao_ver): tarefas enviadas para aprovação do conteúdo ou do planejamento.
+    // O roteiro (interno) só vai nas tarefas enviadas para aprovação do planejamento.
     const noPlano = (p) => ['aprovacao', 'ajustes', 'aprovado'].includes(p.planejamento);
     // Ideias do Planejamento que ainda não foram enviadas: aparecem só aqui, na prévia, marcadas como "Ainda não enviado".
     const rascunho = (p) => p.etapa === 'briefing' && !p.planejamento;
