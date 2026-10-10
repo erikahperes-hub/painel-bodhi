@@ -503,6 +503,9 @@ a.chip{text-decoration:none}
 
 /* Abas de cliente */
 .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+/* Linha das abas Status e Calendário, com o botão Nova peça sempre à direita */
+.abas-linha{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.abas-linha .tabs{margin-bottom:0}
 .tab{border:0;background:var(--card);box-shadow:var(--sh);border-radius:99px;padding:10px 18px;font:700 13.5px var(--ui);color:var(--ink-2)}
 .tab.on{background:var(--petroleo);color:var(--creme)}
 .cli-h{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}

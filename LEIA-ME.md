@@ -107,6 +107,8 @@ A aba **Conteúdo** tem duas visões: **Status** (quadro por etapa) e **Calendá
 
 **Adicionar em lote (várias peças de uma vez):** em Conteúdo, o botão **Adicionar em lote** (ao lado de **Nova peça**, que cria uma peça só) abre a escolha entre três formas, cada uma com uma explicação: **Colar planejamento** (tabela de ideias do mês), **Importar da pasta do Drive** (artes e vídeos pelo nome do arquivo) e **Arquivo de peças (.json)** (casos especiais, como trazer histórico de outra ferramenta). Os parágrafos abaixo descrevem cada uma.
 
+**Mês no Status e no Calendário:** as duas abas têm o mesmo seletor de mês (setas e "Mês atual"), e o mês escolhido vale nas duas. No **Status**, o quadro de etapas e os números ("Em produção", "Aguardando aprovação", "Pedidos de ajuste") mostram o mês escolhido, mais as peças **sem data** (para elas não sumirem). **Atrasadas** conta todos os meses de propósito, para nenhuma peça atrasada ficar escondida. O botão **Nova peça** fica sempre à direita da linha das abas, logo abaixo dos números.
+
 **Números ao lado de cada cliente (Todos · 19, Arena Pixel · 5...):** contam só as peças do **mês mostrado** (o do calendário; sem calendário aberto, o mês atual). Ao trocar de mês no calendário, os números mudam, e o Status acompanha o mesmo mês. Peças sem data de publicação não entram na conta. Passando o mouse, aparece o mês a que o número se refere.
 
 **Filtros do calendário (Tipo e Funil):** os botões abaixo do calendário contam e filtram **só o mês que está na tela** (ao trocar de mês, os números mudam). A lista que aparece ao clicar em um filtro também mostra só as peças do mês.

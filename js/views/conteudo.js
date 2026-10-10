@@ -1,12 +1,12 @@
-import { store } from '../store.js?v=74';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=74';
-import { ic, flor } from '../icons.js?v=74';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=74';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=74';
-import { idDrive, urlAbrir } from '../drive.js?v=74';
-import { lerPasta } from '../drive-pasta.js?v=74';
-import { lerTabela } from '../planejamento.js?v=74';
-import { config } from '../config.js?v=74';
+import { store } from '../store.js?v=75';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=75';
+import { ic, flor } from '../icons.js?v=75';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=75';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=75';
+import { idDrive, urlAbrir } from '../drive.js?v=75';
+import { lerPasta } from '../drive-pasta.js?v=75';
+import { lerTabela } from '../planejamento.js?v=75';
+import { config } from '../config.js?v=75';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a peça ser produzida.
@@ -141,7 +141,6 @@ function escolherAdicionar(clienteId = '') {
 function botoesCabecalho(filtro) {
   return `<div class="actions">${filtro ? `<button class="btn sec sm" data-act="ir" data-rota="previa" data-ref="${esc(filtro)}">${ic('image')}Prévia do cliente</button><button class="btn sec sm" data-act="enviar-planejamento" data-cliente="${esc(filtro)}">${ic('send')}Enviar planejamento</button><button class="btn sec sm" data-act="link-aprovacao" data-cliente="${esc(filtro)}">${ic('link')}Link de aprovação</button>` : ''}
     <button class="btn sec sm" data-act="adicionar-pecas" data-cliente="${esc(filtro)}">${ic('upload')}Adicionar em lote</button>
-    <button class="btn pri sm" data-act="nova-peca" data-cliente="${esc(filtro)}">${ic('plus')}Nova peça</button>
     <input type="file" accept="application/json,.json" hidden data-lote></div>`;
 }
 
@@ -428,6 +427,17 @@ function blocoPeca(p, mostrarCliente) {
     ${botaoConcluir(p, true)}<i class="cal-dot cor-${e.cor}" title="${esc(e.nome)}"></i>${ic(f.icone)}<span><b>${esc(p.titulo || '(sem título)')}</b>${mostrarCliente && cli ? `<small>${esc(cli)}</small>` : ''}</span></button>`;
 }
 
+// Escolha do mês, igual no Status e no Calendário (o mês escolhido vale nas duas abas).
+function seletorMes(ym) {
+  const [a, m] = ym.split('-').map(Number);
+  const nome = mesNome(m - 1);
+  return `<div class="toolbar" style="margin-bottom:12px">
+      <div class="mes"><button class="iconbtn" data-act="cal-mes" data-passo="-1" aria-label="Mês anterior"><span style="display:grid;transform:scaleX(-1)">${ic('chev')}</span></button>
+        <b>${nome[0].toUpperCase()}${nome.slice(1)} de ${a}</b><button class="iconbtn" data-act="cal-mes" data-passo="1" aria-label="Próximo mês">${ic('chev')}</button>
+        ${ym !== hojeISO().slice(0, 7) ? '<button class="btn ghost sm" data-act="cal-mes" data-passo="0">Mês atual</button>' : ''}</div>
+    </div>`;
+}
+
 function calendario({ filtro, lista, chipsClientes }) {
   const hoje = hojeISO();
   const ym = mesCal || hoje.slice(0, 7);
@@ -451,14 +461,9 @@ function calendario({ filtro, lista, chipsClientes }) {
   }).join('');
 
   return `<div class="card">
-    <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2><p class="sub">${listaMes.length} ${listaMes.length === 1 ? 'peça' : 'peças'} em ${nomeMes}. Clique em uma peça para abrir ou arraste para outro dia para mudar a data de publicação.</p></div>
+    <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2><p class="sub">${listaMes.length} ${listaMes.length === 1 ? 'peça' : 'peças'} em ${nomeMes}.</p></div>
       ${botoesCabecalho(filtro)}</div>
-    <div class="toolbar" style="margin-bottom:12px">
-      <div class="mes"><button class="iconbtn" data-act="cal-mes" data-passo="-1" aria-label="Mês anterior"><span style="display:grid;transform:scaleX(-1)">${ic('chev')}</span></button>
-        <b>${nomeMes[0].toUpperCase()}${nomeMes.slice(1)} de ${a}</b><button class="iconbtn" data-act="cal-mes" data-passo="1" aria-label="Próximo mês">${ic('chev')}</button>
-        ${ym !== hoje.slice(0, 7) ? '<button class="btn ghost sm" data-act="cal-mes" data-passo="0">Mês atual</button>' : ''}</div>
-      
-    </div>
+    ${seletorMes(ym)}
     <div class="calbox"><div class="calgrid">${DIAS_SEMANA.map((d) => `<div class="dow">${d}</div>`).join('')}${celulas}</div></div>
     <div class="filtros-cal${filtroTipo && filtroFunil ? ' juntos' : ''}"${filtroTipo && filtroFunil ? ' title="Os dois filtros estão ligados ao mesmo tempo"' : ''}><div class="filtros-linha"><span class="filtros-rot">Tipo</span><div class="legenda" title="Clique em um tipo para ver só as peças dele. A cor é o tipo de conteúdo">${Object.entries(FORMATOS).map(([id, f]) => `<button type="button" class="chip fm-${id} funil-btn tipo-btn${filtroTipo === id ? ' on' : ''}" data-act="filtro-tipo" data-tipo="${id}" aria-pressed="${filtroTipo === id}">${ic(f.icone)}${esc(f.nome)} ${listaMes.filter((p) => (FORMATOS[p.formato] ? p.formato : 'feed') === id).length}</button>`).join('')}</div></div>${linhaFunil(listaMes)}</div>
     ${listaFunil(listaMes, !filtro)}
@@ -488,10 +493,13 @@ export default {
     const filtro = store.obter('cliente', ref) ? ref : '';
     const todas = pecas();
     const lista = filtro ? todas.filter((p) => p.clienteId === filtro) : todas;
-    const em = (...ids) => lista.filter((p) => ids.includes(p.etapa));
+    // Mês escolhido (vale no Status e no Calendário). Status e números mostram esse mês, mais as peças sem data (para não sumirem).
+    const ym = mesCal || hojeISO().slice(0, 7);
+    const listaV = lista.filter((p) => !p.publicar || p.publicar.slice(0, 7) === ym);
+    const em = (...ids) => listaV.filter((p) => ids.includes(p.etapa));
 
-    // O número de cada cliente conta só as peças do mês mostrado (o do calendário; sem calendário aberto, o mês atual).
-    const ymChips = mesCal || hojeISO().slice(0, 7);
+    // O número de cada cliente conta só as peças do mês mostrado.
+    const ymChips = ym;
     const doMesChips = todas.filter((p) => !!p.publicar && p.publicar.slice(0, 7) === ymChips);
     const dicaMes = `Peças com publicação em ${mesNome(Number(ymChips.slice(5, 7)) - 1)}`;
     const chipsClientes = [`<button class="cbtn ${filtro ? '' : 'on'}" data-act="ir" data-rota="conteudo" title="${esc(dicaMes)}">Todos · ${doMesChips.length}</button>`,
@@ -505,9 +513,11 @@ export default {
         <div class="card stat tone-verde"><div><div class="lbl">Em produção</div><div class="big num">${em('briefing', 'criacao').length}</div><div class="hint">Planejamento e criação</div></div><span class="stat-ic">${ic('grid')}</span></div>
         <div class="card stat tone-creme"><div><div class="lbl">Aguardando aprovação</div><div class="big num">${em('aprovacao').length}</div><div class="hint">Com o cliente</div></div><span class="stat-ic">${ic('send')}</span></div>
         <div class="card stat tone-coral"><div><div class="lbl">Pedidos de ajuste</div><div class="big num">${em('ajustes').length}</div><div class="hint">Para refazer</div></div><span class="stat-ic">${ic('edit')}</span></div>
-        <div class="card stat tone-coral"><div><div class="lbl">Atrasadas</div><div class="big num">${lista.filter(atrasada).length}</div><div class="hint">Passaram da data de publicação</div></div><span class="stat-ic">${ic('calendar')}</span></div>
+        <div class="card stat tone-coral"><div><div class="lbl">Atrasadas</div><div class="big num">${lista.filter(atrasada).length}</div><div class="hint">Passaram da data, em todos os meses</div></div><span class="stat-ic">${ic('calendar')}</span></div>
       </div>`;
-    const cabeca = `<div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>${numeros}${abas}`;
+    // O botão Nova peça fica sempre à direita da linha das abas, logo abaixo dos números.
+    const novaPeca = `<button class="btn pri sm" data-act="nova-peca" data-cliente="${esc(filtro)}">${ic('plus')}Nova peça</button>`;
+    const cabeca = `<div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>${numeros}<div class="abas-linha">${abas}${novaPeca}</div>`;
     if (aba === 'calendario') return cabeca + calendario({ filtro, lista });
 
     const colunas = ETAPAS.map((e) => {
@@ -525,7 +535,7 @@ export default {
     return cabeca + `<div class="card">
         <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2></div>
           ${botoesCabecalho(filtro)}</div>
-        ${lista.length ? `<div class="kanban">${colunas}</div>` : `<div class="empty" style="padding:30px 10px">${flor()}<h2>Nenhuma peça ainda</h2><p>Use “Nova peça” para registrar o primeiro post, carrossel, reels ou story.</p></div>`}
+        ${lista.length ? `${seletorMes(ym)}<div class="kanban">${colunas}</div>` : `<div class="empty" style="padding:30px 10px">${flor()}<h2>Nenhuma peça ainda</h2><p>Use “Nova peça” para registrar o primeiro post, carrossel, reels ou story.</p></div>`}
       </div>`;
   },
 
