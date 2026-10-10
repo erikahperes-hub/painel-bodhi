@@ -1,12 +1,12 @@
-import { store } from '../store.js?v=72';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=72';
-import { ic, flor } from '../icons.js?v=72';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=72';
-import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=72';
-import { idDrive, urlAbrir } from '../drive.js?v=72';
-import { lerPasta } from '../drive-pasta.js?v=72';
-import { lerTabela } from '../planejamento.js?v=72';
-import { config } from '../config.js?v=72';
+import { store } from '../store.js?v=73';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=73';
+import { ic, flor } from '../icons.js?v=73';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=73';
+import { ETAPAS, FORMATOS, etapaDe, atrasada, pecas } from '../conteudo.js?v=73';
+import { idDrive, urlAbrir } from '../drive.js?v=73';
+import { lerPasta } from '../drive-pasta.js?v=73';
+import { lerTabela } from '../planejamento.js?v=73';
+import { config } from '../config.js?v=73';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a peça ser produzida.
@@ -450,8 +450,7 @@ function calendario({ filtro, lista, chipsClientes }) {
       ${pecasDia.map((p) => blocoPeca(p, !filtro)).join('')}</div>`;
   }).join('');
 
-  return `<div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>
-  <div class="card">
+  return `<div class="card">
     <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2><p class="sub">${listaMes.length} ${listaMes.length === 1 ? 'peça' : 'peças'} em ${nomeMes}. Clique em uma peça para abrir ou arraste para outro dia para mudar a data de publicação.</p></div>
       ${botoesCabecalho(filtro)}</div>
     <div class="toolbar" style="margin-bottom:12px">
@@ -497,7 +496,15 @@ export default {
     const abas = `<div class="tabs" role="tablist" aria-label="Visões de conteúdo">
       <button class="tab ${aba === 'status' ? 'on' : ''}" role="tab" aria-selected="${aba === 'status'}" data-act="aba-conteudo" data-aba="status">${ic('grid')}Status</button>
       <button class="tab ${aba === 'calendario' ? 'on' : ''}" role="tab" aria-selected="${aba === 'calendario'}" data-act="aba-conteudo" data-aba="calendario">${ic('calendar')}Calendário</button></div>`;
-    if (aba === 'calendario') return abas + calendario({ filtro, lista, chipsClientes });
+    // Cabeça igual nas duas abas, nesta ordem: clientes, números e, logo acima do conteúdo, as abas Status e Calendário.
+    const numeros = `<div class="grid" style="margin-bottom:16px">
+        <div class="card stat tone-verde"><div><div class="lbl">Em produção</div><div class="big num">${em('briefing', 'criacao').length}</div><div class="hint">Planejamento e criação</div></div><span class="stat-ic">${ic('grid')}</span></div>
+        <div class="card stat tone-creme"><div><div class="lbl">Aguardando aprovação</div><div class="big num">${em('aprovacao').length}</div><div class="hint">Com o cliente</div></div><span class="stat-ic">${ic('send')}</span></div>
+        <div class="card stat tone-coral"><div><div class="lbl">Pedidos de ajuste</div><div class="big num">${em('ajustes').length}</div><div class="hint">Para refazer</div></div><span class="stat-ic">${ic('edit')}</span></div>
+        <div class="card stat tone-coral"><div><div class="lbl">Atrasadas</div><div class="big num">${lista.filter(atrasada).length}</div><div class="hint">Passaram da data de publicação</div></div><span class="stat-ic">${ic('calendar')}</span></div>
+      </div>`;
+    const cabeca = `<div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>${numeros}${abas}`;
+    if (aba === 'calendario') return cabeca + calendario({ filtro, lista });
 
     const colunas = ETAPAS.map((e) => {
       let itens = e.id === 'publicado' ? ordenarPecas(em(e.id), true) : ordenarPecas(em(e.id));
@@ -511,16 +518,7 @@ export default {
       </section>`;
     }).join('');
 
-    return abas + `<div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>
-
-      <div class="grid" style="margin-bottom:16px">
-        <div class="card stat tone-verde"><div><div class="lbl">Em produção</div><div class="big num">${em('briefing', 'criacao').length}</div><div class="hint">Planejamento e criação</div></div><span class="stat-ic">${ic('grid')}</span></div>
-        <div class="card stat tone-creme"><div><div class="lbl">Aguardando aprovação</div><div class="big num">${em('aprovacao').length}</div><div class="hint">Com o cliente</div></div><span class="stat-ic">${ic('send')}</span></div>
-        <div class="card stat tone-coral"><div><div class="lbl">Pedidos de ajuste</div><div class="big num">${em('ajustes').length}</div><div class="hint">Para refazer</div></div><span class="stat-ic">${ic('edit')}</span></div>
-        <div class="card stat tone-coral"><div><div class="lbl">Atrasadas</div><div class="big num">${lista.filter(atrasada).length}</div><div class="hint">Passaram da data de publicação</div></div><span class="stat-ic">${ic('calendar')}</span></div>
-      </div>
-
-      <div class="card">
+    return cabeca + `<div class="card">
         <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2></div>
           ${botoesCabecalho(filtro)}</div>
         ${lista.length ? `<div class="kanban">${colunas}</div>` : `<div class="empty" style="padding:30px 10px">${flor()}<h2>Nenhuma peça ainda</h2><p>Use “Nova peça” para registrar o primeiro post, carrossel, reels ou story.</p></div>`}
