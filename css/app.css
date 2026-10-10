@@ -265,16 +265,10 @@ button.card.clicavel:focus-visible{outline:2px solid var(--verde);outline-offset
 /* O título pode usar até duas linhas, para não ser cortado por causa do círculo */
 .cal-p b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .cal-p .chk.on{background:var(--verde)}
-/* Peça concluída: perde a cor do tipo e fica neutra, em cinza (sem riscar) */
-.cal-p.feita{background:#D2D3D0;color:#3E4042}
-.cal-p.feita svg{color:#5A5D5F}
-.cal-p.feita small{color:#5A5D5F}
-.cal-p.feita .cal-dot{background:#8A8D8F}
-.peca.feita{background:#D2D3D0;box-shadow:none}
-.peca.feita .peca-t,.peca.feita .peca-m{color:#3E4042}
-.peca.feita .chip{background:rgba(255,255,255,.55);color:#4A4C4E}
-.peca.feita .btn.sec{background:rgba(255,255,255,.6)}
-.peca.feita.enviado{background:#D2D3D0;box-shadow:none}
+/* Peça concluída: continua com a cor do tipo de conteúdo, só mais apagadinha (sem riscar). O círculo verde segue visível. */
+.cal-p.feita,.peca.feita{opacity:.55}
+.cal-p.feita:hover,.peca.feita:hover{opacity:.85}
+.cal-p.feita .chk.on,.peca.feita .chk.on{box-shadow:0 0 0 2px var(--card)}
 .peca:active{cursor:grabbing}
 .peca.arrastando,.cal-p.arrastando{opacity:.4}
 .kol.alvo{background:#E3F4EC;box-shadow:inset 0 0 0 2px var(--verde)}
