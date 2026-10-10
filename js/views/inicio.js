@@ -1,8 +1,8 @@
-import { store } from '../store.js?v=77';
-import { metricas, alertas, faixaProposta } from '../calc.js?v=77';
-import { brl, esc, dataBR, diasTxt, diasAte } from '../util.js?v=77';
-import { ic } from '../icons.js?v=77';
-import { asaas } from '../asaas.js?v=77';
+import { store } from '../store.js?v=78';
+import { metricas, alertas, faixaProposta } from '../calc.js?v=78';
+import { brl, esc, dataBR, diasTxt, diasAte } from '../util.js?v=78';
+import { ic } from '../icons.js?v=78';
+import { asaas } from '../asaas.js?v=78';
 
 const wave = '<svg class="wave" viewBox="0 0 120 54" fill="none" aria-hidden="true"><path d="M4 40c10-2 12-26 24-26s10 30 22 30 12-34 26-34 12 24 22 24 12-8 18-12" stroke="#23BB84" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 

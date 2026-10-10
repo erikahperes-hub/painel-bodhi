@@ -1,7 +1,7 @@
-import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=77';
-import { ic } from './icons.js?v=77';
-import { urlImagem, urlPlayer } from './drive.js?v=77';
-import { config } from './config.js?v=77';
+import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=78';
+import { ic } from './icons.js?v=78';
+import { urlImagem, urlPlayer } from './drive.js?v=78';
+import { config } from './config.js?v=78';
 
 // Visual de Instagram usado na prévia do painel e na página de aprovação do cliente.
 // Recebe os dados prontos, então funciona com ou sem login.
@@ -74,7 +74,7 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
     return (pend || ultimo)?.publicar.slice(0, 7) || hojeISO().slice(0, 7);
   }
   const planoPendente = plano.some((p) => p.planejamento === 'aprovacao');
-  const estado = { aba: planoPendente && !lista.some((p) => p.etapa === 'aprovacao') ? 'plano' : (plano.length && !lista.length ? 'plano' : 'feed'), mes: mesInicial(), aberta: null };
+  const estado = { aba: planoPendente && !lista.some((p) => p.etapa === 'aprovacao') ? 'plano' : (plano.length && !lista.length ? 'plano' : 'feed'), mes: mesInicial(), aberta: null, filtroPlano: '' };
 
   function tile(p, { pequeno = false, num = '', passivo = false } = {}) {
     const tag = passivo ? 'span' : 'button';
@@ -170,6 +170,9 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
     return `<button class="ig-pl-item" data-ig-pl-abrir="${esc(p.id)}">${quando}<span class="ig-pl-it"><b>${esc(p.titulo || 'Peça')}</b><small><i class="fm-dot fm-${fmId(p)}"></i>${esc([f.nome, funilTxt(p)].filter(Boolean).join(' · '))}</small></span><span class="chip cor-${st[0]}">${esc(p._rascunho ? 'Não enviada' : PLANO_CURTO[p.planejamento])}</span></button>`;
   }
 
+  // Filtro da aba Planejamento, escolhido nos botões do resumo: '' (todas), 'aprovado', 'aprovacao', 'ajustes' ou 'rascunho'.
+  const casaPlano = (p) => !estado.filtroPlano || (estado.filtroPlano === 'rascunho' ? !!p._rascunho : (!p._rascunho && p.planejamento === estado.filtroPlano));
+
   function calendarioPlano(itens) {
     const hoje = hojeISO();
     const [a, m] = estado.mes.split('-').map(Number);
@@ -182,7 +185,7 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
       const iso = isoDia(d);
       const chips = (dias[iso] || []).map((p) => {
         const st = stPlano(p);
-        return `<button class="ig-pl-chip fm-${fmId(p)}" data-ig-pl-abrir="${esc(p.id)}" title="${esc(`${p.titulo || 'Peça'} · ${fmt(p).nome} · ${st[1]}`)}"><i class="st-${st[0]}"></i><span>${esc(p.titulo || 'Peça')}</span></button>`;
+        return `<button class="ig-pl-chip fm-${fmId(p)}${casaPlano(p) ? '' : ' apagado'}" data-ig-pl-abrir="${esc(p.id)}" title="${esc(`${p.titulo || 'Peça'} · ${fmt(p).nome} · ${st[1]}`)}"><i class="st-${st[0]}"></i><span>${esc(p.titulo || 'Peça')}</span></button>`;
       }).join('');
       return `<div class="ig-dia${d.getMonth() !== m - 1 ? ' fora' : ''}${iso === hoje ? ' hoje' : ''}"><span>${d.getDate()}</span><div>${chips}</div></div>`;
     }).join('');
@@ -195,9 +198,11 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
     const cont = (s) => doMesP.filter((p) => p.planejamento === s).length;
     const pend = cont('aprovacao');
     const naoEnv = doMesP.filter((p) => p._rascunho).length;
-    const resumo = `<div class="ig-pl-res"><span class="chip cor-ok">Aprovadas ${cont('aprovado')}</span><span class="chip cor-creme">Aguardando ${pend}</span><span class="chip cor-warn">Com alteração ${cont('ajustes')}</span>${naoEnv ? `<span class="chip cor-mute">Ainda não enviadas ${naoEnv}</span>` : ''}</div>`;
+    // Os botões do resumo são filtros: clique para ver só as ideias daquele grupo (e de novo para voltar a ver todas).
+    const botaoFiltro = (k, cor, texto, n) => `<button type="button" class="chip cor-${cor} ig-pl-filtro${estado.filtroPlano === k ? ' on' : ''}" data-ig-pl-filtro="${k}" aria-pressed="${estado.filtroPlano === k}">${texto} ${n}</button>`;
+    const resumo = `<div class="ig-pl-res" title="Clique para ver só as ideias de cada grupo">${botaoFiltro('aprovado', 'ok', 'Aprovadas', cont('aprovado'))}${botaoFiltro('aprovacao', 'creme', 'Aguardando', pend)}${botaoFiltro('ajustes', 'warn', 'Com alteração', cont('ajustes'))}${naoEnv ? botaoFiltro('rascunho', 'mute', 'Ainda não enviadas', naoEnv) : ''}</div>`;
     const tudo = pend ? `<button class="btn verde sm" data-ig-pl-todas>${ic('check')}Aprovar tudo deste mês</button>` : '';
-    const itens = [...doMesP, ...semDataP].map(itemPlano).join('') || '<div class="ig-nada"><p>Nenhuma ideia neste mês. Use as setas para ver outros meses.</p></div>';
+    const itens = [...doMesP, ...semDataP].filter(casaPlano).map(itemPlano).join('') || `<div class="ig-nada"><p>${estado.filtroPlano ? 'Nenhuma ideia neste grupo neste mês. Clique no botão de novo para ver todas.' : 'Nenhuma ideia neste mês. Use as setas para ver outros meses.'}</p></div>`;
     return `<div class="ig-plgrid">
       <aside class="ig-pl-lado"><h4 class="ig-sub" style="margin:0">Ideias do mês</h4>${resumo}${tudo}<p class="ig-erro" data-ig-pl-erro hidden></p><div class="ig-pl-itens">${itens}</div></aside>
       <div class="ig-pl-calwrap">${calendarioPlano(doMesP)}<div class="ig-pl-fmts" title="A cor de cada ideia no calendário é o tipo de conteúdo; a bolinha mostra se foi aprovada">${Object.entries(FORMATO).map(([id, x]) => `<span class="chip fm-${id}">${esc(x.nome)}</span>`).join('')}</div></div></div>`;
@@ -238,6 +243,8 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
     if (cancelar) { cancelar.closest('[data-ig-pl-form]').hidden = true; return true; }
     if (alvo.closest('[data-ig-pl-fechar]')) { fecharPlano(); return true; }
     if (alvo.closest('[data-ig-pl-todas]')) { aprovarTudoDoMes(); return true; }
+    const filtro = alvo.closest('[data-ig-pl-filtro]');
+    if (filtro) { estado.filtroPlano = filtro.dataset.igPlFiltro === estado.filtroPlano ? '' : filtro.dataset.igPlFiltro; desenhar(); return true; }
     return false;
   }
 

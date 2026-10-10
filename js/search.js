@@ -1,9 +1,9 @@
-import { store } from './store.js?v=77';
-import { alertas } from './calc.js?v=77';
-import { esc, norm, brl, dataBR } from './util.js?v=77';
-import { ic } from './icons.js?v=77';
-import { listaProcessos } from './views/processo.js?v=77';
-import { FORMATOS, etapaDe } from './conteudo.js?v=77';
+import { store } from './store.js?v=78';
+import { alertas } from './calc.js?v=78';
+import { esc, norm, brl, dataBR } from './util.js?v=78';
+import { ic } from './icons.js?v=78';
+import { listaProcessos } from './views/processo.js?v=78';
+import { FORMATOS, etapaDe } from './conteudo.js?v=78';
 
 export const SECOES = [
   { rota: 'inicio', nome: 'Início', ic: 'home', extra: 'resumo visão geral' },
