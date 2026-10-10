@@ -121,6 +121,8 @@ Formatos: feed, carrossel, reels, story. Etapas: planejamento, criacao, aprovaca
 
 **Ativar uma vez (Supabase):** abra o SQL Editor, cole o conteúdo de `supabase/aprovacao.sql` e clique em Run. Sem isso, o botão “Link de aprovação” avisa que falta ativar.
 
+**O que o cliente vê no link (só o que importa agora):** as peças que **aguardam a resposta dele** (aprovação ou pedido de ajuste, mesmo que a data já tenha passado) e as aprovadas ou publicadas **de hoje em diante**. O passado (publicado ou aprovado com data anterior a hoje) não aparece, para a página ficar limpa e leve. O filtro é feito no banco (função `aprovacao_ver`, versão 3 de `supabase/aprovacao.sql`), então vale também para quem tentar ler o link por fora. Isso permite importar o histórico de um cliente (como as tarefas do Asana) sem poluir a página dele.
+
 **Observações:** o título da peça aparece para o cliente na lista do calendário, então use nomes que ele possa ler. Os vídeos tocam no player do Drive. O Google às vezes demora ou recusa uma imagem; a página tenta de novo sozinha.
 
 ## Modelo de contrato

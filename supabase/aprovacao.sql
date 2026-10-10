@@ -1,5 +1,5 @@
 -- Página de aprovação do cliente (aprovar.html). Cole no "SQL Editor" do Supabase e clique em Run.
--- Pode rodar de novo sem problema (esta é a versão 2: inclui a aprovação do PLANEJAMENTO antes da produção).
+-- Pode rodar de novo sem problema (versão 3: o cliente só vê as peças de hoje em diante, mais as que aguardam resposta dele).
 --
 -- Como funciona e por que é seguro:
 -- * A tabela "records" continua fechada: só as sócias leem e escrevem nela.
@@ -29,6 +29,7 @@ declare
   v_cliente text;
   v_cli jsonb;
   v_pecas jsonb;
+  v_hoje text := to_char(now() at time zone 'America/Sao_Paulo', 'YYYY-MM-DD');
 begin
   select cliente_id into v_cliente from aprovacao_links where token = p_token and ativo;
   if v_cliente is null then return null; end if;
@@ -55,8 +56,15 @@ begin
   from records r
   where r.kind = 'conteudo'
     and r.data->>'clienteId' = v_cliente
-    and (r.data->>'etapa' in ('aprovacao', 'ajustes', 'aprovado', 'publicado')
-         or r.data->>'planejamento' in ('aprovacao', 'ajustes', 'aprovado'));
+    and (
+      -- o que ainda precisa da resposta do cliente aparece sempre, mesmo que a data já tenha passado
+      r.data->>'etapa' in ('aprovacao', 'ajustes')
+      or r.data->>'planejamento' in ('aprovacao', 'ajustes')
+      -- o que já foi aprovado ou publicado só aparece de hoje em diante (o passado não polui nem pesa a página)
+      or ((r.data->>'etapa' in ('aprovado', 'publicado') or r.data->>'planejamento' = 'aprovado')
+          and (coalesce(r.data->>'publicar', '') >= v_hoje
+               or (r.data->>'etapa' = 'aprovado' and coalesce(r.data->>'publicar', '') = '')))
+    );
 
   return jsonb_build_object(
     'cliente', jsonb_build_object('nome', v_cli->>'nome', 'imagem', v_cli->>'imagem', 'instagram', v_cli->>'instagram'),
