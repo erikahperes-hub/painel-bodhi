@@ -9,6 +9,10 @@ Este é o painel interno da Bôdhi Marketing (painel.bodhi.marketing). Quem pede
 - Teste local sem login e sem tocar nos dados reais: `node tools/serve.mjs` e abrir `http://localhost:5173/?local` (dados só no navegador).
 - Regras de negócio do conteúdo (formatos, etapas, o que o cliente enxerga) estão no `LEIA-ME.md`, seção "Conteúdo e aprovação do cliente". Leia antes de mexer nessa área.
 
+## Antes de propor um caminho
+
+Para qualquer pedido, avalie qual é o melhor caminho e a melhor solução, sem se limitar ao mais fácil de construir: veja o que já está conectado à sessão (conectores, contas e serviços que a Bôdhi já paga, skills), pesquise o que mais existe (catálogo de conectores e a web; instalar outro conector é permitido), compare custo, esforço, limites e manutenção, e só então recomenda UMA opção, citando as outras. Não mande ninguém criar conta ou fazer login antes de a recomendação estar avaliada.
+
 ## Fluxo obrigatório de toda mudança
 
 1. `git pull` antes de começar (a outra pessoa pode ter publicado).
