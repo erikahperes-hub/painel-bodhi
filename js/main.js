@@ -1,26 +1,27 @@
-import { store } from './store.js?v=80';
-import { logo } from './logo.js?v=80';
-import { ic, flor } from './icons.js?v=80';
-import { esc, toast, debounce } from './util.js?v=80';
-import { alertas } from './calc.js?v=80';
-import { buscar, htmlResultados } from './search.js?v=80';
-import { temModal, fecharTopo, formulario } from './ui.js?v=80';
+import { store } from './store.js?v=81';
+import { logo } from './logo.js?v=81';
+import { ic, flor } from './icons.js?v=81';
+import { esc, toast, debounce } from './util.js?v=81';
+import { alertas } from './calc.js?v=81';
+import { buscar, htmlResultados } from './search.js?v=81';
+import { temModal, fecharTopo, formulario } from './ui.js?v=81';
 
-import inicio from './views/inicio.js?v=80';
-import comercial from './views/comercial.js?v=80';
-import clientes from './views/clientes.js?v=80';
-import conteudo from './views/conteudo.js?v=80';
-import previa from './views/previa.js?v=80';
-import propostas from './views/propostas.js?v=80';
-import contratos from './views/contratos.js?v=80';
-import financeiro from './views/financeiro.js?v=80';
-import processo from './views/processo.js?v=80';
-import prospeccao from './views/prospeccao.js?v=80';
-import configuracoes from './views/configuracoes.js?v=80';
+import inicio from './views/inicio.js?v=81';
+import comercial from './views/comercial.js?v=81';
+import clientes from './views/clientes.js?v=81';
+import conteudo from './views/conteudo.js?v=81';
+import previa from './views/previa.js?v=81';
+import relatorio from './views/relatorio.js?v=81';
+import propostas from './views/propostas.js?v=81';
+import contratos from './views/contratos.js?v=81';
+import financeiro from './views/financeiro.js?v=81';
+import processo from './views/processo.js?v=81';
+import prospeccao from './views/prospeccao.js?v=81';
+import configuracoes from './views/configuracoes.js?v=81';
 
-const VIEWS = { inicio, comercial, clientes, conteudo, previa, propostas, contratos, financeiro, processo, prospeccao, configuracoes };
+const VIEWS = { inicio, comercial, clientes, conteudo, previa, relatorio, propostas, contratos, financeiro, processo, prospeccao, configuracoes };
 const NAV = [
-  ['inicio', 'Início', 'home'], ['comercial', 'Comercial', 'bars'], ['clientes', 'Clientes', 'users'], ['conteudo', 'Conteúdo', 'grid'],
+  ['inicio', 'Início', 'home'], ['comercial', 'Comercial', 'bars'], ['clientes', 'Clientes', 'users'], ['conteudo', 'Conteúdo', 'grid'], ['relatorio', 'Relatório', 'trend'],
   ['propostas', 'Propostas', 'send'], ['contratos', 'Contratos', 'doc'], ['financeiro', 'Financeiro', 'wallet'], ['processo', 'Processo', 'flow'], ['prospeccao', 'Prospecção', 'target'],
 ];
 const ACOES = Object.assign({}, ...Object.values(VIEWS).map((v) => v.acoes || {}));

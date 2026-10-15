@@ -1,5 +1,6 @@
 const P = {
   home: '<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-6h4v6"/>',
+  trend: '<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
   bars: '<path d="M4 20V10"/><path d="M10 20V6"/><path d="M16 20v-8"/><path d="M20 20V4"/>',
   users: '<circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c0-3 2.5-5.2 5.5-5.2s5.5 2.2 5.5 5.2"/><circle cx="17" cy="9.5" r="2.3"/><path d="M15.3 13.8c2.6.3 4.7 2.3 4.7 5.2"/>',
   send: '<path d="M3.5 11 20 4l-4.5 16-4.5-6.5z"/><path d="M11 13.5 20 4"/>',

@@ -620,3 +620,4 @@ a.chip{text-decoration:none}
   .head-t h1{font-size:26px}
 }
 @media print{.shell,.overlay{display:none}}
+@media print{body.imprimindo .shell{display:block!important}body.imprimindo .side,body.imprimindo .head,body.imprimindo .logo-cell,body.imprimindo .no-print{display:none!important}body.imprimindo .card{box-shadow:none;border:1px solid var(--line);break-inside:avoid}}
