@@ -1,0 +1,25 @@
+# Rede de proteção: a cada envio ao GitHub, confere se o código abre sem erro, se as versões ?v= estão iguais
+# e se nenhuma chave secreta ou a pasta seed/ foi enviada. Se falhar, o GitHub avisa por e-mail e mostra um X vermelho.
+name: Checar o painel
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Instalar o Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Conferir
+        run: node tools/checar.mjs

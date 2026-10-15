@@ -74,6 +74,25 @@ insert into public.socias (email) values ('email-da-pessoa@exemplo.com') on conf
 
 Para ver quem está liberado: `select * from public.socias;`
 
+## Mudar o próprio painel (Érika e Milena, com o Claude Code)
+
+As duas podem pedir ao Claude Code qualquer mudança no painel (um campo novo, outra cor, uma tela do financeiro) e ele mesmo edita o código, testa e publica. O arquivo `CLAUDE.md` da pasta já ensina o Claude a fazer isso do jeito certo, então basta pedir em português.
+
+**Preparar o computador (uma vez só, cerca de 15 minutos):**
+
+1. Instale o **Git** (git-scm.com) e o **Node** (nodejs.org), aceitando as opções padrão.
+2. Crie a conta gratuita no **GitHub** e peça para a Érika adicionar você como colaboradora do repositório `erikahperes-hub/painel-bodhi` (Settings > Collaborators). Aceite o convite que chega por e-mail.
+3. Abra o **Claude Code** (app do Claude, aba Code), escolha uma pasta vazia do seu computador e peça: *"Baixe (clone) o repositório https://github.com/erikahperes-hub/painel-bodhi.git aqui e me deixe pronta para mexer no painel"*. Na primeira vez o Git abre uma janela para entrar no GitHub: entre com a sua conta.
+4. Para entrar no painel de verdade (com os dados reais), o e-mail do seu login precisa estar na lista de sócias (seção acima). Para testar sem mexer nos dados, o Claude usa o modo `?local`.
+
+**No dia a dia:** abra o Claude Code na pasta do painel e peça a mudança. O Claude baixa as novidades da outra pessoa, edita, testa no modo local, confere (`node tools/checar.mjs`), sobe a versão (`node tools/versionar.mjs`) e publica. Em 1 a 2 minutos a mudança está no ar. Se der algo errado, peça *"desfaça a última mudança"*: o histórico guarda tudo.
+
+**Rede de proteção:** `node tools/checar.mjs` confere se o código abre sem erro, se as versões estão iguais e se nenhuma chave secreta ou dado de cliente foi parar no código. O GitHub roda a mesma conferência a cada envio e avisa por e-mail se algo falhar. Se as duas editarem ao mesmo tempo, o Git pede para juntar as duas mudanças; o Claude faz isso.
+
+**Mudanças no banco de dados** (campo novo que precisa ser guardado, regra de acesso) têm um passo a mais: o Claude edita o arquivo em `supabase/` e entrega o texto pronto para você colar no **SQL Editor** do Supabase e clicar em Run. Ele explica cada passo.
+
+**Mudar o Asaas:** a chave do Asaas nunca vai no código. Ela fica em **Edge Functions > Secrets** (`ASAAS_API_KEY`), como no Passo 4.
+
 ## Importar os clientes anteriores (ou qualquer lote de clientes)
 
 No painel: **Configurações > Restaurar de um backup** e escolha o arquivo `seed/clientes-inativos.json`. Ele só **acrescenta ou atualiza** os clientes daquele arquivo, sem mexer nos outros dados.
@@ -160,7 +179,8 @@ css/app.css          visual (paleta, fontes e formas da marca)
 js/                  telas, busca, geração de PDF, ligação com Supabase e Asaas
 assets/              fontes e logo oficiais da Bôdhi
 supabase/            schema.sql (banco) e função do Asaas
-tools/               servidor local e conversor de dados
+tools/               servidor local, conferência antes de publicar (checar) e numeração de versão (versionar)
 seed/                dados validados (fica só no seu computador)
 CNAME                domínio do painel
+CLAUDE.md            regras que o Claude Code segue ao mexer no painel
 ```
