@@ -9,23 +9,21 @@ Hoje só existe a receita mapeada. Objetivo: subir todos os extratos e gastos da
 - Dados de despesa são sensíveis: ficam no Supabase (kind próprio, ex. `despesa`), só para sócias. Nunca em arquivo público nem no repositório (`seed/` é ignorado pelo git).
 - Depois do Asaas conectado, a receita real entra sozinha e a despesa fica como entrada manual ou por arquivo do banco (OFX ou CSV).
 
-## 2. Relatório do cliente com Instagram (em andamento, por partes)
+## 2. Relatório do cliente com Instagram (partes 1 a 4 prontas em 16/10/2026)
 
-Objetivo: relatório mensal de cada cliente dentro do painel, com os resultados do Instagram, no estilo do relatório do Reportei (referência da Érika: relatório da PTE Smart) e com insights a mais. Teste feito com o Instagram da Bôdhi (@bodhi.mkt), conectado em 16/10/2026.
+Pronto e no ar (detalhes no LEIA-ME, seção "Relatório do cliente e Instagram"):
+- Conexão grátis pelo app da Meta (só leitura), com renovação automática do token; testado com o Instagram da Bôdhi (@bodhi.mkt).
+- Relatório no estilo do Reportei com insights a mais: resumo em frases, qualidade do resultado, metas por cliente, evolução de 6 meses, tabela de publicações, melhores formatos/dias/períodos, stories, perfil do público, entregas da Bôdhi, leitura do mês editável e funil (só equipe).
+- Link do cliente só para o relatório (`relatorio.html#codigo`), com "Novo link" para desativar o antigo.
+- Leitura automática no Supabase: stories de 3 em 3 horas e números do mês todo dia; avisos no sino e na tela do Relatório quando falhar, parar ou a autorização estiver perto de vencer.
 
-Como funciona hoje (feito):
-- App da Meta "Painel Bodhi Marketing" (API do Instagram com login do Instagram, só leitura: perfil e insights). O dono do Instagram autoriza uma vez; o token fica só no Supabase (tabela `ig_conexoes`, função `instagram`), renova sozinho a cada 60 dias.
-- Painel, aba Relatório: botões Conectar Instagram, Link para o cliente (link de autorização, vale 7 dias), Atualizar do Instagram (busca o mês mostrado), Importar dados (JSON) e Imprimir ou salvar PDF.
-- Layout (`js/relatorio-html.js`): capa com período de análise e de comparação, números com variação (alcance, visualizações, interações, visitas, contas engajadas, seguidores, taxa de engajamento), evolução de 6 meses, publicações do mês com tabela completa, o que funcionou melhor (formato e dia da semana), entregas da Bôdhi e leitura do mês.
+Ainda a validar com dados reais: stories (a conta da Bôdhi não tinha story ativo no teste; falta postar um e conferir que os números e a navegação chegam).
 
-Partes que faltam, em ordem:
-1. Link do cliente só para o relatório (página pública `relatorio.html#codigo`, igual ao link de aprovação: tabela de links + função `relatorio_ver` que entrega só os números daquele cliente).
-2. Stories, seguidores por gênero/idade/cidade e melhor horário. Stories só ficam disponíveis por 24 horas na API, então precisa de uma leitura automática diária (agendada no Supabase) que guarde cada story.
-3. Insights de estratégia que o Reportei não tem: cruzar tarefas do Conteúdo (funil topo/meio/fundo, formato, data) com o alcance de cada publicação; metas mensais por cliente; "leitura do mês" sugerida pelo Claude a partir dos números.
-4. Atualização automática mensal (hoje é pelo botão) e aviso no sino quando a autorização de um cliente estiver para vencer.
-5. Outras redes (TikTok, YouTube, LinkedIn), uma de cada vez.
-
-Limites já conhecidos: o Instagram só entrega 30 dias por consulta de insights (em mês de 31 dias o último dia fica de fora); seguidores ao fim do mês não existem para meses passados (guardamos a data da leitura); modo de teste do app permite só contas adicionadas como testadoras (Funções do app, Testador do Instagram).
+Próximas ideias:
+- Gerar a "leitura do mês" com o Claude a partir dos números (hoje é um rascunho por regras que a equipe edita).
+- Comparar com concorrentes ou com a média do segmento (o Metricool e o Supermetrics têm; a API oficial não entrega).
+- Outras redes (TikTok, YouTube, LinkedIn), uma de cada vez.
+- Abrir o app da Meta para qualquer cliente sem convite exige a análise do app pela Meta (hoje só "testadores").
 
 ## 3. Propostas e contratos automatizados
 
