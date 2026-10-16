@@ -1,5 +1,5 @@
-import { store } from './store.js?v=88';
-import { config } from './config.js?v=88';
+import { store } from './store.js?v=89';
+import { config } from './config.js?v=89';
 
 // Conversa com a função "instagram" do Supabase. Os tokens dos clientes ficam só no servidor (tabela ig_conexoes);
 // aqui o painel nunca vê token nenhum, só pede o link de autorização, manda sincronizar e lê quem está conectado.
@@ -38,7 +38,7 @@ export const igApi = {
     await store.recarregar(true);
     return r;
   },
-  // Lê agora os stories ativos do cliente (a leitura automática faz isso de 3 em 3 horas).
+  // Lê agora os stories ativos do cliente (a leitura automática faz isso de hora em hora).
   async lerStories(clienteId) {
     const r = await chamar('stories', { clienteId });
     delete cacheStories[clienteId];

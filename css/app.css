@@ -691,3 +691,43 @@ a.chip{text-decoration:none}
 .rl-leg-g b{color:var(--ink)}
 @media print{body.imprimindo .rl-resumo,body.imprimindo .rl-meta-b i,body.imprimindo .rl-h-b i,body.imprimindo .rl-stack i,body.imprimindo .rl-leg-g i{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 @media print{.no-print{display:none!important}.pub{padding:0}.pub-h{display:flex}}
+
+/* Aba Feed (js/feed-perfil.js): o perfil do cliente simulado como no Instagram */
+.fp{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:20px;align-items:start}
+.fp-tel{background:var(--card);border-radius:28px;border:8px solid var(--graf-s);box-shadow:var(--sh);padding:12px 10px 10px;max-width:420px;width:100%;margin:0 auto}
+.fp-topo{display:flex;justify-content:space-between;align-items:center;padding:4px 6px 10px;font:700 16px var(--ui)}
+.fp-id{display:flex;align-items:center;gap:18px;padding:0 6px 10px}
+.fp-av{width:78px;height:78px;border-radius:50%;flex:none;display:grid;place-items:center;background:var(--verde);color:#fff;font:700 26px var(--ui);overflow:hidden}
+.fp-av img{width:100%;height:100%;object-fit:cover}
+.fp-nums{display:flex;flex:1;justify-content:space-around;text-align:center}
+.fp-nums b{display:block;font:700 16px var(--ui)}
+.fp-nums span{font:400 12px var(--ui);color:var(--ink-2)}
+.fp-bio{padding:0 8px 10px;font:400 13.5px/1.45 var(--ui)}
+.fp-bio p{margin:2px 0}
+.fp-bio a{color:var(--petroleo);font-weight:600;word-break:break-all}
+.fp-cat{display:block;color:var(--ink-2);font-size:12.5px}
+.fp-vazio{color:var(--ink-3)}
+.fp-dest{display:flex;gap:14px;overflow-x:auto;padding:4px 8px 12px}
+.fp-dest>div{display:flex;flex-direction:column;align-items:center;gap:4px;flex:none}
+.fp-dest span{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;color:#fff;font:700 20px var(--ui);box-shadow:0 0 0 2px var(--card),0 0 0 3px var(--line)}
+.fp-dest small{font:400 11.5px var(--ui);color:var(--ink-2)}
+.fp-abas{display:flex;border-top:1px solid var(--line)}
+.fp-abas button{flex:1;padding:10px 0;display:grid;place-items:center;font-size:20px;color:var(--ink-3);border:0;border-bottom:2px solid transparent;background:none;border-radius:0;box-shadow:none}
+.fp-abas button.on{color:var(--ink);border-bottom-color:var(--ink)}
+.fp-grade{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+.fp-t{position:relative;aspect-ratio:3/4;overflow:hidden;background:var(--graf-s);display:block;padding:0;text-align:left;border:0;border-radius:0;box-shadow:none}
+.fp-t img{width:100%;height:100%;object-fit:cover;display:block}
+.fp-t.sem{background:repeating-linear-gradient(135deg,var(--graf-s) 0 10px,transparent 10px 20px),var(--canvas)}
+.fp-sem{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:8px;text-align:center;color:var(--ink-2);font-size:20px}
+.fp-sem b{font:700 10.5px/1.25 var(--ui);display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.fp-ic{position:absolute;top:6px;right:6px;color:#fff;font-size:16px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+.fp-d{position:absolute;left:0;bottom:0;right:0;padding:14px 6px 4px;font:700 10.5px var(--ui);color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.55));opacity:0;transition:opacity .15s}
+.fp-t:hover .fp-d,.fp-t:focus-visible .fp-d{opacity:1}
+.fp-st{position:absolute;top:6px;left:6px;width:10px;height:10px;border-radius:50%;background:var(--ink-3);box-shadow:0 0 0 2px rgba(255,255,255,.9)}
+.fp-leg .fp-st,.fp-lado .fp-st{position:static;display:inline-block;margin-right:6px;vertical-align:middle;box-shadow:none}
+.fp-st.cor-ok{background:var(--verde)}.fp-st.cor-warn{background:var(--coral)}.fp-st.cor-info{background:var(--petroleo)}.fp-st.cor-creme{background:#D9A93A}.fp-st.cor-mute{background:var(--ink-3)}
+.fp-nada{padding:30px 10px;text-align:center;color:var(--ink-2);font-size:13.5px}
+.fp-lado{display:grid;gap:14px}
+.fp-lado h3{margin:0 0 4px;font:700 15px var(--ui)}
+.fp-leg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--ink-2);margin-top:6px}
+@media (max-width:900px){.fp{grid-template-columns:minmax(0,1fr)}}

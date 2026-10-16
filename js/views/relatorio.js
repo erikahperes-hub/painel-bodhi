@@ -1,10 +1,10 @@
-import { store } from '../store.js?v=88';
-import { esc, toast, norm, hojeISO } from '../util.js?v=88';
-import { ic, flor } from '../icons.js?v=88';
-import { formulario, confirmar } from '../ui.js?v=88';
-import { FORMATOS, pecas } from '../conteudo.js?v=88';
-import { igApi } from '../instagram-api.js?v=88';
-import { corpoRelatorio, frasesResumo, ymAnterior, ymMais, nomeMes } from '../relatorio-html.js?v=88';
+import { store } from '../store.js?v=89';
+import { esc, toast, norm, hojeISO } from '../util.js?v=89';
+import { ic, flor } from '../icons.js?v=89';
+import { formulario, confirmar } from '../ui.js?v=89';
+import { FORMATOS, pecas } from '../conteudo.js?v=89';
+import { igApi } from '../instagram-api.js?v=89';
+import { corpoRelatorio, frasesResumo, ymAnterior, ymMais, nomeMes } from '../relatorio-html.js?v=89';
 
 // Relatório mensal do cliente nas redes sociais. Começa pelo Instagram.
 // Cada mês de cada cliente é um registro `insights` (id "clienteId_AAAA-MM"). Os números chegam direto do Instagram
@@ -47,7 +47,7 @@ function botoesInstagram(c, ym) {
   if (!igApi.disponivel()) return '';
   const ig = igApi.conexao(c.id);
   if (ig) return `<button class="btn pri sm" data-act="rel-sync" data-cliente="${esc(c.id)}" data-mes="${ym}">${ic('refresh')}Atualizar do Instagram</button>
-    <button class="btn sec sm" data-act="rel-stories" data-cliente="${esc(c.id)}" title="Lê agora os stories ativos (a leitura automática faz isso de 3 em 3 horas)">${ic('play')}Ler stories agora</button>`;
+    <button class="btn sec sm" data-act="rel-stories" data-cliente="${esc(c.id)}" title="Lê agora os stories ativos (a leitura automática faz isso de hora em hora)">${ic('play')}Ler stories agora</button>`;
   return `<button class="btn pri sm" data-act="rel-conectar" data-cliente="${esc(c.id)}">${ic('link')}Conectar Instagram</button>
     <button class="btn sec sm" data-act="rel-link-cliente" data-cliente="${esc(c.id)}" title="Copia um link para o dono do Instagram autorizar no celular">${ic('send')}Link para autorizar</button>`;
 }

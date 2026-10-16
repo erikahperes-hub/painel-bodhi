@@ -1,12 +1,13 @@
-import { store } from '../store.js?v=88';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=88';
-import { ic, flor } from '../icons.js?v=88';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=88';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=88';
-import { idDrive, urlAbrir } from '../drive.js?v=88';
-import { lerPasta } from '../drive-pasta.js?v=88';
-import { lerTabela } from '../planejamento.js?v=88';
-import { config } from '../config.js?v=88';
+import { store } from '../store.js?v=89';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=89';
+import { ic, flor } from '../icons.js?v=89';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=89';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=89';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=89';
+import { feedPerfil } from '../feed-perfil.js?v=89';
+import { lerPasta } from '../drive-pasta.js?v=89';
+import { lerTabela } from '../planejamento.js?v=89';
+import { config } from '../config.js?v=89';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
@@ -430,6 +431,8 @@ function cartao(p, mostrarCliente) {
 
 // Visão escolhida (Status ou Calendário) e mês mostrado no calendário; valem até recarregar a página.
 let aba = 'status';
+let feedFiltro = 'tudo'; // filtro da grade do Feed
+let feedAba = 'grade'; // 'grade' ou 'reels'
 let mesCal = null;
 const recarregarTela = () => window.dispatchEvent(new Event('atualizar-tela'));
 let verLista = false; // depois de escolher um filtro, mostra a lista sem mexer no resto da tela
@@ -525,7 +528,8 @@ export default {
 
     const abas = `<div class="tabs" role="tablist" aria-label="Visões de conteúdo">
       <button class="tab ${aba === 'status' ? 'on' : ''}" role="tab" aria-selected="${aba === 'status'}" data-act="aba-conteudo" data-aba="status">${ic('grid')}Status</button>
-      <button class="tab ${aba === 'calendario' ? 'on' : ''}" role="tab" aria-selected="${aba === 'calendario'}" data-act="aba-conteudo" data-aba="calendario">${ic('calendar')}Calendário</button></div>`;
+      <button class="tab ${aba === 'calendario' ? 'on' : ''}" role="tab" aria-selected="${aba === 'calendario'}" data-act="aba-conteudo" data-aba="calendario">${ic('calendar')}Calendário</button>
+      <button class="tab ${aba === 'feed' ? 'on' : ''}" role="tab" aria-selected="${aba === 'feed'}" data-act="aba-conteudo" data-aba="feed">${ic('image')}Feed</button></div>`;
     // Cabeça igual nas duas abas, nesta ordem: clientes, números e, logo acima do conteúdo, as abas Status e Calendário.
     const numeros = `<div class="grid" style="margin-bottom:16px">
         <div class="card stat tone-verde"><div><div class="lbl">Em produção</div><div class="big num">${em('briefing', 'criacao').length}</div><div class="hint">Planejamento e criação</div></div><span class="stat-ic">${ic('grid')}</span></div>
@@ -535,6 +539,12 @@ export default {
       </div>`;
     const cabeca = `<div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>${numeros}${abas}`;
     if (aba === 'calendario') return cabeca + calendario({ filtro, lista });
+    if (aba === 'feed') {
+      if (!filtro) return `${cabeca}<div class="card empty">${flor()}<h2>Escolha um cliente</h2><p>O feed mostra o perfil de um cliente por vez, como ele fica no Instagram. Toque no nome do cliente acima.</p></div>`;
+      const cli = store.obter('cliente', filtro);
+      const ultimo = store.todos('insights').filter((i) => i.clienteId === filtro && Number.isFinite(Number(i.seguidores))).sort((a, b) => String(b.mes).localeCompare(String(a.mes)))[0];
+      return cabeca + feedPerfil({ cliente: cli, pecas: lista, seguidores: ultimo?.seguidores, filtro: feedFiltro, aba: feedAba });
+    }
 
     const colunas = ETAPAS.map((e) => {
       let itens = e.id === 'publicado' ? ordenarPecas(em(e.id), true) : ordenarPecas(em(e.id));
@@ -557,6 +567,18 @@ export default {
 
   montar(el) {
     ligarArrastar(el);
+    // As artes do Drive às vezes falham em rajada: o Feed tenta de novo algumas vezes antes de desistir.
+    if (!el.dataset.feedErro) {
+      el.dataset.feedErro = '1';
+      el.addEventListener('error', (ev) => {
+        const img = ev.target;
+        if (img.tagName !== 'IMG' || !img.dataset.id || !img.closest('.fp')) return;
+        const n = Number(img.dataset.tent || 0);
+        if (n >= 8) return;
+        img.dataset.tent = n + 1;
+        setTimeout(() => { img.src = urlImagem(img.dataset.id, Number(img.dataset.w), n + 1); }, 700 * (n + 1));
+      }, true);
+    }
     // O círculo de concluir no calendário é um <span>: Enter ou Espaço também funcionam.
     // A tela é redesenhada sem trocar este elemento: registra o ouvinte uma vez só (senão dois se cancelam).
     if (!el.dataset.chkTeclado) {
@@ -624,7 +646,32 @@ export default {
         toast('Novo link gerado');
       };
     },
-    'aba-conteudo': (el) => { aba = el.dataset.aba === 'calendario' ? 'calendario' : 'status'; recarregarTela(); },
+    'aba-conteudo': (el) => { aba = ['calendario', 'feed'].includes(el.dataset.aba) ? el.dataset.aba : 'status'; recarregarTela(); },
+    'feed-filtro': (el) => { feedFiltro = el.dataset.filtro || 'tudo'; recarregarTela(); },
+    'feed-aba': (el) => { feedAba = el.dataset.aba === 'reels' ? 'reels' : 'grade'; recarregarTela(); },
+    // Bio, link, destaques e "seguindo" do perfil simulado no Feed (ficam na ficha do cliente).
+    'feed-perfil': (el) => {
+      const c = store.obter('cliente', el.dataset.cliente);
+      if (!c) return;
+      formulario({
+        titulo: `Perfil de ${c.nome}`,
+        subtitulo: 'Como o perfil aparece na aba Feed. Não muda nada no Instagram do cliente; é só para a equipe ver como o feed fica.',
+        salvarTexto: 'Salvar perfil',
+        valores: { bio: c.bio || '', categoria: c.categoria || '', linkBio: c.linkBio || '', seguindo: c.seguindo ?? '', destaques: c.destaques || [] },
+        campos: [
+          { nome: 'categoria', rotulo: 'Categoria (a linha cinza abaixo do nome)', placeholder: 'Agência de mídia social' },
+          { nome: 'bio', rotulo: 'Bio', tipo: 'area', cheio: true, linhas: 5, placeholder: 'Texto da bio, como está no Instagram' },
+          { nome: 'linkBio', rotulo: 'Link da bio', placeholder: 'https://...' },
+          { nome: 'seguindo', rotulo: 'Quantos o perfil segue', tipo: 'numero' },
+          { nome: 'destaques', rotulo: 'Destaques (um por linha)', tipo: 'lista', cheio: true, ajuda: 'Os nomes dos destaques, na ordem em que aparecem.' },
+        ],
+        aoSalvar: async (v) => {
+          try { await store.salvar('cliente', { ...c, bio: v.bio, categoria: v.categoria, linkBio: v.linkBio, seguindo: v.seguindo === '' ? null : Number(v.seguindo), destaques: v.destaques || [] }); } catch (err) { toast(err.message, true); return false; }
+          toast('Perfil salvo.');
+          recarregarTela();
+        },
+      });
+    },
     'cal-mes': (el) => {
       const passo = Number(el.dataset.passo);
       if (!passo) mesCal = null;

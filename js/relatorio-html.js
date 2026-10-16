@@ -1,4 +1,4 @@
-import { esc, mesNome, dataBR, urlSegura, iniciais } from './util.js?v=88';
+import { esc, mesNome, dataBR, urlSegura, iniciais } from './util.js?v=89';
 
 // O visual do relatório do cliente (baseado no relatório do Reportei, com insights a mais).
 // Só monta o HTML a partir dos dados; é usado pelo painel (js/views/relatorio.js) e pela página que o cliente abre pelo link (relatorio.html).
@@ -75,7 +75,7 @@ function linhaStory(s) {
 }
 function secaoStories(stories, storiesAnt, painel) {
   if (!stories.length) {
-    return painel ? `<section class="card rl-sec rl-nota"><h3>Stories</h3><p class="rl-sub">Nenhum story guardado neste mês. O Instagram só entrega cada story por 24 horas; a leitura automática do painel copia os stories de 3 em 3 horas, então eles aparecem aqui a partir da primeira leitura com o Instagram conectado.</p></section>` : '';
+    return painel ? `<section class="card rl-sec rl-nota"><h3>Stories</h3><p class="rl-sub">Nenhum story guardado neste mês. O Instagram só entrega cada story por 24 horas; a leitura automática do painel copia os stories de hora em hora, então eles aparecem aqui a partir da primeira leitura com o Instagram conectado.</p></section>` : '';
   }
   const r = resumoStories(stories);
   const ant = storiesAnt.length ? resumoStories(storiesAnt) : null;

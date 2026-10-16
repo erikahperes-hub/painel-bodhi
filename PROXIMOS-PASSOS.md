@@ -15,7 +15,7 @@ Pronto e no ar (detalhes no LEIA-ME, seção "Relatório do cliente e Instagram"
 - Conexão grátis pelo app da Meta (só leitura), com renovação automática do token; testado com o Instagram da Bôdhi (@bodhi.mkt).
 - Relatório no estilo do Reportei com insights a mais: resumo em frases, qualidade do resultado, metas por cliente, evolução de 6 meses, tabela de publicações, melhores formatos/dias/períodos, stories, perfil do público, entregas da Bôdhi, leitura do mês editável e funil (só equipe).
 - Link do cliente só para o relatório (`relatorio.html#codigo`), com "Novo link" para desativar o antigo.
-- Leitura automática no Supabase: stories de 3 em 3 horas e números do mês todo dia; avisos no sino e na tela do Relatório quando falhar, parar ou a autorização estiver perto de vencer.
+- Leitura automática no Supabase: stories de hora em hora e números do mês todo dia; avisos no sino e na tela do Relatório quando falhar, parar ou a autorização estiver perto de vencer.
 
 Ainda a validar com dados reais: stories (a conta da Bôdhi não tinha story ativo no teste; falta postar um e conferir que os números e a navegação chegam).
 

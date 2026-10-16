@@ -2,7 +2,7 @@
 -- Rode depois do instagram.sql e depois de publicar a função "instagram".
 --
 -- Duas rotinas (horários em UTC; Brasília = UTC menos 3 horas):
---  * ig-stories: de 3 em 3 horas copia os stories ativos (com os números mais recentes) para a tabela ig_stories.
+--  * ig-stories: de hora em hora (aos 5 minutos) copia os stories ativos (com os números mais recentes) para a tabela ig_stories.
 --    O Instagram só guarda cada story por 24 horas; sem isso eles seriam perdidos para o relatório.
 --  * ig-mes: todo dia, às 05:30 em Brasília, atualiza os números do mês atual e do mês anterior de cada cliente conectado.
 -- Se uma leitura falhar, o motivo aparece no painel (aba Relatório e sino de alertas).
@@ -16,7 +16,7 @@ begin
   perform cron.unschedule(jobname) from cron.job where jobname in ('ig-stories', 'ig-mes');
 end $$;
 
-select cron.schedule('ig-stories', '0 */3 * * *', $job$
+select cron.schedule('ig-stories', '5 * * * *', $job$
   select net.http_post(
     url := 'https://dmxycyxqfxzmotnlyixz.supabase.co/functions/v1/instagram',
     headers := jsonb_build_object('Content-Type', 'application/json', 'x-cron-key', (select chave from public.ig_cron limit 1)),
