@@ -1,7 +1,7 @@
-import { esc, iniciais, dataBR, urlSegura } from './util.js?v=106';
-import { ic } from './icons.js?v=106';
-import { urlImagem } from './drive.js?v=106';
-import { ETAPAS, FORMATOS, etapaDe } from './conteudo.js?v=106';
+import { esc, iniciais, dataBR, urlSegura } from './util.js?v=107';
+import { ic } from './icons.js?v=107';
+import { urlImagem } from './drive.js?v=107';
+import { ETAPAS, FORMATOS, etapaDe } from './conteudo.js?v=107';
 
 // Aba "Feed" de Conteúdo: o perfil do cliente simulado como no Instagram (foto, @, números, bio, destaques e grade),
 // com as tarefas do Conteúdo nos lugares onde vão aparecer. Serve para a equipe ver como o feed fica, sem abrir a prévia do cliente.
@@ -29,6 +29,30 @@ function casa(p, filtro) {
   return (p.etapa || 'briefing') === filtro;
 }
 
+const TIPO_FORMATO = { feed: 'Estático', reels: 'Reels', carrossel: 'Carrossel' };
+
+// Publicações que já estão no Instagram e não têm tarefa no painel. Uma tarefa publicada "gasta" a publicação do Instagram
+// com a mesma data e o mesmo formato, para a mesma peça não aparecer duas vezes.
+function postsDoInstagram(real, doFeed) {
+  const lista = [...(real?.posts || [])];
+  for (const p of doFeed) {
+    if (!p.publicar || (p.etapa || 'briefing') !== 'publicado') continue;
+    const i = lista.findIndex((x) => x.data === p.publicar.slice(0, 10) && x.tipo === (TIPO_FORMATO[p.formato] || 'Estático'));
+    if (i >= 0) lista.splice(i, 1);
+  }
+  return lista;
+}
+
+function pecaIg(x) {
+  const dica = [x.legenda ? x.legenda.replace(/\s+/g, ' ').slice(0, 60) : 'Publicação do Instagram', x.tipo, dataBR(x.data), 'já no Instagram'].join(' · ');
+  const icone = x.tipo === 'Reels' ? 'play' : x.tipo === 'Carrossel' ? 'layers' : '';
+  return `<a class="fp-t ${x.capa ? '' : 'sem'}" href="${esc(urlSegura(x.link) || '#')}" target="_blank" rel="noopener" data-dica="${esc(dica)}" aria-label="${esc(dica)}">
+    ${x.capa ? `<img src="${esc(x.capa)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<span class="fp-sem">${ic('image')}<b>Publicação do Instagram</b></span>`}
+    ${icone ? `<span class="fp-ic">${ic(icone)}</span>` : ''}
+    <span class="fp-d">${esc(dataBR(x.data).slice(0, 5))}</span>
+    <i class="fp-st cor-ok"></i></a>`;
+}
+
 function peca(p, i) {
   const f = FORMATOS[p.formato] || FORMATOS.feed;
   const e = etapaDe(p);
@@ -54,6 +78,10 @@ export function feedPerfil({ cliente, pecas, seguidores, filtro = 'tudo', aba = 
   const visiveis = doFeed
     .filter((p) => casa(p, filtro) && (aba === 'reels' ? p.formato === 'reels' : true))
     .sort((a, b) => String(b.publicar || '9999-99-99').localeCompare(String(a.publicar || '9999-99-99')));
+  // Misturadas por data com as tarefas do painel; aparecem em "Tudo", "Só com arte" e "Publicadas".
+  const doIg = ['tudo', 'arte', 'publicado'].includes(filtro) ? postsDoInstagram(real, doFeed).filter((x) => (aba === 'reels' ? x.tipo === 'Reels' : true)) : [];
+  const itens = [...visiveis.map((p) => ({ d: String(p.publicar || '9999-99-99'), html: peca(p) })), ...doIg.map((x) => ({ d: x.data, html: pecaIg(x) }))]
+    .sort((a, b) => b.d.localeCompare(a.d));
   const destaques = (Array.isArray(cliente.destaques) ? cliente.destaques : String(cliente.destaques || '').split('\n')).map((x) => String(x).trim()).filter(Boolean);
   const site = urlSegura(real?.site || cliente.linkBio);
   const contagem = Object.fromEntries(ETAPAS.map((e) => [e.id, doFeed.filter((p) => (p.etapa || 'briefing') === e.id).length]));
@@ -70,13 +98,13 @@ export function feedPerfil({ cliente, pecas, seguidores, filtro = 'tudo', aba = 
         ${site ? `<a href="${esc(site)}" target="_blank" rel="noopener">${esc(site.replace(/^https?:\/\//, '').replace(/\/$/, ''))}</a>` : ''}</div>
       ${destaques.length ? `<div class="fp-dest">${destaques.map((d, i) => `<div><span style="background:${CORES_DESTAQUE[i % CORES_DESTAQUE.length]}">${esc(d.slice(0, 1).toUpperCase())}</span><small>${esc(d.length > 11 ? `${d.slice(0, 10)}…` : d)}</small></div>`).join('')}</div>` : ''}
       <div class="fp-abas" role="tablist"><button class="${aba === 'grade' ? 'on' : ''}" data-act="feed-aba" data-aba="grade" aria-label="Grade de publicações" role="tab">${ic('grid')}</button><button class="${aba === 'reels' ? 'on' : ''}" data-act="feed-aba" data-aba="reels" aria-label="Só reels" role="tab">${ic('play')}</button></div>
-      ${visiveis.length ? `<div class="fp-grade">${visiveis.map(peca).join('')}</div>` : `<div class="fp-nada">Nenhuma publicação neste filtro.</div>`}
+      ${itens.length ? `<div class="fp-grade">${itens.map((x) => x.html).join('')}</div>` : `<div class="fp-nada">Nenhuma publicação neste filtro.</div>`}
     </div>`;
 
   const lateral = `<aside class="fp-lado">
       <div class="card">
         <h3>O que mostrar na grade</h3>
-        <p class="rl-sub">A grade vai da mais nova (em cima) para a mais antiga, como no Instagram. Toque em uma peça para editar a tarefa.</p>
+        <p class="rl-sub">A grade vai da mais nova (em cima) para a mais antiga, como no Instagram. Toque em uma peça do painel para editar a tarefa; as que já estão no Instagram (bolinha verde) abrem a publicação.</p>
         <div class="cbtns" style="margin-top:8px">${FILTROS_FEED.map(([id, nome]) => `<button class="cbtn ${filtro === id ? 'on' : ''}" data-act="feed-filtro" data-filtro="${id}"><i></i>${esc(nome)}${ETAPAS.some((e) => e.id === id) ? ` · ${contagem[id] || 0}` : ''}</button>`).join('')}</div>
       </div>
       <div class="card">

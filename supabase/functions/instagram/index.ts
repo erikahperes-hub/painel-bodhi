@@ -239,9 +239,15 @@ async function perfilAtual(clienteId: string) {
   const { token } = await conexao(clienteId);
   const q = consulta(token);
   const p = await pegar(`${GRAPH}/me?${q({ fields: 'username,name,biography,website,profile_picture_url,followers_count,follows_count,media_count' })}`);
+  // Últimas publicações, para a grade do Feed mostrar o que já está no Instagram (capa de cada uma).
+  const posts: any[] = [];
+  try {
+    const r = await pegar(`${GRAPH}/me/media?${q({ fields: 'id,caption,media_type,media_product_type,timestamp,permalink,media_url,thumbnail_url', limit: '30' })}`);
+    for (const x of r.data ?? []) posts.push({ id: x.id, tipo: tipoDe(x), data: partesBR(x.timestamp).data, link: x.permalink ?? '', capa: x.thumbnail_url ?? x.media_url ?? '', legenda: String(x.caption ?? '').slice(0, 140) });
+  } catch { /* segue só com o perfil */ }
   return {
     usuario: p.username ?? '', nome: p.name ?? '', bio: p.biography ?? '', site: p.website ?? '', foto: p.profile_picture_url ?? '',
-    seguidores: p.followers_count ?? null, seguindo: p.follows_count ?? null, publicacoes: p.media_count ?? null,
+    seguidores: p.followers_count ?? null, seguindo: p.follows_count ?? null, publicacoes: p.media_count ?? null, posts,
   };
 }
 
