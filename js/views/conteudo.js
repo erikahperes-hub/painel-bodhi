@@ -1,13 +1,13 @@
-import { store } from '../store.js?v=89';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=89';
-import { ic, flor } from '../icons.js?v=89';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=89';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=89';
-import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=89';
-import { feedPerfil } from '../feed-perfil.js?v=89';
-import { lerPasta } from '../drive-pasta.js?v=89';
-import { lerTabela } from '../planejamento.js?v=89';
-import { config } from '../config.js?v=89';
+import { store } from '../store.js?v=90';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=90';
+import { ic, flor } from '../icons.js?v=90';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=90';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=90';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=90';
+import { feedPerfil } from '../feed-perfil.js?v=90';
+import { lerPasta } from '../drive-pasta.js?v=90';
+import { lerTabela } from '../planejamento.js?v=90';
+import { config } from '../config.js?v=90';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.

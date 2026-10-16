@@ -1,4 +1,4 @@
-import { esc, mesNome, dataBR, urlSegura, iniciais } from './util.js?v=89';
+import { esc, mesNome, dataBR, urlSegura, iniciais } from './util.js?v=90';
 
 // O visual do relatório do cliente (baseado no relatório do Reportei, com insights a mais).
 // Só monta o HTML a partir dos dados; é usado pelo painel (js/views/relatorio.js) e pela página que o cliente abre pelo link (relatorio.html).
@@ -281,13 +281,34 @@ export function corpoRelatorio({ cliente, ym, atual, anterior, serie = {}, produ
   const interno = funil && funil.length ? `<section class="card rl-sec rl-interno no-print"><h3>Por etapa do funil <span class="chip mute">só para a equipe</span></h3><p class="rl-sub">Cruza as tarefas do Conteúdo com o alcance de cada publicação (últimos 6 meses). Não aparece no link do cliente.</p>
       <div class="rl-duas"><div>${linhas(funil.map((x) => ({ k: x.nome, n: x.n, media: x.media })))}</div></div></section>` : '';
 
-  return `${capa}
-    ${resumo}
-    <section class="rl-grid">${principais}${seg}</section>
-    ${indicadores ? `<section class="rl-bloco"><h3 class="rl-t">Qualidade do resultado</h3><div class="rl-grid">${indicadores}</div></section>` : ''}
-    ${secaoMetas(cliente.metas, atual, posts, stories)}
-    ${evolucao(serie, ym, 'alcance', 'Evolução do alcance')}
-    ${evolucao(serie, ym, 'interacoes', 'Evolução das interações')}
-    <section class="rl-grid">${contadores}</section>
-    ${tabela}${funcionou}${secaoStories(stories, storiesAnt, painel)}${secaoPublico(pubDados.pub, pubDados.em, atual.seguidores)}${entregas}${leitura}${interno}`;
+  // Layout em capítulos, com índice ao lado: cada assunto tem o seu capítulo e só aparece quando há conteúdo.
+  const capitulos = [
+    { id: 'resumo', nome: 'Resumo', titulo: 'Resumo e leitura do mês', html: `${resumo}${leitura}` },
+    { id: 'numeros', nome: 'Números', titulo: 'Os números do mês', html: `<section class="rl-grid">${principais}${seg}</section>${indicadores ? `<section class="rl-bloco"><h3 class="rl-t">Qualidade do resultado</h3><div class="rl-grid">${indicadores}</div></section>` : ''}${secaoMetas(cliente.metas, atual, posts, stories)}` },
+    { id: 'evolucao', nome: 'Evolução', titulo: 'Evolução nos últimos meses', html: `${evolucao(serie, ym, 'alcance', 'Evolução do alcance')}${evolucao(serie, ym, 'interacoes', 'Evolução das interações')}` },
+    { id: 'publicacoes', nome: 'Publicações', titulo: 'Publicações do mês', html: `<section class="rl-grid">${contadores}</section>${tabela}${funcionou}` },
+    { id: 'stories', nome: 'Stories', titulo: 'Stories', html: secaoStories(stories, storiesAnt, painel) },
+    { id: 'publico', nome: 'Público', titulo: 'Quem acompanha o perfil', html: secaoPublico(pubDados.pub, pubDados.em, atual.seguidores) },
+    { id: 'entregas', nome: 'Entregas', titulo: 'O que a Bôdhi entregou', html: entregas },
+    { id: 'equipe', nome: 'Equipe', titulo: 'Só para a equipe', html: interno },
+  ].filter((c) => c.html.trim());
+  const indice = `<nav class="rl-ind no-print" aria-label="Capítulos do relatório">${capitulos.map((c, i) => `<button type="button" data-rl-ir="rl-cap-${c.id}"><span>${i + 1}</span>${esc(c.nome)}</button>`).join('')}</nav>`;
+  const corpo = capitulos.map((c, i) => `<section class="rl-cap" id="rl-cap-${c.id}"><h2 class="rl-cap-t"><span>${i + 1}</span>${esc(c.titulo)}</h2>${c.html}</section>`).join('');
+  return `${capa}<div class="rl-c">${indice}<div class="rl-corpo">${corpo}</div></div>`;
+}
+
+// Liga o índice: clicar leva ao capítulo (sem mexer no endereço da página) e o capítulo à vista fica marcado.
+export function ligarIndice(raiz) {
+  const botoes = [...raiz.querySelectorAll('[data-rl-ir]')];
+  if (!botoes.length || raiz.dataset.rlIndice) return;
+  raiz.dataset.rlIndice = '1';
+  botoes.forEach((b) => b.addEventListener('click', () => document.getElementById(b.dataset.rlIr)?.scrollIntoView({ behavior: 'smooth', block: 'start' })));
+  if (!('IntersectionObserver' in window)) return;
+  const vistos = new Map();
+  const marca = () => {
+    const topo = [...vistos.entries()].filter(([, v]) => v).map(([id]) => id)[0];
+    botoes.forEach((b) => b.classList.toggle('on', b.dataset.rlIr === topo));
+  };
+  const obs = new IntersectionObserver((itens) => { itens.forEach((i) => vistos.set(i.target.id, i.isIntersecting)); marca(); }, { rootMargin: '-10% 0px -70% 0px' });
+  botoes.forEach((b) => { const el = document.getElementById(b.dataset.rlIr); if (el) { vistos.set(el.id, false); obs.observe(el); } });
 }

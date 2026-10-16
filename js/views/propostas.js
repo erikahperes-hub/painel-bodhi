@@ -1,9 +1,9 @@
-import { store } from '../store.js?v=89';
-import { metricas, faixaProposta } from '../calc.js?v=89';
-import { brl, esc, toast, urlSegura } from '../util.js?v=89';
-import { ic, flor } from '../icons.js?v=89';
-import { formulario, confirmar } from '../ui.js?v=89';
-import { gerarProposta } from '../docs/proposta.js?v=89';
+import { store } from '../store.js?v=90';
+import { metricas, faixaProposta } from '../calc.js?v=90';
+import { brl, esc, toast, urlSegura } from '../util.js?v=90';
+import { ic, flor } from '../icons.js?v=90';
+import { formulario, confirmar } from '../ui.js?v=90';
+import { gerarProposta } from '../docs/proposta.js?v=90';
 
 const STATUS = {
   rascunho: ['mute', 'Rascunho'],

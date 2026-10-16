@@ -731,3 +731,23 @@ a.chip{text-decoration:none}
 .fp-lado h3{margin:0 0 4px;font:700 15px var(--ui)}
 .fp-leg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--ink-2);margin-top:6px}
 @media (max-width:900px){.fp{grid-template-columns:minmax(0,1fr)}}
+
+/* Relatório em capítulos, com índice ao lado (layout C) */
+.rl-c{display:grid;grid-template-columns:190px minmax(0,1fr);gap:26px;align-items:start}
+.rl-ind{position:sticky;top:16px;display:flex;flex-direction:column;gap:4px}
+.rl-ind button{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;font:600 13.5px var(--ui);color:var(--ink-2);text-align:left;border:0;background:none;box-shadow:none;cursor:pointer}
+.rl-ind button span{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--graf-s);font:700 11.5px var(--ui)}
+.rl-ind button:hover{background:var(--graf-s)}
+.rl-ind button.on{background:var(--card);color:var(--ink);box-shadow:var(--sh)}
+.rl-ind button.on span{background:var(--verde);color:#fff}
+.rl-corpo{display:grid;gap:40px;min-width:0}
+.rl-cap{display:grid;gap:16px;scroll-margin-top:16px;min-width:0}
+.rl-cap-t{display:flex;align-items:center;gap:12px;margin:0;font:700 24px var(--display)}
+.rl-cap-t span{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--verde-s);color:var(--verde-ink);font:700 15px var(--ui)}
+@media (max-width:860px){
+  .rl-c{grid-template-columns:minmax(0,1fr);gap:14px}
+  .rl-ind{position:sticky;top:0;z-index:4;flex-direction:row;overflow-x:auto;padding:8px 0;background:var(--canvas);gap:6px}
+  .rl-ind button{flex:none;padding:7px 12px;background:var(--card)}
+  .rl-cap{scroll-margin-top:64px}
+}
+@media print{.rl-c{display:block}.rl-ind{display:none}.rl-corpo{gap:22px}.rl-cap-t span{-webkit-print-color-adjust:exact;print-color-adjust:exact}}

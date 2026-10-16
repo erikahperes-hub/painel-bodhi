@@ -1,10 +1,10 @@
-import { store } from '../store.js?v=89';
-import { esc, toast, norm, hojeISO } from '../util.js?v=89';
-import { ic, flor } from '../icons.js?v=89';
-import { formulario, confirmar } from '../ui.js?v=89';
-import { FORMATOS, pecas } from '../conteudo.js?v=89';
-import { igApi } from '../instagram-api.js?v=89';
-import { corpoRelatorio, frasesResumo, ymAnterior, ymMais, nomeMes } from '../relatorio-html.js?v=89';
+import { store } from '../store.js?v=90';
+import { esc, toast, norm, hojeISO } from '../util.js?v=90';
+import { ic, flor } from '../icons.js?v=90';
+import { formulario, confirmar } from '../ui.js?v=90';
+import { FORMATOS, pecas } from '../conteudo.js?v=90';
+import { igApi } from '../instagram-api.js?v=90';
+import { corpoRelatorio, frasesResumo, ligarIndice, ymAnterior, ymMais, nomeMes } from '../relatorio-html.js?v=90';
 
 // Relatório mensal do cliente nas redes sociais. Começa pelo Instagram.
 // Cada mês de cada cliente é um registro `insights` (id "clienteId_AAAA-MM"). Os números chegam direto do Instagram
@@ -156,6 +156,8 @@ export default {
     if (igApi.disponivel() && !igApi.carregado()) igApi.status().then(recarregarTela);
     return `<div class="cbtns no-print" style="margin-bottom:16px">${chips}</div><div class="no-print">${seletorMes(ym)}</div><div id="rel-corpo" data-cliente="${esc(c.id)}">${blocoCliente(c, ym)}</div>`;
   },
+
+  montar(el) { ligarIndice(el); },
 
   acoes: {
     'rel-mes': (el) => {

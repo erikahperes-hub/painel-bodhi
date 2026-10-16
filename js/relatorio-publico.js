@@ -1,8 +1,8 @@
-import { config } from './config.js?v=89';
-import { logo } from './logo.js?v=89';
-import { esc, hojeISO } from './util.js?v=89';
-import { ic, flor } from './icons.js?v=89';
-import { corpoRelatorio, ymAnterior, ymMais, nomeMes } from './relatorio-html.js?v=89';
+import { config } from './config.js?v=90';
+import { logo } from './logo.js?v=90';
+import { esc, hojeISO } from './util.js?v=90';
+import { ic, flor } from './icons.js?v=90';
+import { corpoRelatorio, ligarIndice, ymAnterior, ymMais, nomeMes } from './relatorio-html.js?v=90';
 
 // Página pública do relatório do cliente. Não tem login: o código do link (depois do #) identifica o cliente.
 // O banco só entrega os números DELE (função relatorio_ver): resultados do Instagram, stories, entregas do mês e metas.
@@ -54,6 +54,8 @@ async function iniciar() {
       <p class="pub-f">Bôdhi Marketing · Se tiver qualquer dúvida, é só nos chamar.</p></div>`;
     app.querySelectorAll('[data-passo]').forEach((b) => b.addEventListener('click', () => { ym = ymMais(ym, Number(b.dataset.passo)); desenhar(); window.scrollTo(0, 0); }));
     app.querySelector('[data-imprimir]')?.addEventListener('click', () => window.print());
+    delete app.dataset.rlIndice;
+    ligarIndice(app);
   }
   desenhar();
 }
