@@ -1,23 +1,24 @@
-import { store } from './store.js?v=85';
-import { logo } from './logo.js?v=85';
-import { ic, flor } from './icons.js?v=85';
-import { esc, toast, debounce } from './util.js?v=85';
-import { alertas } from './calc.js?v=85';
-import { buscar, htmlResultados } from './search.js?v=85';
-import { temModal, fecharTopo, formulario } from './ui.js?v=85';
+import { store } from './store.js?v=87';
+import { logo } from './logo.js?v=87';
+import { ic, flor } from './icons.js?v=87';
+import { esc, toast, debounce } from './util.js?v=87';
+import { alertas } from './calc.js?v=87';
+import { igApi } from './instagram-api.js?v=87';
+import { buscar, htmlResultados } from './search.js?v=87';
+import { temModal, fecharTopo, formulario } from './ui.js?v=87';
 
-import inicio from './views/inicio.js?v=85';
-import comercial from './views/comercial.js?v=85';
-import clientes from './views/clientes.js?v=85';
-import conteudo from './views/conteudo.js?v=85';
-import previa from './views/previa.js?v=85';
-import relatorio from './views/relatorio.js?v=85';
-import propostas from './views/propostas.js?v=85';
-import contratos from './views/contratos.js?v=85';
-import financeiro from './views/financeiro.js?v=85';
-import processo from './views/processo.js?v=85';
-import prospeccao from './views/prospeccao.js?v=85';
-import configuracoes from './views/configuracoes.js?v=85';
+import inicio from './views/inicio.js?v=87';
+import comercial from './views/comercial.js?v=87';
+import clientes from './views/clientes.js?v=87';
+import conteudo from './views/conteudo.js?v=87';
+import previa from './views/previa.js?v=87';
+import relatorio from './views/relatorio.js?v=87';
+import propostas from './views/propostas.js?v=87';
+import contratos from './views/contratos.js?v=87';
+import financeiro from './views/financeiro.js?v=87';
+import processo from './views/processo.js?v=87';
+import prospeccao from './views/prospeccao.js?v=87';
+import configuracoes from './views/configuracoes.js?v=87';
 
 const VIEWS = { inicio, comercial, clientes, conteudo, previa, relatorio, propostas, contratos, financeiro, processo, prospeccao, configuracoes };
 const NAV = [
@@ -155,6 +156,7 @@ function abrirApp() {
   ligarBusca();
   ligarSino();
   atualizarSino();
+  if (igApi.disponivel()) igApi.status().then(atualizarSino);
   renderRota(true);
   store.ouvir(() => {
     renderRota(false);

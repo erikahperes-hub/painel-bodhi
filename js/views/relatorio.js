@@ -1,10 +1,10 @@
-import { store } from '../store.js?v=85';
-import { esc, toast, norm, hojeISO } from '../util.js?v=85';
-import { ic, flor } from '../icons.js?v=85';
-import { formulario } from '../ui.js?v=85';
-import { FORMATOS, pecas } from '../conteudo.js?v=85';
-import { igApi } from '../instagram-api.js?v=85';
-import { corpoRelatorio, ymAnterior, ymMais, nomeMes } from '../relatorio-html.js?v=85';
+import { store } from '../store.js?v=87';
+import { esc, toast, norm, hojeISO } from '../util.js?v=87';
+import { ic, flor } from '../icons.js?v=87';
+import { formulario, confirmar } from '../ui.js?v=87';
+import { FORMATOS, pecas } from '../conteudo.js?v=87';
+import { igApi } from '../instagram-api.js?v=87';
+import { corpoRelatorio, frasesResumo, ymAnterior, ymMais, nomeMes } from '../relatorio-html.js?v=87';
 
 // Relatório mensal do cliente nas redes sociais. Começa pelo Instagram.
 // Cada mês de cada cliente é um registro `insights` (id "clienteId_AAAA-MM"). Os números chegam direto do Instagram
@@ -40,29 +40,73 @@ function seletorMes(ym) {
       ${ym !== padrao ? '<button class="btn ghost sm" data-act="rel-mes" data-passo="0">Último mês fechado</button>' : ''}</div></div>`;
 }
 
+const storiesPedidos = new Set(); // clientes cujos stories já foram pedidos ao banco nesta visita
+
 // Conectar o Instagram do cliente (ele autoriza uma vez) e atualizar os números do mês mostrado.
 function botoesInstagram(c, ym) {
   if (!igApi.disponivel()) return '';
   const ig = igApi.conexao(c.id);
-  if (ig) return `<button class="btn pri sm" data-act="rel-sync" data-cliente="${esc(c.id)}" data-mes="${ym}">${ic('refresh')}Atualizar do Instagram</button>`;
+  if (ig) return `<button class="btn pri sm" data-act="rel-sync" data-cliente="${esc(c.id)}" data-mes="${ym}">${ic('refresh')}Atualizar do Instagram</button>
+    <button class="btn sec sm" data-act="rel-stories" data-cliente="${esc(c.id)}" title="Lê agora os stories ativos (a leitura automática faz isso de 3 em 3 horas)">${ic('play')}Ler stories agora</button>`;
   return `<button class="btn pri sm" data-act="rel-conectar" data-cliente="${esc(c.id)}">${ic('link')}Conectar Instagram</button>
-    <button class="btn sec sm" data-act="rel-link-cliente" data-cliente="${esc(c.id)}" title="Copia um link para o dono do Instagram autorizar no celular">${ic('send')}Link para o cliente</button>`;
+    <button class="btn sec sm" data-act="rel-link-cliente" data-cliente="${esc(c.id)}" title="Copia um link para o dono do Instagram autorizar no celular">${ic('send')}Link para autorizar</button>`;
+}
+
+// Estado da leitura automática: avisa se parou ou falhou.
+function avisoLeitura(c) {
+  const ig = igApi.conexao(c.id);
+  if (!ig) return '';
+  const hora = (iso) => new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  if (ig.ultimoErro) return `<div class="card rl-aviso no-print"><b>A leitura automática do Instagram falhou.</b> ${esc(ig.ultimoErro)} Se pedir, conecte o Instagram deste cliente de novo.</div>`;
+  const parada = ig.ultimaLeitura && Date.now() - new Date(ig.ultimaLeitura).getTime() > 36 * 3600e3;
+  return parada ? `<div class="card rl-aviso no-print"><b>A leitura automática está parada.</b> A última foi em ${hora(ig.ultimaLeitura)}. Confira as rotinas no Supabase (supabase/instagram-cron.sql).</div>` : '';
+}
+
+// Cruza as publicações com as tarefas do Conteúdo (mesmo dia e mesmo formato) para ver qual etapa do funil alcançou mais.
+const NOME_FUNIL = { topo: 'Topo de funil (atrair)', meio: 'Meio de funil (considerar)', fundo: 'Fundo de funil (converter)' };
+const FORMATO_DO_TIPO = { Reels: 'reels', Carrossel: 'carrossel', 'Estático': 'feed' };
+function funilPorEtapa(clienteId, serie, ym) {
+  const tarefas = pecas().filter((p) => p.clienteId === clienteId && NOME_FUNIL[p.funil] && p.publicar);
+  const usadas = new Set();
+  const grupos = {};
+  for (let i = 0; i < 6; i++) {
+    for (const post of serie[ymMais(ym, -i)]?.posts || []) {
+      if (!post.data || !Number.isFinite(Number(post.alcance))) continue;
+      const t = tarefas.find((x) => !usadas.has(x.id) && x.publicar === post.data && (FORMATOS[x.formato] ? x.formato : 'feed') === FORMATO_DO_TIPO[post.tipo]);
+      if (!t) continue;
+      usadas.add(t.id);
+      (grupos[t.funil] ||= []).push(Number(post.alcance));
+    }
+  }
+  const total = Object.values(grupos).reduce((n, v) => n + v.length, 0);
+  if (total < 3) return null;
+  return Object.entries(grupos).map(([f, v]) => ({ nome: NOME_FUNIL[f], n: v.length, media: Math.round(v.reduce((a, b) => a + b, 0) / v.length) })).sort((a, b) => b.media - a.media);
 }
 
 function blocoCliente(c, ym) {
   const atual = store.obter('insights', idInsight(c.id, ym));
   const anterior = store.obter('insights', idInsight(c.id, ymAnterior(ym)));
   const prod = producaoDoMes(c.id, ym);
+  const online = igApi.disponivel();
+  const todasStories = online ? igApi.storiesGuardadas(c.id) : [];
+  if (online && !storiesPedidos.has(c.id)) { storiesPedidos.add(c.id); igApi.stories(c.id).then(recarregarTela); }
+  const doMes = (m) => todasStories.filter((s) => String(s.dados?.data || '').slice(0, 7) === m);
   const barra = `<div class="card rl-barra no-print"><div><b>${esc(c.nome)}</b><span class="lbl"> · ${atual?.fonte === 'instagram' ? 'números direto do Instagram' : atual ? 'dados importados' : 'sem números neste mês'}</span></div>
-      <div class="actions">${botoesInstagram(c, ym)}<button class="btn sec sm" data-act="rel-importar" data-cliente="${esc(c.id)}">${ic('upload')}Importar dados</button>
-        ${atual ? `<button class="btn sec sm" data-act="rel-imprimir">${ic('printer')}Imprimir ou salvar PDF</button>` : ''}</div></div>`;
+      <div class="actions">${botoesInstagram(c, ym)}<button class="btn sec sm" data-act="rel-importar" data-cliente="${esc(c.id)}">${ic('upload')}Importar dados</button></div></div>
+    ${avisoLeitura(c)}`;
   if (!atual) {
     return `${barra}<div class="card empty" style="padding:26px 10px">${flor()}<h2>Sem números deste mês</h2>
       <p>Use “Atualizar do Instagram” (se o Instagram deste cliente estiver conectado) ou “Importar dados”. Enquanto isso, o painel já mostra o que foi produzido.</p>
       ${prod.total ? `<p class="lbl">Produzido no mês: ${prod.total} ${prod.total === 1 ? 'tarefa' : 'tarefas'} (${prod.porFormato.map(([n, q]) => `${q} ${n}`).join(', ')}).</p>` : ''}</div>`;
   }
   const serie = Object.fromEntries(store.todos('insights').filter((i) => i.clienteId === c.id).map((i) => [i.mes, i]));
-  return `${barra}<div class="rl">${corpoRelatorio({ cliente: c, ym, atual, anterior, serie, producao: prod })}</div>`;
+  const acoes2 = `<div class="rl-acoes no-print">
+      <button class="btn sec sm" data-act="rel-leitura" data-cliente="${esc(c.id)}" data-mes="${ym}">${ic('edit')}Escrever a leitura do mês</button>
+      <button class="btn sec sm" data-act="rel-metas" data-cliente="${esc(c.id)}">${ic('target')}Metas do cliente</button>
+      <button class="btn sec sm" data-act="rel-imprimir">${ic('printer')}Imprimir ou salvar PDF</button>
+      ${online ? `<button class="btn pri sm" data-act="rel-link-relatorio" data-cliente="${esc(c.id)}" title="Copia o link que o cliente abre para ver só este relatório">${ic('link')}Copiar link do cliente</button>
+      <button class="btn ghost sm" data-act="rel-link-novo" data-cliente="${esc(c.id)}" title="Cria um link novo e desativa o anterior">Novo link</button>` : ''}</div>`;
+  return `${barra}${acoes2}<div class="rl">${corpoRelatorio({ cliente: c, ym, atual, anterior, serie, producao: prod, stories: doMes(ym), storiesAnt: doMes(ymAnterior(ym)), painel: true, funil: funilPorEtapa(c.id, serie, ym) })}</div>`;
 }
 
 // Aceita um objeto, uma lista ou `{insights:[...]}`. Cada item: clienteNome (ou clienteId), mes e os números.
@@ -143,6 +187,74 @@ export default {
         toast(`Pronto: ${r.publicacoes} ${r.publicacoes === 1 ? 'publicação' : 'publicações'} de ${nomeMes(r.mes)}.`);
       } catch (err) { toast(err.message, true); }
       recarregarTela();
+    },
+    'rel-stories': async (el) => {
+      el.disabled = true;
+      toast('Lendo os stories ativos...');
+      try {
+        const r = await igApi.lerStories(el.dataset.cliente);
+        await igApi.stories(el.dataset.cliente, true);
+        toast(r.stories ? `${r.stories} ${r.stories === 1 ? 'story guardado' : 'stories guardados'}.` : 'Nenhum story ativo agora (o Instagram só entrega os das últimas 24 horas).');
+      } catch (err) { toast(err.message, true); }
+      recarregarTela();
+    },
+    'rel-link-relatorio': async (el) => {
+      try {
+        const url = await igApi.linkRelatorio(el.dataset.cliente);
+        try { await navigator.clipboard.writeText(url); toast('Link copiado. O cliente abre e vê só este relatório.'); } catch { window.prompt('Copie o link do relatório:', url); }
+      } catch (err) { toast(err.message, true); }
+    },
+    'rel-link-novo': async (el) => {
+      if (!(await confirmar('Criar um link novo? O link antigo deixa de funcionar para quem já recebeu.', 'Criar link novo'))) return;
+      try {
+        const url = await igApi.linkRelatorio(el.dataset.cliente, true);
+        try { await navigator.clipboard.writeText(url); toast('Link novo copiado. O anterior foi desativado.'); } catch { window.prompt('Copie o link novo:', url); }
+      } catch (err) { toast(err.message, true); }
+    },
+    // A leitura do mês é o texto da Bôdhi no relatório. Já vem um rascunho feito pelos números, para a Érika ou a Milena ajustar.
+    'rel-leitura': (el) => {
+      const c = store.obter('cliente', el.dataset.cliente);
+      const ym = el.dataset.mes;
+      const atual = store.obter('insights', idInsight(c.id, ym));
+      if (!atual) return;
+      const serie = Object.fromEntries(store.todos('insights').filter((i) => i.clienteId === c.id).map((i) => [i.mes, i]));
+      const stories = igApi.storiesGuardadas(c.id).filter((s) => String(s.dados?.data || '').slice(0, 7) === ym);
+      const rascunho = frasesResumo({ ym, atual, anterior: store.obter('insights', idInsight(c.id, ymAnterior(ym))), serie, stories }).join('\n');
+      formulario({
+        titulo: `Leitura de ${nomeMes(ym)}`,
+        subtitulo: 'Este texto aparece no relatório do cliente. O rascunho abaixo foi montado pelos números; escreva o que você acha importante: o que funcionou, o que mudamos e o que vem a seguir.',
+        largo: true,
+        salvarTexto: 'Salvar leitura',
+        valores: { observacao: atual.observacao || rascunho },
+        campos: [{ nome: 'observacao', rotulo: 'Leitura do mês', tipo: 'area', cheio: true, linhas: 10 }],
+        aoSalvar: async (v) => {
+          try { await store.salvar('insights', { ...atual, observacao: String(v.observacao || '').trim() }); } catch (err) { toast(err.message, true); return false; }
+          toast('Leitura salva.');
+          recarregarTela();
+        },
+      });
+    },
+    'rel-metas': (el) => {
+      const c = store.obter('cliente', el.dataset.cliente);
+      formulario({
+        titulo: `Metas de ${c.nome}`,
+        subtitulo: 'Metas por mês. Elas aparecem no relatório com a barra do quanto já foi atingido. Deixe vazio o que não tiver meta.',
+        salvarTexto: 'Salvar metas',
+        valores: { metas: c.metas || {} },
+        campos: [
+          { nome: 'metas.alcance', rotulo: 'Alcance do mês (contas alcançadas)', tipo: 'numero' },
+          { nome: 'metas.seguidoresNovos', rotulo: 'Seguidores novos no mês', tipo: 'numero' },
+          { nome: 'metas.interacoes', rotulo: 'Interações no mês', tipo: 'numero' },
+          { nome: 'metas.publicacoes', rotulo: 'Publicações no feed no mês', tipo: 'numero' },
+          { nome: 'metas.stories', rotulo: 'Stories no mês', tipo: 'numero' },
+        ],
+        aoSalvar: async (v) => {
+          const m = Object.fromEntries(Object.entries(v.metas || {}).filter(([, x]) => x !== '' && x !== null && x !== undefined && Number(x) > 0).map(([k, x]) => [k, Number(x)]));
+          try { await store.salvar('cliente', { ...c, metas: m }); } catch (err) { toast(err.message, true); return false; }
+          toast('Metas salvas.');
+          recarregarTela();
+        },
+      });
     },
     'rel-imprimir': () => {
       document.body.classList.add('imprimindo');

@@ -1,6 +1,7 @@
-import { store } from './store.js?v=85';
-import { sum, diasAte, diasTxt, dataBR } from './util.js?v=85';
-import { atrasada } from './conteudo.js?v=85';
+import { store } from './store.js?v=87';
+import { sum, diasAte, diasTxt, dataBR } from './util.js?v=87';
+import { atrasada } from './conteudo.js?v=87';
+import { igApi } from './instagram-api.js?v=87';
 
 export function faixaProposta(p) {
   const valores = (p.pacotes || []).map((x) => Number(x.preco) || 0).filter((v) => v > 0);
@@ -121,6 +122,15 @@ export function alertas() {
       lista.push({ nivel: 1, tipo: 'warn', tag: 'Tarefa atrasada', icone: 'calendar', rota: 'conteudo', ref: p.clienteId,
         titulo: `${nome}: ${p.titulo}`, texto: `passou da data de publicação (${dataBR(p.publicar)}).` });
     }
+  });
+  // Instagram dos clientes: leitura automática com problema, parada, ou autorização perto de vencer.
+  igApi.conexoes().forEach((x) => {
+    const nome = cli(x.clienteId)?.nome || 'Cliente';
+    const dias = diasAte(String(x.expiraEm || '').slice(0, 10));
+    const parada = x.ultimaLeitura && Date.now() - new Date(x.ultimaLeitura).getTime() > 36 * 3600e3;
+    if (x.ultimoErro) lista.push({ nivel: 1, tipo: 'warn', tag: 'Instagram', icone: 'alert', rota: 'relatorio', ref: x.clienteId, titulo: `Instagram de ${nome}`, texto: `a leitura automática falhou: ${x.ultimoErro}` });
+    else if (parada) lista.push({ nivel: 1, tipo: 'warn', tag: 'Instagram', icone: 'alert', rota: 'relatorio', ref: x.clienteId, titulo: `Instagram de ${nome}`, texto: 'a leitura automática está parada há mais de um dia e meio.' });
+    else if (dias !== null && dias <= 10) lista.push({ nivel: 1, tipo: 'warn', tag: 'Instagram', icone: 'alert', rota: 'relatorio', ref: x.clienteId, titulo: `Instagram de ${nome}`, texto: `a autorização vence em ${diasTxt(dias)}. Conecte o Instagram de novo no Relatório.` });
   });
   store.todos('pendencia').filter((x) => !x.feito && x.destaque).forEach((x) => {
     lista.push({ nivel: 3, tipo: 'mute', tag: 'Pendente', icone: 'file', rota: 'comercial', ref: x.id, titulo: x.titulo, texto: x.texto || '' });

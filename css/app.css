@@ -666,3 +666,28 @@ a.chip{text-decoration:none}
 .rl-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .rl-texto{white-space:pre-wrap;margin:8px 0 0;line-height:1.55}
 @media print{body.imprimindo .rl{max-width:none}body.imprimindo .rl-bar i,body.imprimindo .rl-var,body.imprimindo .rl-lin,body.imprimindo .rl-av{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+.rl-acoes{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
+.rl-aviso{padding:12px 16px;margin-bottom:16px;background:var(--coral-s);color:var(--coral-ink);box-shadow:none;font-size:13.5px}
+.rl-resumo{background:var(--verde-s);box-shadow:none}
+.rl-resumo ul{margin:8px 0 0;padding-left:20px;display:grid;gap:7px;line-height:1.5}
+.rl-t{margin:0 0 10px;font:700 15px var(--ui);color:var(--ink-2)}
+.rl-bloco{display:block}
+.rl-nota{background:var(--graf-s);box-shadow:none}
+.rl-interno{border:1px dashed var(--ink-3)}
+.rl-meta{margin-top:14px}
+.rl-meta-t{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13.5px;margin-bottom:6px}
+.rl-meta-t span{color:var(--ink-2)}
+.rl-meta-b{height:12px;border-radius:99px;background:var(--graf-s);overflow:hidden}
+.rl-meta-b i{display:block;height:100%;border-radius:99px;background:var(--petroleo)}
+.rl-meta-b i.ok{background:var(--verde)}
+.rl-h{display:grid;grid-template-columns:minmax(80px,32%) 1fr 48px;align-items:center;gap:10px;font-size:13px;margin-bottom:6px}
+.rl-h-b{height:10px;border-radius:99px;background:var(--graf-s);overflow:hidden}
+.rl-h-b i{display:block;height:100%;background:var(--verde);border-radius:99px}
+.rl-h b{text-align:right;font:700 12.5px var(--ui)}
+.rl-stack{display:flex;height:18px;border-radius:99px;overflow:hidden;margin:8px 0}
+.rl-stack i{display:block;height:100%}
+.rl-leg-g{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--ink-2)}
+.rl-leg-g i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+.rl-leg-g b{color:var(--ink)}
+@media print{body.imprimindo .rl-resumo,body.imprimindo .rl-meta-b i,body.imprimindo .rl-h-b i,body.imprimindo .rl-stack i,body.imprimindo .rl-leg-g i{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+@media print{.no-print{display:none!important}.pub{padding:0}.pub-h{display:flex}}
