@@ -1,9 +1,9 @@
-import { store } from '../store.js?v=83';
-import { esc, toast, mesNome, norm, hojeISO, dataBR, urlSegura } from '../util.js?v=83';
-import { ic, flor } from '../icons.js?v=83';
-import { formulario } from '../ui.js?v=83';
-import { FORMATOS, pecas } from '../conteudo.js?v=83';
-import { igApi } from '../instagram-api.js?v=83';
+import { store } from '../store.js?v=84';
+import { esc, toast, mesNome, norm, hojeISO, dataBR, urlSegura } from '../util.js?v=84';
+import { ic, flor } from '../icons.js?v=84';
+import { formulario } from '../ui.js?v=84';
+import { FORMATOS, pecas } from '../conteudo.js?v=84';
+import { igApi } from '../instagram-api.js?v=84';
 
 // Relatório mensal do cliente nas redes sociais. Começa pelo Instagram.
 // Cada mês de cada cliente é um registro `insights` (id "clienteId_AAAA-MM"). Os números chegam por importação
@@ -88,7 +88,7 @@ function blocoCliente(c, ym) {
   }
   const seg = temNumero(atual.seguidores)
     ? `<div class="card stat tone-verde"><div><div class="lbl">Seguidores</div><div class="big num">${num(atual.seguidores)}</div>
-        <div class="hint">${temNumero(atual.seguidoresGanhos) ? `${Number(atual.seguidoresGanhos) >= 0 ? '+' : ''}${num(atual.seguidoresGanhos)} no mês` : 'Ao fim do mês'}</div></div><span class="stat-ic">${ic('users')}</span></div>` : '';
+        <div class="hint">${temNumero(atual.seguidoresGanhos) ? `${Number(atual.seguidoresGanhos) >= 0 ? '+' : ''}${num(atual.seguidoresGanhos)} no mês` : atual.seguidoresEm ? `Em ${dataBR(atual.seguidoresEm)}` : 'Ao fim do mês'}</div></div><span class="stat-ic">${ic('users')}</span></div>` : '';
   const cartoes = CAMPOS.filter(([k]) => temNumero(atual[k])).map(([k, nome, dica], i) =>
     `<div class="card stat ${['tone-creme', 'tone-verde', 'tone-coral', 'tone-creme'][i % 4]}"><div><div class="lbl">${nome}</div><div class="big num">${num(atual[k])}</div>
       <div class="hint">${variacao(atual[k], antes?.[k])} ${esc(dica)}</div></div></div>`).join('');

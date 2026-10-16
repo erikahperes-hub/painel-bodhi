@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Instagram conectado · Bôdhi Marketing</title>
+<style>
+  :root{--fundo:#FFFCF6;--tinta:#16301f;--tinta2:#4a5d51;--verde:#1f4d36}
+  @media (prefers-color-scheme:dark){:root{--fundo:#12201a;--tinta:#f3eee2;--tinta2:#b9c4bc;--verde:#9fd3b4}}
+  body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:var(--fundo);color:var(--tinta);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;text-align:center}
+  main{max-width:440px}
+  h1{font-size:26px;margin:0 0 12px;color:var(--verde)}
+  p{line-height:1.55;margin:0 0 10px;color:var(--tinta2)}
+  small{display:block;margin-top:22px;color:var(--tinta2);opacity:.8}
+</style>
+</head>
+<body>
+<main>
+  <h1 id="titulo">Conferindo…</h1>
+  <p id="texto"></p>
+  <small>Bôdhi Marketing</small>
+</main>
+<script>
+  // O Instagram devolve o dono da conta para cá depois de tocar em "Permitir" (pela função "instagram" do Supabase).
+  var q = new URLSearchParams(location.search);
+  var conta = (q.get('conta') || '').replace(/[^A-Za-z0-9_.]/g, '');
+  var msgs = {
+    ok: ['Instagram conectado', 'A conta ' + (conta ? '@' + conta + ' ' : '') + 'foi conectada. A Bôdhi Marketing só lê os números de desempenho (alcance, seguidores e publicações) e não consegue postar nem mudar nada. Você pode fechar esta página. Se quiser, remova a permissão quando quiser em Configurações do Instagram, Apps e sites.'],
+    cancelado: ['Conexão cancelada', 'Nada foi conectado. Se foi sem querer, peça à Bôdhi Marketing um novo link.'],
+    invalido: ['Link inválido ou vencido', 'Peça à Bôdhi Marketing um novo link de conexão.'],
+    falha: ['Não foi possível conectar', 'Tente de novo em alguns minutos ou peça um novo link à Bôdhi Marketing.']
+  };
+  var m = msgs[q.get('r')] || msgs.invalido;
+  document.getElementById('titulo').textContent = m[0];
+  document.getElementById('texto').textContent = m[1];
+  document.title = m[0] + ' · Bôdhi Marketing';
+</script>
+</body>
+</html>

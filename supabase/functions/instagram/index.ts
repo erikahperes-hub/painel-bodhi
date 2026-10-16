@@ -10,11 +10,9 @@ const cors = {
 };
 const json = (obj: unknown, status = 200) =>
   new Response(JSON.stringify(obj), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
-const pagina = (titulo: string, texto: string) =>
-  new Response(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${titulo}</title>
-<body style="font-family:system-ui,sans-serif;background:#FFFCF6;color:#16301f;display:grid;place-items:center;min-height:100vh;margin:0;padding:24px;text-align:center">
-<div><h1 style="font-size:24px">${titulo}</h1><p style="max-width:420px;line-height:1.5">${texto}</p></div></body>`,
-    { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+// O Supabase mostra páginas HTML das funções como texto cru; por isso o retorno vai para uma página do próprio painel (conectado.html).
+const pagina = (r: string, conta = '') =>
+  new Response(null, { status: 302, headers: { Location: `https://painel.bodhi.marketing/conectado.html?r=${r}${conta ? `&conta=${encodeURIComponent(conta)}` : ''}` } });
 
 const APP_ID = Deno.env.get('IG_APP_ID') ?? '';
 const APP_SECRET = Deno.env.get('IG_APP_SECRET') ?? '';
@@ -147,7 +145,7 @@ async function sincronizar(clienteId: string, mes: string) {
   const { data: antigo } = await admin.from('records').select('data').eq('kind', 'insights').eq('id', id).maybeSingle();
   const dado = {
     ...(antigo?.data ?? {}), id, clienteId, mes, rede: 'instagram', fonte: 'instagram', atualizadoEm: new Date().toISOString(),
-    seguidores: perfil.followers_count ?? null, ...(ganhos !== undefined ? { seguidoresGanhos: ganhos } : {}),
+    seguidores: perfil.followers_count ?? null, seguidoresEm: new Date().toISOString().slice(0, 10), ...(ganhos !== undefined ? { seguidoresGanhos: ganhos } : {}),
     alcance: total.reach ?? null, visualizacoes: total.views ?? null, interacoes: total.total_interactions ?? null,
     visitasPerfil: total.profile_views ?? null, contasEngajadas: total.accounts_engaged ?? null, posts: detalhes,
   };
@@ -163,16 +161,16 @@ Deno.serve(async (req) => {
 
   // Retorno do Instagram depois que o dono da conta toca em "Permitir" (aberto pelo navegador do cliente, sem login do painel).
   if (req.method === 'GET' && (u.searchParams.has('code') || u.searchParams.has('error'))) {
-    if (u.searchParams.get('error')) return pagina('Conexão cancelada', 'Nada foi conectado. Se foi sem querer, peça à Bôdhi Marketing um novo link.');
+    if (u.searchParams.get('error')) return pagina('cancelado');
     const code = (u.searchParams.get('code') ?? '').replace(/#_$/, '');
     const clienteId = await lerEstado(u.searchParams.get('state') ?? '');
-    if (!code || !clienteId) return pagina('Link inválido ou vencido', 'Peça à Bôdhi Marketing um novo link de conexão.');
+    if (!code || !clienteId) return pagina('invalido');
     try {
       const nome = await guardarConexao(clienteId, code);
-      return pagina('Instagram conectado', `A conta @${nome} foi conectada. A Bôdhi Marketing só lê os números de desempenho. Você pode fechar esta página e, se quiser, remover a permissão a qualquer momento em Configurações do Instagram, Apps e sites.`);
+      return pagina('ok', nome);
     } catch (e) {
       console.log('erro na conexão', (e as Error).message);
-      return pagina('Não foi possível conectar', 'Tente de novo em alguns minutos ou peça um novo link à Bôdhi Marketing.');
+      return pagina('falha');
     }
   }
 
