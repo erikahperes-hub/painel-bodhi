@@ -34,3 +34,10 @@ Desenho:
 - No painel: ao entrar como editora, só aparece a área Conteúdo (menu, busca, atalhos e rotas das outras áreas ficam fora).
 - Opcional: limitar a editora a um ou mais clientes (ex.: só TRE Clinic).
 - Testar com uma conta de teste antes de convidar a Gabs, tentando abrir as outras áreas e consultar o banco direto.
+
+## 5. Aba "Feed" em Conteúdo (ideia da Érika, 16/10/2026)
+
+Hoje a aba Conteúdo tem Status e Calendário. Incluir uma terceira visão, **Feed**, que mostra como o perfil do cliente fica com os conteúdos, sem precisar abrir a Prévia do cliente.
+- Simular a página do Instagram do cliente: foto, nome, bio, destaques, grade de publicações (3 colunas), com as tarefas do planejamento e aprovadas nas posições em que vão sair. Reaproveitar `js/instagram.js` (já usado na Prévia e na página de aprovação).
+- Bio, foto e destaques vêm da ficha do cliente (campos novos) ou, depois, direto do Instagram pelo app da Meta.
+- LEMBRAR a Érika desta ideia assim que a configuração do Instagram (app da Meta e relatório) estiver concluída.
