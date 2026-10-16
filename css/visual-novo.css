@@ -94,3 +94,21 @@ html[data-visual="novo"] .fp-t.sem{background:repeating-linear-gradient(135deg,v
 
 /* Celular: a barra de baixo também sem branco */
 @media (max-width:760px){html[data-visual="novo"] .shell{border-radius:30px;background:rgba(249,246,236,.94)}}
+
+/* Página do cliente (relatorio.html): sempre no visual novo, dentro de um painel de vidro como o do painel da equipe */
+html[data-visual="novo"] .pub{max-width:1120px;margin:20px auto;padding:26px 30px 40px;background:rgba(249,246,236,.7);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-radius:42px;box-shadow:0 32px 80px rgba(80,66,36,.13),inset 0 0 0 1px rgba(250,245,232,.7)}
+html[data-visual="novo"] .pub-h p{font-weight:700;color:var(--ink-2)}
+/* O primeiro número do relatório (alcance) é o destaque, em petróleo */
+html[data-visual="novo"] .rl-cap-t+.rl-grid>.rl-kpi:first-child{background:var(--petroleo);color:var(--creme);box-shadow:0 18px 40px rgba(7,63,86,.28),inset 0 1px 0 rgba(255,255,255,.14)}
+html[data-visual="novo"] .rl-cap-t+.rl-grid>.rl-kpi:first-child .rl-kpi-a{color:rgba(252,249,242,.75)}
+html[data-visual="novo"] .rl-cap-t+.rl-grid>.rl-kpi:first-child .rl-kpi-a b{color:var(--creme)}
+html[data-visual="novo"] .rl-cap-t+.rl-grid>.rl-kpi:first-child .rl-var.up{background:rgba(35,187,132,.28);color:#A6EBCF}
+html[data-visual="novo"] .rl-cap-t+.rl-grid>.rl-kpi:first-child .rl-var.down{background:rgba(233,106,106,.28);color:#F7BDBD}
+html[data-visual="novo"] .rl-cap-t+.rl-grid>.rl-kpi:first-child .rl-var.igual{background:rgba(252,249,242,.16);color:var(--creme)}
+html[data-visual="novo"] .rl-capa{background:var(--card)}
+html[data-visual="novo"] .rl-cap-t span{background:rgba(35,187,132,.2)}
+@media (max-width:760px){html[data-visual="novo"] .pub{margin:10px;padding:18px 14px 30px;border-radius:30px}}
+@media print{html[data-visual="novo"] body{background:none!important}html[data-visual="novo"] .pub{margin:0;padding:0;background:none;box-shadow:none;border-radius:0;-webkit-backdrop-filter:none;backdrop-filter:none}}
+/* Índice em faixa (celular): rolagem lateral sem a barra */
+.rl-ind{scrollbar-width:none}
+.rl-ind::-webkit-scrollbar{display:none}

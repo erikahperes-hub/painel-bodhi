@@ -1,7 +1,7 @@
-import { store } from '../store.js?v=100';
-import { esc, hojeISO } from '../util.js?v=100';
-import { ic, flor } from '../icons.js?v=100';
-import { montarFeed, ETAPAS_CLIENTE } from '../instagram.js?v=100';
+import { store } from '../store.js?v=102';
+import { esc, hojeISO } from '../util.js?v=102';
+import { ic, flor } from '../icons.js?v=102';
+import { montarFeed, ETAPAS_CLIENTE } from '../instagram.js?v=102';
 
 export default {
   titulo: () => 'Prévia do cliente',
