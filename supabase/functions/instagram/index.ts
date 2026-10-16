@@ -234,6 +234,17 @@ async function lerStories(clienteId: string) {
   return { stories: gravados };
 }
 
+/* ---------- perfil: foto, nome, bio, link e números como estão agora no Instagram (o Instagram não entrega os destaques a nenhum app) ---------- */
+async function perfilAtual(clienteId: string) {
+  const { token } = await conexao(clienteId);
+  const q = consulta(token);
+  const p = await pegar(`${GRAPH}/me?${q({ fields: 'username,name,biography,website,profile_picture_url,followers_count,follows_count,media_count' })}`);
+  return {
+    usuario: p.username ?? '', nome: p.name ?? '', bio: p.biography ?? '', site: p.website ?? '', foto: p.profile_picture_url ?? '',
+    seguidores: p.followers_count ?? null, seguindo: p.follows_count ?? null, publicacoes: p.media_count ?? null,
+  };
+}
+
 /* ---------- agendamento (pg_cron chama estas ações com a chave da tabela ig_cron) ---------- */
 async function paraCadaCliente(fn: (clienteId: string) => Promise<unknown>) {
   const { data: lista } = await admin.from('ig_conexoes').select('cliente_id');
@@ -310,6 +321,7 @@ Deno.serve(async (req) => {
     }
     if (acao === 'sincronizar') return json({ configurado: true, ...(await sincronizar(String(d.clienteId), String(d.mes))) });
     if (acao === 'stories') return json({ configurado: true, ...(await lerStories(String(d.clienteId))) });
+    if (acao === 'perfil') return json({ configurado: true, perfil: await perfilAtual(String(d.clienteId)) });
     return json({ erro: 'Ação desconhecida' }, 400);
   } catch (e) {
     return json({ erro: (e as Error).message }, 400);

@@ -1,10 +1,11 @@
-import { store } from './store.js?v=104';
-import { config } from './config.js?v=104';
+import { store } from './store.js?v=105';
+import { config } from './config.js?v=105';
 
 // Conversa com a função "instagram" do Supabase. Os tokens dos clientes ficam só no servidor (tabela ig_conexoes);
 // aqui o painel nunca vê token nenhum, só pede o link de autorização, manda sincronizar e lê quem está conectado.
 let conectados = null; // lista de { clienteId, username, expiraEm, ultimoErro, ultimaLeitura }; null = ainda não carregou
 const cacheStories = {}; // `${clienteId}` -> { em, lista }
+const cachePerfil = {}; // `${clienteId}` -> { em, perfil } (perfil real do Instagram; vale 10 minutos)
 
 async function chamar(acao, dados = {}) {
   const sb = store.supabase();
@@ -57,6 +58,18 @@ export const igApi = {
   },
   // Stories já carregados do cliente (sem ir ao banco; vazio até a primeira leitura de igApi.stories).
   storiesGuardadas: (clienteId) => cacheStories[clienteId]?.lista || [],
+  // Perfil como está agora no Instagram: { usuario, nome, bio, site, foto, seguidores, seguindo, publicacoes }. Vazio se não houver conexão.
+  async perfil(clienteId, forcar = false) {
+    if (store.modo !== 'supabase' || !this.conexao(clienteId)) return null;
+    const c = cachePerfil[clienteId];
+    if (c && !forcar && Date.now() - c.em < 600000) return c.perfil;
+    try {
+      const perfil = (await chamar('perfil', { clienteId })).perfil || null;
+      cachePerfil[clienteId] = { em: Date.now(), perfil };
+      return perfil;
+    } catch { return c?.perfil || null; }
+  },
+  perfilGuardado: (clienteId) => cachePerfil[clienteId]?.perfil || null,
   // Link do relatório para o cliente abrir (só vê o relatório dele). Com renovar, o link antigo deixa de funcionar.
   async linkRelatorio(clienteId, renovar = false) {
     const sb = store.supabase();

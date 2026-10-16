@@ -1,7 +1,7 @@
-import { esc, iniciais, dataBR, urlSegura } from './util.js?v=104';
-import { ic } from './icons.js?v=104';
-import { urlImagem } from './drive.js?v=104';
-import { ETAPAS, FORMATOS, etapaDe } from './conteudo.js?v=104';
+import { esc, iniciais, dataBR, urlSegura } from './util.js?v=105';
+import { ic } from './icons.js?v=105';
+import { urlImagem } from './drive.js?v=105';
+import { ETAPAS, FORMATOS, etapaDe } from './conteudo.js?v=105';
 
 // Aba "Feed" de Conteúdo: o perfil do cliente simulado como no Instagram (foto, @, números, bio, destaques e grade),
 // com as tarefas do Conteúdo nos lugares onde vão aparecer. Serve para a equipe ver como o feed fica, sem abrir a prévia do cliente.
@@ -42,27 +42,31 @@ function peca(p, i) {
     <i class="fp-st cor-${esc(e.cor)}"></i></button>`;
 }
 
-// ctx: { cliente, pecas, seguidores, filtro, aba ('grade' | 'reels') }
-export function feedPerfil({ cliente, pecas, seguidores, filtro = 'tudo', aba = 'grade' }) {
-  const handle = String(cliente.instagram || '').replace(/^@/, '').trim() || String(cliente.nome || '').trim();
+// ctx: { cliente, pecas, seguidores, filtro, aba ('grade' | 'reels'), real, conectado }
+// real = perfil lido do Instagram (foto, nome, bio, link e números); quando existe, vale mais que o que foi digitado na ficha do cliente.
+export function feedPerfil({ cliente, pecas, seguidores, filtro = 'tudo', aba = 'grade', real = null, conectado = false }) {
+  const handle = real?.usuario || String(cliente.instagram || '').replace(/^@/, '').trim() || String(cliente.nome || '').trim();
+  const nome = real?.nome || cliente.nome || '';
+  const foto = real?.foto || cliente.imagem || '';
+  const bio = real?.bio || cliente.bio || '';
   const doFeed = pecas.filter((p) => !ehStory(p));
   const stories = pecas.filter(ehStory);
   const visiveis = doFeed
     .filter((p) => casa(p, filtro) && (aba === 'reels' ? p.formato === 'reels' : true))
     .sort((a, b) => String(b.publicar || '9999-99-99').localeCompare(String(a.publicar || '9999-99-99')));
   const destaques = (Array.isArray(cliente.destaques) ? cliente.destaques : String(cliente.destaques || '').split('\n')).map((x) => String(x).trim()).filter(Boolean);
-  const site = urlSegura(cliente.linkBio);
+  const site = urlSegura(real?.site || cliente.linkBio);
   const contagem = Object.fromEntries(ETAPAS.map((e) => [e.id, doFeed.filter((p) => (p.etapa || 'briefing') === e.id).length]));
 
   const perfil = `<div class="fp-tel" role="group" aria-label="Simulação do perfil no Instagram">
       <div class="fp-topo"><b>${esc(handle)}</b><span>${ic('bars')}</span></div>
       <div class="fp-id">
-        <span class="fp-av">${cliente.imagem ? `<img src="${esc(cliente.imagem)}" alt="">` : esc(iniciais(cliente.nome))}</span>
-        <div class="fp-nums"><div><b>${doFeed.length}</b><span>publicações</span></div><div><b>${num(seguidores)}</b><span>seguidores</span></div><div><b>${num(cliente.seguindo)}</b><span>seguindo</span></div></div>
+        <span class="fp-av">${foto ? `<img src="${esc(foto)}" alt="" referrerpolicy="no-referrer">` : esc(iniciais(nome))}</span>
+        <div class="fp-nums"><div><b>${num(real?.publicacoes ?? doFeed.length)}</b><span>publicações</span></div><div><b>${num(real?.seguidores ?? seguidores)}</b><span>seguidores</span></div><div><b>${num(real?.seguindo ?? cliente.seguindo)}</b><span>seguindo</span></div></div>
       </div>
-      <div class="fp-bio"><b>${esc(cliente.nome || '')}</b>
+      <div class="fp-bio"><b>${esc(nome)}</b>
         ${cliente.categoria ? `<span class="fp-cat">${esc(cliente.categoria)}</span>` : ''}
-        ${cliente.bio ? `<p>${esc(cliente.bio).replace(/\n/g, '<br>')}</p>` : '<p class="fp-vazio">Sem bio cadastrada. Use “Editar perfil” para escrever a bio, o link e os destaques.</p>'}
+        ${bio ? `<p>${esc(bio).replace(/\n/g, '<br>')}</p>` : '<p class="fp-vazio">Sem bio cadastrada. Use “Editar perfil” para escrever a bio, o link e os destaques.</p>'}
         ${site ? `<a href="${esc(site)}" target="_blank" rel="noopener">${esc(site.replace(/^https?:\/\//, '').replace(/\/$/, ''))}</a>` : ''}</div>
       ${destaques.length ? `<div class="fp-dest">${destaques.map((d, i) => `<div><span style="background:${CORES_DESTAQUE[i % CORES_DESTAQUE.length]}">${esc(d.slice(0, 1).toUpperCase())}</span><small>${esc(d.length > 11 ? `${d.slice(0, 10)}…` : d)}</small></div>`).join('')}</div>` : ''}
       <div class="fp-abas" role="tablist"><button class="${aba === 'grade' ? 'on' : ''}" data-act="feed-aba" data-aba="grade" aria-label="Grade de publicações" role="tab">${ic('grid')}</button><button class="${aba === 'reels' ? 'on' : ''}" data-act="feed-aba" data-aba="reels" aria-label="Só reels" role="tab">${ic('play')}</button></div>
@@ -82,8 +86,10 @@ export function feedPerfil({ cliente, pecas, seguidores, filtro = 'tudo', aba = 
       </div>
       <div class="card">
         <h3>Perfil</h3>
-        <p class="rl-sub">Bio, link, destaques e quantos o perfil segue. Os seguidores vêm do relatório do Instagram.</p>
-        <button class="btn sec sm" data-act="feed-perfil" data-cliente="${esc(cliente.id)}">${ic('edit')}Editar perfil</button>
+        <p class="rl-sub">${real ? 'Foto, nome, bio, link e números vêm direto do Instagram do cliente. Os destaques o Instagram não libera para nenhum aplicativo, então os nomes são digitados aqui.'
+          : conectado ? 'Buscando o perfil no Instagram do cliente. Se não aparecer, toque em “Puxar do Instagram”.'
+          : 'Bio, link, destaques e quantos o perfil segue. Conecte o Instagram do cliente (tela Relatório) para a foto, a bio e os números virem sozinhos.'}</p>
+        <div class="actions">${conectado ? `<button class="btn sec sm" data-act="feed-puxar" data-cliente="${esc(cliente.id)}">${ic('refresh')}Puxar do Instagram</button>` : ''}<button class="btn sec sm" data-act="feed-perfil" data-cliente="${esc(cliente.id)}">${ic('edit')}${real ? 'Editar destaques' : 'Editar perfil'}</button></div>
       </div></aside>`;
 
   return `<div class="fp">${perfil}${lateral}</div>`;

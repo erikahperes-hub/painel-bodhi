@@ -1,13 +1,14 @@
-import { store } from '../store.js?v=104';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=104';
-import { ic, flor } from '../icons.js?v=104';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=104';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=104';
-import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=104';
-import { feedPerfil } from '../feed-perfil.js?v=104';
-import { lerPasta } from '../drive-pasta.js?v=104';
-import { lerTabela } from '../planejamento.js?v=104';
-import { config } from '../config.js?v=104';
+import { store } from '../store.js?v=105';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=105';
+import { ic, flor } from '../icons.js?v=105';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=105';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=105';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=105';
+import { feedPerfil } from '../feed-perfil.js?v=105';
+import { igApi } from '../instagram-api.js?v=105';
+import { lerPasta } from '../drive-pasta.js?v=105';
+import { lerTabela } from '../planejamento.js?v=105';
+import { config } from '../config.js?v=105';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
@@ -435,6 +436,7 @@ let feedFiltro = 'tudo'; // filtro da grade do Feed
 let feedAba = 'grade'; // 'grade' ou 'reels'
 let mesCal = null;
 const recarregarTela = () => window.dispatchEvent(new Event('atualizar-tela'));
+const perfilPedido = new Set(); // clientes cujo perfil do Instagram já foi pedido nesta abertura do painel
 let verLista = false; // depois de escolher um filtro, mostra a lista sem mexer no resto da tela
 
 const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -543,7 +545,13 @@ export default {
       if (!filtro) return `${cabeca}<div class="card empty">${flor()}<h2>Escolha um cliente</h2><p>O feed mostra o perfil de um cliente por vez, como ele fica no Instagram. Toque no nome do cliente acima.</p></div>`;
       const cli = store.obter('cliente', filtro);
       const ultimo = store.todos('insights').filter((i) => i.clienteId === filtro && Number.isFinite(Number(i.seguidores))).sort((a, b) => String(b.mes).localeCompare(String(a.mes)))[0];
-      return cabeca + feedPerfil({ cliente: cli, pecas: lista, seguidores: ultimo?.seguidores, filtro: feedFiltro, aba: feedAba });
+      // Perfil real do Instagram, quando o cliente está conectado: busca uma vez e redesenha quando chegar.
+      const conectado = igApi.disponivel() && !!igApi.conexao(filtro);
+      if (conectado && !igApi.perfilGuardado(filtro) && !perfilPedido.has(filtro)) {
+        perfilPedido.add(filtro);
+        igApi.perfil(filtro).then(recarregarTela);
+      }
+      return cabeca + feedPerfil({ cliente: cli, pecas: lista, seguidores: ultimo?.seguidores, filtro: feedFiltro, aba: feedAba, real: conectado ? igApi.perfilGuardado(filtro) : null, conectado });
     }
 
     const colunas = ETAPAS.map((e) => {
@@ -648,6 +656,11 @@ export default {
     },
     'aba-conteudo': (el) => { aba = ['calendario', 'feed'].includes(el.dataset.aba) ? el.dataset.aba : 'status'; recarregarTela(); },
     'feed-filtro': (el) => { feedFiltro = el.dataset.filtro || 'tudo'; recarregarTela(); },
+    'feed-puxar': async (el) => {
+      const perfil = await igApi.perfil(el.dataset.cliente, true);
+      toast(perfil ? 'Perfil atualizado com o que está no Instagram.' : 'Não consegui ler o perfil. Veja se a conexão do Instagram do cliente está ativa.', !perfil);
+      recarregarTela();
+    },
     'feed-aba': (el) => { feedAba = el.dataset.aba === 'reels' ? 'reels' : 'grade'; recarregarTela(); },
     // Bio, link, destaques e "seguindo" do perfil simulado no Feed (ficam na ficha do cliente).
     'feed-perfil': (el) => {

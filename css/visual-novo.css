@@ -1,5 +1,5 @@
 /* Visual novo do painel. Só vale quando <html data-visual="novo">; ligado em Configurações > Aparência.
-   Duas escolhas extras, que se combinam: data-modo="noturno" (a paleta da Bôdhi no escuro) e data-cor="rosa" (fundinho rosado, do coral da marca).
+   Duas escolhas extras, que se combinam: data-modo="noturno" (a paleta da Bôdhi no escuro) e data-cor="rosa" ou "verde" (fundinho rosado ou esverdeado).
    Ideia: sem branco puro, camadas de tom (página, painel de vidro, cartões, poços), cartões grandes de cantos redondos sem bordas duras,
    um cartão de destaque, números grandes e gráficos nas cores da marca. Tudo o que muda de cor está nas variáveis do começo. */
 
@@ -57,6 +57,33 @@ html[data-visual="novo"][data-cor="rosa"]{
   --glow-1:#FFF4F1;
   --glow-2:#F4D9DB;
   --glow-3:rgba(233,106,106,.14);
+}
+
+/* ---------- Verde, claro: fundinho esverdeado, destaque em verde profundo ---------- */
+html[data-visual="novo"][data-cor="verde"]{
+  --creme:#F7FBF6;
+  --canvas:#EBF4EC;
+  --card:#F8FCF7;
+  --poco:#E7F1E8;
+  --campo:#F7FBF6;
+  --campo-foco:#FBFEFA;
+  --pagina:#E3EEE5;
+  --line:rgba(30,80,50,.11);
+  --graf-s:rgba(30,80,50,.07);
+  --petroleo:#0C6646;
+  --pet-s:rgba(12,102,70,.10);
+  --petroleo-texto:#0C6646;
+  --destaque:#0C6646;
+  --destaque-sombra:rgba(12,102,70,.30);
+  --vidro:rgba(240,248,241,.72);
+  --vidro-borda:rgba(246,252,246,.7);
+  --botao-claro:rgba(250,254,249,.95);
+  --sombra:30,80,50;
+  --tinta:30,80,50;
+  --brilho:rgba(248,255,248,.85);
+  --glow-1:#F4FAF3;
+  --glow-2:#CFE6D5;
+  --glow-3:rgba(35,187,132,.18);
 }
 
 /* ---------- Noturno: petróleo profundo, creme e verde ---------- */
@@ -120,6 +147,31 @@ html[data-visual="novo"][data-modo="noturno"][data-cor="rosa"]{
   --glow-1:#4A2431;
   --glow-2:#2B1620;
   --glow-3:rgba(233,106,106,.12);
+}
+
+/* ---------- Noturno + verde: floresta escura, destaque em verde menta ---------- */
+html[data-visual="novo"][data-modo="noturno"][data-cor="verde"]{
+  --ink:#EEF3E8;
+  --ink-2:#B7CCBC;
+  --ink-3:#7E9886;
+  --pagina:#07170F;
+  --canvas:#0D2418;
+  --card:#12301F;
+  --poco:#0F281A;
+  --campo:#0B2015;
+  --campo-foco:#10301F;
+  --line:rgba(236,244,230,.11);
+  --graf-s:rgba(236,244,230,.07);
+  --petroleo:#1F9A6A;
+  --pet-s:rgba(134,224,184,.14);
+  --petroleo-texto:#86E0B8;
+  --destaque:#5FD7A5;
+  --on-destaque:#06301F;
+  --destaque-sombra:rgba(95,215,165,.26);
+  --vidro:rgba(13,36,24,.72);
+  --glow-1:#14452D;
+  --glow-2:#0A2A1B;
+  --glow-3:rgba(95,215,165,.10);
 }
 
 /* ---------- Estrutura: fundo, painel de vidro, cartões ---------- */
@@ -222,7 +274,7 @@ html[data-visual="novo"] .pub-h p{font-weight:700;color:var(--ink-2)}
 
 /* ---------- Impressão (PDF): sempre claro, sem vidro nem fundo ---------- */
 @media print{
-  html[data-visual="novo"][data-modo="noturno"],html[data-visual="novo"][data-modo="noturno"][data-cor="rosa"]{
+  html[data-visual="novo"][data-modo="noturno"],html[data-visual="novo"][data-modo="noturno"][data-cor="rosa"],html[data-visual="novo"][data-modo="noturno"][data-cor="verde"]{
     color-scheme:light;--creme:#FCF9F2;--ink:#292B2D;--ink-2:#63676A;--ink-3:#9A9DA0;--canvas:#F7F3E8;--card:#FDFBF6;--poco:#F6F1E6;--campo:#FCF9F2;
     --line:rgba(70,58,32,.10);--graf-s:rgba(70,58,32,.07);--petroleo:#073F56;--pet-s:rgba(7,63,86,.09);--petroleo-texto:#073F56;--verde-ink:#0C6646;--coral-ink:#A13A3A;
     --verde-s:rgba(35,187,132,.15);--coral-s:rgba(233,106,106,.16);--destaque:#073F56;--on-destaque:#FCF9F2;--sombra:80,66,36;--tinta:70,58,32;--botao-claro:#FEFCF8}

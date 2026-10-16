@@ -1,9 +1,9 @@
-import { store } from '../store.js?v=104';
-import { esc, toast, baixar, hojeISO } from '../util.js?v=104';
-import { ic } from '../icons.js?v=104';
-import { formulario, abrirModal, confirmar } from '../ui.js?v=104';
-import { modeloAtual } from '../docs/contrato.js?v=104';
-import { CLAUSULAS_PADRAO, PREAMBULO_PADRAO, VARIAVEIS } from '../docs/modeloContrato.js?v=104';
+import { store } from '../store.js?v=105';
+import { esc, toast, baixar, hojeISO } from '../util.js?v=105';
+import { ic } from '../icons.js?v=105';
+import { formulario, abrirModal, confirmar } from '../ui.js?v=105';
+import { modeloAtual } from '../docs/contrato.js?v=105';
+import { CLAUSULAS_PADRAO, PREAMBULO_PADRAO, VARIAVEIS } from '../docs/modeloContrato.js?v=105';
 
 function editarModelo() {
   const modelo = modeloAtual();
@@ -48,15 +48,15 @@ export default {
     const d = document.documentElement.dataset;
     const visual = d.visual === 'novo' ? 'novo' : 'antigo';
     const modo = d.modo === 'noturno' ? 'noturno' : 'claro';
-    const cor = d.cor === 'rosa' ? 'rosa' : 'areia';
+    const cor = ['rosa', 'verde'].includes(d.cor) ? d.cor : 'areia';
     const op = (k, v, atual, nome) => `<button class="btn ${atual === v ? 'pri' : 'sec'}" data-act="aparencia" data-k="${k}" data-v="${v}" aria-pressed="${atual === v}">${nome}</button>`;
     return `<div class="grid">
       <div class="card c4">
-        <div class="card-h"><div><h2>Aparência</h2><p class="sub">Vale só neste navegador. O visual novo tira o branco puro e dá camadas de tom; o modo noturno e a cor rosa funcionam sobre o visual novo (ao escolher um deles, o visual novo liga sozinho).</p></div></div>
+        <div class="card-h"><div><h2>Aparência</h2><p class="sub">Vale só neste navegador. O visual novo tira o branco puro e dá camadas de tom; o modo noturno e as cores rosa e verde funcionam sobre o visual novo (ao escolher um deles, o visual novo liga sozinho).</p></div></div>
         <div class="aparencia">
           <div><span class="lbl">Visual</span><div class="actions">${op('visual', 'antigo', visual, 'Atual')}${op('visual', 'novo', visual, 'Novo')}</div></div>
           <div><span class="lbl">Modo</span><div class="actions">${op('modo', 'claro', modo, 'Claro')}${op('modo', 'noturno', modo, 'Noturno')}</div></div>
-          <div><span class="lbl">Cor</span><div class="actions">${op('cor', 'areia', cor, 'Areia')}${op('cor', 'rosa', cor, 'Rosa')}</div></div>
+          <div><span class="lbl">Cor</span><div class="actions">${op('cor', 'areia', cor, 'Areia')}${op('cor', 'rosa', cor, 'Rosa')}${op('cor', 'verde', cor, 'Verde')}</div></div>
         </div>
       </div>
       <div class="card c2">
@@ -105,7 +105,7 @@ export default {
       const k = ['visual', 'modo', 'cor'].includes(el.dataset.k) ? el.dataset.k : 'visual';
       try {
         localStorage.setItem(`bodhi.${k}`, el.dataset.v);
-        if ((k === 'modo' && el.dataset.v === 'noturno') || (k === 'cor' && el.dataset.v === 'rosa')) localStorage.setItem('bodhi.visual', 'novo');
+        if ((k === 'modo' && el.dataset.v === 'noturno') || (k === 'cor' && el.dataset.v !== 'areia')) localStorage.setItem('bodhi.visual', 'novo');
         if (k === 'visual' && el.dataset.v === 'antigo') { localStorage.setItem('bodhi.modo', 'claro'); localStorage.setItem('bodhi.cor', 'areia'); }
       } catch { toast('Este navegador não deixou guardar a escolha.', true); return; }
       location.reload();
