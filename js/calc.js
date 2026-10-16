@@ -1,6 +1,6 @@
-import { store } from './store.js?v=81';
-import { sum, diasAte, diasTxt, dataBR } from './util.js?v=81';
-import { atrasada } from './conteudo.js?v=81';
+import { store } from './store.js?v=82';
+import { sum, diasAte, diasTxt, dataBR } from './util.js?v=82';
+import { atrasada } from './conteudo.js?v=82';
 
 export function faixaProposta(p) {
   const valores = (p.pacotes || []).map((x) => Number(x.preco) || 0).filter((v) => v > 0);
@@ -30,7 +30,7 @@ export function resumoMes(ym) {
   const hoje = mesDe(new Date().toISOString());
   const clientes = store.todos('cliente');
   // Meses futuros contam só clientes ativos; o mês atual e os passados incluem quem está encerrando.
-  const fixos = clientes.filter((c) => c.mensalidade && (c.status === 'ativo' || (c.status === 'encerrando' && ym <= hoje)));
+  const fixos = clientes.filter((c) => !c.interno && c.mensalidade && (c.status === 'ativo' || (c.status === 'encerrando' && ym <= hoje)));
   const lancs = lancamentosDoMes(ym);
   const receitasExtras = lancs.filter((l) => l.tipo === 'receita');
   const despesas = lancs.filter((l) => l.tipo === 'despesa');
@@ -55,7 +55,8 @@ export function resumoMes(ym) {
 }
 
 export function metricas() {
-  const clientes = store.todos('cliente');
+  // A conta da própria Bôdhi (marcada como "interna") não entra nas receitas, médias e contagens de clientes.
+  const clientes = store.todos('cliente').filter((c) => !c.interno);
   const ativos = clientes.filter((c) => c.status === 'ativo').sort((a, b) => b.mensalidade - a.mensalidade);
   const encerrando = clientes.filter((c) => c.status === 'encerrando');
   const mrr = sum(ativos.map((c) => c.mensalidade));

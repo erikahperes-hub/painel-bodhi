@@ -1,8 +1,8 @@
-import { store } from '../store.js?v=81';
-import { brl, esc, iniciais, toast, dataBR, mesAno, mesesEntre, mesesTxt, urlSegura, norm } from '../util.js?v=81';
-import { ic, flor } from '../icons.js?v=81';
-import { formulario, confirmar } from '../ui.js?v=81';
-import { ETAPAS, pecasDoCliente } from '../conteudo.js?v=81';
+import { store } from '../store.js?v=82';
+import { brl, esc, iniciais, toast, dataBR, mesAno, mesesEntre, mesesTxt, urlSegura, norm } from '../util.js?v=82';
+import { ic, flor } from '../icons.js?v=82';
+import { formulario, confirmar } from '../ui.js?v=82';
+import { ETAPAS, pecasDoCliente } from '../conteudo.js?v=82';
 
 const STATUS = {
   ativo: ['ok', 'Ativo'],
@@ -31,6 +31,7 @@ const campos = [
   { nome: 'contato', rotulo: 'Contato principal' },
   { nome: 'inicio', rotulo: 'Início do trabalho', tipo: 'data' },
   { nome: 'fim', rotulo: 'Fim do trabalho', tipo: 'data', ajuda: 'Deixe vazio para clientes ativos.' },
+  { nome: 'interno', rotulo: 'Conta da própria Bôdhi (não conta como cliente nas receitas, médias e totais)', tipo: 'checkbox', cheio: true },
   { nome: 'fimEstimado', rotulo: 'As datas são aproximadas (confirmar depois)', tipo: 'checkbox', cheio: true },
   { nome: 'motivoSaida', rotulo: 'Motivo da saída', tipo: 'select', opcoes: [{ v: '', t: 'Não se aplica' }, ...Object.entries(MOTIVOS).map(([v, t]) => ({ v, t }))] },
   { nome: 'motivoDetalhe', rotulo: 'Detalhe da saída', placeholder: 'O que aconteceu, em uma frase' },
@@ -138,7 +139,7 @@ export default {
     const stt = estatisticas(lista);
     const grupoDe = (x) => (x.status === 'inativo' ? 'inativos' : 'ativos');
     const aba = grupoDe(c);
-    const nAtivos = lista.filter((x) => grupoDe(x) === 'ativos').length;
+    const nAtivos = lista.filter((x) => grupoDe(x) === 'ativos' && !x.interno).length;
     const nEnc = lista.filter((x) => x.status === 'encerrando').length;
     const nomes = lista.filter((x) => grupoDe(x) === aba).sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || '')));
 

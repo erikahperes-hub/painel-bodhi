@@ -1,8 +1,8 @@
-import { store } from '../store.js?v=81';
-import { esc, toast, mesNome, norm, hojeISO, dataBR, urlSegura } from '../util.js?v=81';
-import { ic, flor } from '../icons.js?v=81';
-import { formulario } from '../ui.js?v=81';
-import { FORMATOS, pecas } from '../conteudo.js?v=81';
+import { store } from '../store.js?v=82';
+import { esc, toast, mesNome, norm, hojeISO, dataBR, urlSegura } from '../util.js?v=82';
+import { ic, flor } from '../icons.js?v=82';
+import { formulario } from '../ui.js?v=82';
+import { FORMATOS, pecas } from '../conteudo.js?v=82';
 
 // Relatório mensal do cliente nas redes sociais. Começa pelo Instagram.
 // Cada mês de cada cliente é um registro `insights` (id "clienteId_AAAA-MM"). Os números chegam por importação
