@@ -43,9 +43,11 @@ Desenho:
 - Opcional: limitar a editora a um ou mais clientes (ex.: só TRE Clinic).
 - Testar com uma conta de teste antes de convidar a Gabs, tentando abrir as outras áreas e consultar o banco direto.
 
-## 5. Aba "Feed" em Conteúdo (ideia da Érika, 16/10/2026)
+## 5. Aba "Feed" em Conteúdo (pronta em 16/10/2026)
 
-Hoje a aba Conteúdo tem Status e Calendário. Incluir uma terceira visão, **Feed**, que mostra como o perfil do cliente fica com os conteúdos, sem precisar abrir a Prévia do cliente.
-- Simular a página do Instagram do cliente: foto, nome, bio, destaques, grade de publicações (3 colunas), com as tarefas do planejamento e aprovadas nas posições em que vão sair. Reaproveitar `js/instagram.js` (já usado na Prévia e na página de aprovação).
-- Bio, foto e destaques vêm da ficha do cliente (campos novos) ou, depois, direto do Instagram pelo app da Meta.
-- LEMBRAR a Érika desta ideia assim que a configuração do Instagram (app da Meta e relatório) estiver concluída.
+No ar: perfil do cliente simulado (foto, nome, bio, link, seguidores, seguindo e publicações) puxado direto do Instagram quando o cliente está conectado, com as tarefas do painel e os posts que já estão no Instagram misturados por data na grade. Destaques o Instagram não entrega a nenhum app, então os nomes são digitados em "Editar destaques".
+- Ainda a conferir com o Instagram real: foto, bio e a grade com os posts do @bodhi.mkt.
+
+## 6. Aparência (pronta em 16/10/2026)
+
+Visual novo opcional, modo noturno e cores areia, rosa e verde, em Configurações > Aparência. Falta só a Érika decidir se o visual novo vira o padrão e se a aprovação do cliente (`aprovar.html`) também ganha o visual.
