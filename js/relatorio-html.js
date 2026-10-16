@@ -1,4 +1,4 @@
-import { esc, mesNome, dataBR, urlSegura, iniciais } from './util.js?v=87';
+import { esc, mesNome, dataBR, urlSegura, iniciais } from './util.js?v=88';
 
 // O visual do relatório do cliente (baseado no relatório do Reportei, com insights a mais).
 // Só monta o HTML a partir dos dados; é usado pelo painel (js/views/relatorio.js) e pela página que o cliente abre pelo link (relatorio.html).
@@ -150,7 +150,7 @@ export function frasesResumo({ ym, atual, anterior, serie, stories = [] }) {
   if (taxa !== null) {
     const tAnt = [1, 2, 3].map((i) => serie[ymMais(ym, -i)]).map((x) => porcento(razao(x?.interacoes, x?.alcance))).filter((x) => x !== null);
     const mediaT = tAnt.length >= 2 ? tAnt.reduce((a, b) => a + b, 0) / tAnt.length : null;
-    f.push(`A taxa de engajamento foi de ${pct1(taxa)}% (interações em relação ao alcance)${mediaT !== null ? `, ${taxa > mediaT * 1.05 ? 'acima' : taxa < mediaT * 0.95 ? 'abaixo' : 'em linha com'} a média dos 3 meses anteriores (${pct1(mediaT)}%)` : ''}.`);
+    f.push(`A taxa de engajamento foi de ${pct1(taxa)}% (interações em relação ao alcance)${mediaT !== null ? `, ${taxa > mediaT * 1.05 ? 'acima da' : taxa < mediaT * 0.95 ? 'abaixo da' : 'em linha com a'} média dos 3 meses anteriores (${pct1(mediaT)}%)` : ''}.`);
   }
   const ord = [...posts].filter((p) => tem(p.alcance)).sort((a, b) => b.alcance - a.alcance);
   if (ord.length) {
@@ -268,7 +268,11 @@ export function corpoRelatorio({ cliente, ym, atual, anterior, serie = {}, produ
       <div><h4>Por dia da semana (últimos 6 meses)</h4>${mm.dias.length ? linhas(mm.dias.slice(0, 4)) : `<p class="rl-sub">Precisa de pelo menos 6 publicações nos últimos 6 meses para indicar (hoje: ${mm.posts}).</p>`}
         ${mm.periodos.length ? `<h4 style="margin-top:14px">Por período do dia</h4>${linhas(mm.periodos)}` : ''}</div></div></section>` : '';
 
-  const pubDados = atual.publico ? { pub: atual.publico, em: atual.publicoEm } : (() => { for (let i = 0; i < 6; i++) { const r = serie[ymMais(ym, -i)]; if (r?.publico) return { pub: r.publico, em: r.publicoEm }; } return { pub: null, em: '' }; })();
+  // O perfil do público é um retrato do dia da leitura: usa o do próprio mês e, se não houver, o mais recente que existir.
+  const pubDados = atual.publico ? { pub: atual.publico, em: atual.publicoEm } : (() => {
+    const r = Object.values(serie).filter((x) => x?.publico).sort((x, y) => String(y.publicoEm || '').localeCompare(String(x.publicoEm || '')))[0];
+    return r ? { pub: r.publico, em: r.publicoEm } : { pub: null, em: '' };
+  })();
 
   const entregas = producao.total ? `<section class="card rl-sec"><h3>O que a Bôdhi entregou no mês</h3><p class="rl-sub">Tarefas de Conteúdo aprovadas ou publicadas em ${esc(nomeMesMin(ym))}.</p>
       <div class="rl-chips"><span class="chip ok">${producao.total} ${producao.total === 1 ? 'tarefa' : 'tarefas'}</span>${producao.porFormato.map(([n, q]) => `<span class="chip mute">${q} ${esc(n)}</span>`).join('')}</div></section>` : '';

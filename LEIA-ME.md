@@ -162,6 +162,28 @@ Formatos: reels, carrossel, estático e story (no arquivo de lote o código do e
 
 **Observações:** o título da tarefa aparece para o cliente na lista do calendário, então use nomes que ele possa ler. Os vídeos tocam no player do Drive. O Google às vezes demora ou recusa uma imagem; a página tenta de novo sozinha.
 
+## Relatório do cliente e Instagram
+
+Na aba **Relatório** cada cliente com Instagram tem um relatório mensal (no estilo do Reportei, com insights a mais), e o cliente pode abrir o dele por um link.
+
+**Como os números chegam (tudo grátis, sem ferramenta paga):**
+- O painel usa um app da Meta ("Painel Bodhi Marketing", só leitura: perfil e insights). O dono do Instagram toca em **Permitir** uma vez; o token fica só no Supabase (tabela `ig_conexoes`, que ninguém lê pela internet) e a função `instagram` renova sozinha a cada 60 dias.
+- **Conectar um cliente novo:** em Relatório, escolha o cliente, clique em **Conectar Instagram** (ou em **Link para autorizar**, que copia um link para o dono do Instagram abrir no celular; vale por 7 dias). Antes, em developers.facebook.com, abra o app, **Funções do app**, **Adicionar pessoas**, **Testador do Instagram**, e coloque o @ do cliente. O dono aceita o convite no Instagram (Configurações, Apps e sites, Convites de testador).
+- **Leitura automática** (rotinas no Supabase, arquivo `supabase/instagram-cron.sql`): de 3 em 3 horas copia os **stories** (o Instagram só entrega cada um por 24 horas), e todo dia às 5h30 atualiza o mês atual e o anterior de cada cliente conectado. Se uma leitura falhar ou parar, aparece um aviso no sino e na tela do Relatório.
+- **Atualizar do Instagram** faz a leitura do mês mostrado na hora; **Ler stories agora** lê os stories ativos na hora.
+
+**O que cada parte do relatório mostra:** resumo do mês em frases; visibilidade (alcance, visualizações), interesse (visitas ao perfil, seguidores) e qualidade (taxa de engajamento, visualizações por pessoa, interesse pelo perfil, salvos e compartilhados), sempre comparados com o mês anterior e com a média dos 3 meses antes; metas do mês; evolução de 6 meses; tabela das publicações; melhores formatos, dias e períodos do dia; stories; perfil do público (gênero, idade, cidades); o que a Bôdhi entregou; a **leitura do mês** (texto escrito por vocês, com rascunho automático) e, só para a equipe, o desempenho por etapa do funil.
+
+**Link do cliente:** em Relatório, **Copiar link do cliente**. A página `relatorio.html#codigo` só mostra os números daquele cliente (nada de valores, contratos ou briefing). **Novo link** desativa o anterior.
+
+**Limites do Instagram que vale saber:**
+- Stories: só existem os guardados **depois** que a leitura automática foi ligada para aquele cliente (não dá para recuperar o passado) e só com 5 visualizações ou mais.
+- Seguidores por mês passado, perfil do público e horário dos seguidores são "retratos de hoje": o Instagram não guarda o histórico.
+- Cada consulta de números aceita no máximo 30 dias; em mês de 31 dias o último dia fica de fora.
+- Enquanto o app da Meta estiver em modo de teste, só clientes adicionados como "Testador do Instagram" podem conectar.
+
+**Instalar do zero** (se um dia precisar refazer o projeto Supabase): rode no SQL Editor, nesta ordem, `supabase/instagram.sql`, `supabase/relatorio.sql` e `supabase/instagram-cron.sql`; publique a função `supabase/functions/instagram/index.ts` com **Verify JWT desligado**; guarde `IG_APP_ID` e `IG_APP_SECRET` em Edge Functions, Secrets; e cadastre no app da Meta o endereço de retorno `https://SEU-PROJETO.supabase.co/functions/v1/instagram`.
+
 ## Modelo de contrato
 
 O modelo padrão é uma **minuta em revisão**. Edite as cláusulas em **Configurações > Modelo de contrato** (permanência mínima, multa e reajuste só aparecem no contrato quando preenchidas). Recomenda-se revisão jurídica antes de usar com clientes.
@@ -178,7 +200,7 @@ aprovar.html         página pública de aprovação do cliente (sem login, só 
 css/app.css          visual (paleta, fontes e formas da marca)
 js/                  telas, busca, geração de PDF, ligação com Supabase e Asaas
 assets/              fontes e logo oficiais da Bôdhi
-supabase/            schema.sql (banco) e função do Asaas
+supabase/            schema.sql (banco), funções do Asaas e do Instagram, SQL do relatório e das leituras automáticas
 tools/               servidor local, conferência antes de publicar (checar) e numeração de versão (versionar)
 seed/                dados validados (fica só no seu computador)
 CNAME                domínio do painel
