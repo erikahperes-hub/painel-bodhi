@@ -44,7 +44,7 @@ for (const arq of arquivos) {
 }
 for (const pagina of ['index.html', 'aprovar.html', 'relatorio.html']) {
   const html = await readFile(join(raiz, pagina), 'utf8');
-  for (const m of html.matchAll(/(?:css\/app\.css|js\/(?:main|aprovar|relatorio-publico)\.js)\?v=(\d+)/g)) {
+  for (const m of html.matchAll(/(?:css\/(?:app|visual-novo)\.css|js\/(?:main|aprovar|relatorio-publico)\.js)\?v=(\d+)/g)) {
     if (!usadas.has(m[1])) usadas.set(m[1], new Set());
     usadas.get(m[1]).add(pagina);
   }

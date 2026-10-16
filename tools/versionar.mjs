@@ -32,6 +32,6 @@ for (const arq of await arquivosJs(join(raiz, 'js'))) {
 }
 for (const pagina of ['index.html', 'aprovar.html', 'relatorio.html']) {
   const html = join(raiz, pagina);
-  await writeFile(html, (await readFile(html, 'utf8')).replace(/(css\/app\.css|js\/main\.js|js\/aprovar\.js|js\/relatorio-publico\.js)(\?v=\d+)?/g, `$1?v=${versao}`), 'utf8');
+  await writeFile(html, (await readFile(html, 'utf8')).replace(/(css\/app\.css|css\/visual-novo\.css|js\/main\.js|js\/aprovar\.js|js\/relatorio-publico\.js)(\?v=\d+)?/g, `$1?v=${versao}`), 'utf8');
 }
 console.log(`Versão ${versao} aplicada (${alterados} arquivos de código, index.html e aprovar.html).`);

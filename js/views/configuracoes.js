@@ -1,9 +1,9 @@
-import { store } from '../store.js?v=95';
-import { esc, toast, baixar, hojeISO } from '../util.js?v=95';
-import { ic } from '../icons.js?v=95';
-import { formulario, abrirModal, confirmar } from '../ui.js?v=95';
-import { modeloAtual } from '../docs/contrato.js?v=95';
-import { CLAUSULAS_PADRAO, PREAMBULO_PADRAO, VARIAVEIS } from '../docs/modeloContrato.js?v=95';
+import { store } from '../store.js?v=98';
+import { esc, toast, baixar, hojeISO } from '../util.js?v=98';
+import { ic } from '../icons.js?v=98';
+import { formulario, abrirModal, confirmar } from '../ui.js?v=98';
+import { modeloAtual } from '../docs/contrato.js?v=98';
+import { CLAUSULAS_PADRAO, PREAMBULO_PADRAO, VARIAVEIS } from '../docs/modeloContrato.js?v=98';
 
 function editarModelo() {
   const modelo = modeloAtual();
@@ -45,7 +45,12 @@ export default {
   render() {
     const e = store.cfg('empresa', {});
     const local = store.modo === 'local';
+    const visual = document.documentElement.dataset.visual === 'novo' ? 'novo' : 'antigo';
     return `<div class="grid">
+      <div class="card c4">
+        <div class="card-h"><div><h2>Aparência</h2><p class="sub">O visual novo tira o branco puro, dá camadas de tom areia e destaca um cartão por tela. Dá para voltar ao atual quando quiser (vale só neste navegador).</p></div></div>
+        <div class="actions"><button class="btn ${visual === 'novo' ? 'pri' : 'sec'}" data-act="visual" data-v="novo">Visual novo (teste)</button><button class="btn ${visual === 'antigo' ? 'pri' : 'sec'}" data-act="visual" data-v="antigo">Visual atual</button></div>
+      </div>
       <div class="card c2">
         <h2>Conta</h2><p class="sub">${local ? 'Modo local: os dados ficam só neste navegador.' : 'Login com e-mail e senha. Os dados são compartilhados entre as sócias.'}</p>
         <dl class="kv" style="margin-top:0"><div><div class="k">${local ? 'Modo' : 'E-mail'}</div><div class="v">${local ? 'Local (teste)' : esc(store.emailUsuario())}</div></div>
@@ -87,6 +92,13 @@ export default {
   },
 
   acoes: {
+    visual: (el) => {
+      const v = el.dataset.v === 'novo' ? 'novo' : 'antigo';
+      try { localStorage.setItem('bodhi.visual', v); } catch { /* sem armazenamento: vale só até recarregar */ }
+      if (v === 'novo') document.documentElement.setAttribute('data-visual', 'novo'); else document.documentElement.removeAttribute('data-visual');
+      window.dispatchEvent(new Event('atualizar-tela'));
+      toast(v === 'novo' ? 'Visual novo ligado' : 'Visual atual de volta');
+    },
     sair: () => store.sair(),
     'alterar-nome': () => formulario({
       titulo: 'Seu nome', subtitulo: 'Aparece na saudação do painel.',
