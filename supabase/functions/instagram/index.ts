@@ -1,12 +1,12 @@
 // Função segura que conversa com o Instagram (API do Instagram com login do Instagram).
 // Segredos no servidor (Edge Functions > Secrets): IG_APP_ID e IG_APP_SECRET. Nada disso vai para o site.
-// IMPORTANTE: ao publicar esta função, DESLIGUE "Verify JWT" (o retorno do Instagram chega sem login do painel).
-// As ações do painel (POST) conferem o login e a lista de sócias aqui dentro.
+// IMPORTANTE: ao publicar esta função, DESLIGUE "Verify JWT" (o retorno do Instagram e o agendamento chegam sem login do painel).
+// As ações do painel (POST) conferem o login e a lista de sócias aqui dentro; as do agendamento conferem a chave da tabela ig_cron.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-key',
 };
 const json = (obj: unknown, status = 200) =>
   new Response(JSON.stringify(obj), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
@@ -56,6 +56,7 @@ async function guardarConexao(clienteId: string, code: string) {
   const { error } = await admin.from('ig_conexoes').upsert({
     cliente_id: clienteId, ig_user_id: String(eu.user_id ?? curto.user_id), username: eu.username ?? null,
     token: longo.access_token, expira_em: new Date(Date.now() + (longo.expires_in ?? 5184000) * 1000).toISOString(), atualizado_em: new Date().toISOString(),
+    ultimo_erro: null,
   });
   if (error) throw new Error(error.message);
   return eu.username as string;
@@ -73,21 +74,58 @@ async function tokenValido(c: any) {
   } catch { return c.token as string; }
 }
 
-const unix = (d: Date) => Math.floor(d.getTime() / 1000);
-const tipoDe = (m: any) => (m.media_product_type === 'REELS' ? 'Reels' : m.media_type === 'CAROUSEL_ALBUM' ? 'Carrossel' : m.media_type === 'VIDEO' ? 'Reels' : 'Estático');
-
-async function sincronizar(clienteId: string, mes: string) {
-  if (!/^\d{4}-\d{2}$/.test(mes)) throw new Error('Mês inválido.');
+async function conexao(clienteId: string) {
   const { data: c } = await admin.from('ig_conexoes').select('*').eq('cliente_id', clienteId).maybeSingle();
   if (!c) throw new Error('Este cliente ainda não conectou o Instagram.');
-  const token = await tokenValido(c);
+  return { c, token: await tokenValido(c) };
+}
+const consulta = (token: string) => (p: Record<string, string>) => new URLSearchParams({ ...p, access_token: token }).toString();
+
+const unix = (d: Date) => Math.floor(d.getTime() / 1000);
+const tipoDe = (m: any) => (m.media_product_type === 'REELS' ? 'Reels' : m.media_type === 'CAROUSEL_ALBUM' ? 'Carrossel' : m.media_type === 'VIDEO' ? 'Reels' : 'Estático');
+// Data e hora no horário de Brasília (o Instagram devolve em UTC).
+const partesBR = (iso: string) => {
+  const d = new Date(iso);
+  const f = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hour12: false }).formatToParts(d);
+  const p = Object.fromEntries(f.map((x) => [x.type, x.value]));
+  return { data: `${p.year}-${p.month}-${p.day}`, hora: Number(p.hour) % 24 };
+};
+const valor = (d: any) => d?.values?.[0]?.value ?? d?.total_value?.value ?? null;
+
+/* ---------- perfil do público (gênero, idade, cidades): retrato do momento da leitura ---------- */
+async function publico(c: any, token: string) {
+  const q = consulta(token);
+  const out: Record<string, any> = {};
+  for (const [chave, quebra] of [['genero', 'gender'], ['idades', 'age'], ['cidades', 'city'], ['paises', 'country']]) {
+    try {
+      const r = await pegar(`${GRAPH}/${c.ig_user_id}/insights?${q({ metric: 'follower_demographics', period: 'lifetime', metric_type: 'total_value', breakdown: quebra })}`);
+      const res = r.data?.[0]?.total_value?.breakdowns?.[0]?.results ?? [];
+      out[chave] = res.map((x: any) => ({ k: String(x.dimension_values?.[0] ?? ''), v: x.value ?? 0 })).sort((a: any, b: any) => b.v - a.v).slice(0, chave === 'cidades' ? 10 : 20);
+    } catch { /* sem este recorte (menos de 100 seguidores ou não disponível) */ }
+  }
+  // Horas em que os seguidores estão online (só existe em algumas contas; se não vier, o painel calcula pelas publicações).
+  try {
+    const r = await pegar(`${GRAPH}/${c.ig_user_id}/insights?${q({ metric: 'online_followers', period: 'lifetime' })}`);
+    const dias = r.data?.[0]?.values ?? [];
+    const soma: number[] = Array(24).fill(0);
+    for (const v of dias) for (const [h, n] of Object.entries(v.value ?? {})) soma[Number(h)] += Number(n) || 0;
+    if (dias.length && soma.some((x) => x > 0)) out.horasOnline = soma.map((x) => Math.round(x / dias.length));
+  } catch { /* indisponível */ }
+  return out;
+}
+
+/* ---------- números do mês (feed, perfil e público) ---------- */
+async function sincronizar(clienteId: string, mes: string) {
+  if (!/^\d{4}-\d{2}$/.test(mes)) throw new Error('Mês inválido.');
+  const { c, token } = await conexao(clienteId);
   const [a, m] = mes.split('-').map(Number);
-  const ini = new Date(Date.UTC(a, m - 1, 1));
-  const fimMes = new Date(Date.UTC(a, m, 1)); // primeiro dia do mês seguinte
+  // Meses no horário de Brasília (meia-noite de Brasília = 03:00 em UTC).
+  const ini = new Date(Date.UTC(a, m - 1, 1, 3));
+  const fimMes = new Date(Date.UTC(a, m, 1, 3)); // primeiro instante do mês seguinte
   // O Instagram aceita no máximo 30 dias por consulta de insights: em meses de 31 dias o último dia fica de fora.
   const fimConsulta = new Date(Math.min(fimMes.getTime(), ini.getTime() + 30 * 864e5));
   const agora = Date.now();
-  const q = (p: Record<string, string>) => new URLSearchParams({ ...p, access_token: token }).toString();
+  const q = consulta(token);
 
   const perfil = await pegar(`${GRAPH}/me?${q({ fields: 'username,followers_count,media_count' })}`);
 
@@ -126,33 +164,99 @@ async function sincronizar(clienteId: string, mes: string) {
   }
   const detalhes: any[] = [];
   for (const x of posts.slice(0, 40)) {
-    let ins: Record<string, number> = {};
+    const ins: Record<string, number> = {};
     for (const lista of ['reach,views,saved,shares,total_interactions', 'reach,total_interactions', 'reach']) {
       try {
         const r = await pegar(`${GRAPH}/${x.id}/insights?${q({ metric: lista })}`);
-        for (const d of r.data ?? []) ins[d.name] = d.values?.[0]?.value ?? d.total_value?.value ?? 0;
+        for (const d of r.data ?? []) ins[d.name] = valor(d) ?? 0;
         break;
       } catch { /* tenta com menos métricas */ }
     }
+    const { data, hora } = partesBR(x.timestamp);
     detalhes.push({
-      data: String(x.timestamp).slice(0, 10), tipo: tipoDe(x), legenda: x.caption ?? '', link: x.permalink ?? '',
+      data, hora, tipo: tipoDe(x), legenda: x.caption ?? '', link: x.permalink ?? '',
       alcance: ins.reach ?? null, visualizacoes: ins.views ?? null, interacoes: ins.total_interactions ?? null,
       salvamentos: ins.saved ?? null, compartilhamentos: ins.shares ?? null, curtidas: x.like_count ?? null, comentarios: x.comments_count ?? null,
     });
   }
 
+  // Perfil do público: retrato de hoje (o Instagram não guarda o histórico), então só é gravado em leituras do mês atual ou do último mês fechado.
+  const recente = fimMes.getTime() > agora - 45 * 864e5;
+  const pub = recente ? await publico(c, token) : null;
+
   const id = `${clienteId}_${mes}`;
   const { data: antigo } = await admin.from('records').select('data').eq('kind', 'insights').eq('id', id).maybeSingle();
+  const hoje = partesBR(new Date().toISOString()).data;
   const dado = {
     ...(antigo?.data ?? {}), id, clienteId, mes, rede: 'instagram', fonte: 'instagram', atualizadoEm: new Date().toISOString(),
-    seguidores: perfil.followers_count ?? null, seguidoresEm: new Date().toISOString().slice(0, 10), ...(ganhos !== undefined ? { seguidoresGanhos: ganhos } : {}),
+    seguidores: perfil.followers_count ?? null, seguidoresEm: hoje, ...(ganhos !== undefined ? { seguidoresGanhos: ganhos } : {}),
     alcance: total.reach ?? null, visualizacoes: total.views ?? null, interacoes: total.total_interactions ?? null,
     visitasPerfil: total.profile_views ?? null, contasEngajadas: total.accounts_engaged ?? null, posts: detalhes,
+    ...(pub && Object.keys(pub).length ? { publico: pub, publicoEm: hoje } : {}),
   };
   const { error } = await admin.from('records').upsert({ kind: 'insights', id, data: dado, updated_by: 'instagram' });
   if (error) throw new Error(error.message);
   return { mes, publicacoes: detalhes.length, username: perfil.username };
 }
+
+/* ---------- stories: o Instagram só entrega os das últimas 24 horas, então copiamos cada um para a tabela ig_stories ---------- */
+async function lerStories(clienteId: string) {
+  const { c, token } = await conexao(clienteId);
+  const q = consulta(token);
+  const r = await pegar(`${GRAPH}/${c.ig_user_id}/stories?${q({ fields: 'id,media_type,timestamp,permalink,caption' })}`);
+  let gravados = 0;
+  for (const s of r.data ?? []) {
+    const novo: Record<string, any> = {};
+    for (const lista of ['reach,views,replies,shares,total_interactions,follows,profile_visits', 'reach,views,replies,shares,total_interactions', 'reach,views']) {
+      try {
+        const x = await pegar(`${GRAPH}/${s.id}/insights?${q({ metric: lista })}`);
+        const mapa: Record<string, string> = { reach: 'alcance', views: 'visualizacoes', replies: 'respostas', shares: 'compartilhamentos', total_interactions: 'interacoes', follows: 'seguidoresNovos', profile_visits: 'visitasPerfil' };
+        for (const d of x.data ?? []) if (mapa[d.name]) novo[mapa[d.name]] = valor(d) ?? 0;
+        break;
+      } catch { /* tenta com menos métricas; com menos de 5 visualizações o Instagram não entrega números */ }
+    }
+    try {
+      const x = await pegar(`${GRAPH}/${s.id}/insights?${q({ metric: 'navigation', metric_type: 'total_value', breakdown: 'story_navigation_action_type' })}`);
+      const mapaNav: Record<string, string> = { tap_forward: 'avancar', swipe_forward: 'proximo', tap_back: 'voltar', tap_exit: 'sair' };
+      for (const it of x.data?.[0]?.total_value?.breakdowns?.[0]?.results ?? []) {
+        const k = mapaNav[String(it.dimension_values?.[0])];
+        if (k) novo[k] = it.value ?? 0;
+      }
+    } catch { /* sem navegação */ }
+    const { data: antes } = await admin.from('ig_stories').select('dados').eq('cliente_id', clienteId).eq('story_id', s.id).maybeSingle();
+    const { data: dia, hora } = partesBR(s.timestamp);
+    // Guarda os números mais recentes, sem perder os que já tinha (se esta leitura veio incompleta).
+    const dados = { ...(antes?.dados ?? {}), ...novo, tipo: s.media_type === 'VIDEO' ? 'Vídeo' : 'Imagem', data: dia, hora, link: s.permalink ?? '', legenda: s.caption ?? '' };
+    const { error } = await admin.from('ig_stories').upsert({ cliente_id: clienteId, story_id: s.id, publicado_em: new Date(s.timestamp).toISOString(), dados, atualizado_em: new Date().toISOString() });
+    if (error) throw new Error(error.message);
+    gravados++;
+  }
+  return { stories: gravados };
+}
+
+/* ---------- agendamento (pg_cron chama estas ações com a chave da tabela ig_cron) ---------- */
+async function paraCadaCliente(fn: (clienteId: string) => Promise<unknown>) {
+  const { data: lista } = await admin.from('ig_conexoes').select('cliente_id');
+  const resumo: Record<string, string> = {};
+  for (const { cliente_id } of lista ?? []) {
+    try {
+      await fn(cliente_id);
+      await admin.from('ig_conexoes').update({ ultima_leitura: new Date().toISOString(), ultimo_erro: null }).eq('cliente_id', cliente_id);
+      resumo[cliente_id] = 'ok';
+    } catch (e) {
+      const msg = (e as Error).message.slice(0, 300);
+      await admin.from('ig_conexoes').update({ ultimo_erro: msg }).eq('cliente_id', cliente_id);
+      resumo[cliente_id] = msg;
+    }
+  }
+  return resumo;
+}
+const mesesRecentes = () => {
+  const hoje = partesBR(new Date().toISOString()).data.slice(0, 7);
+  const [a, m] = hoje.split('-').map(Number);
+  const ant = new Date(Date.UTC(a, m - 2, 1));
+  return [`${ant.getUTCFullYear()}-${String(ant.getUTCMonth() + 1).padStart(2, '0')}`, hoje];
+};
 
 /* ---------- entrada ---------- */
 Deno.serve(async (req) => {
@@ -174,6 +278,21 @@ Deno.serve(async (req) => {
     }
   }
 
+  // Leituras agendadas: só com a chave guardada na tabela ig_cron.
+  const chaveCron = req.headers.get('x-cron-key');
+  if (chaveCron) {
+    const { data: ok } = await admin.from('ig_cron').select('chave').eq('chave', chaveCron).maybeSingle();
+    if (!ok) return json({ erro: 'Sem permissão' }, 403);
+    try {
+      const { acao } = await req.json();
+      if (acao === 'cron-stories') return json({ resumo: await paraCadaCliente(lerStories) });
+      if (acao === 'cron-mes') return json({ resumo: await paraCadaCliente(async (id) => { for (const mes of mesesRecentes()) await sincronizar(id, mes); }) });
+      return json({ erro: 'Ação desconhecida' }, 400);
+    } catch (e) {
+      return json({ erro: (e as Error).message }, 400);
+    }
+  }
+
   // Ações do painel: precisa estar logada e ser sócia.
   const sb = createClient(SUPA, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } } });
   const { data: { user } } = await sb.auth.getUser();
@@ -190,6 +309,7 @@ Deno.serve(async (req) => {
       return json({ configurado: true, url: link });
     }
     if (acao === 'sincronizar') return json({ configurado: true, ...(await sincronizar(String(d.clienteId), String(d.mes))) });
+    if (acao === 'stories') return json({ configurado: true, ...(await lerStories(String(d.clienteId))) });
     return json({ erro: 'Ação desconhecida' }, 400);
   } catch (e) {
     return json({ erro: (e as Error).message }, 400);
