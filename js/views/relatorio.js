@@ -1,8 +1,9 @@
-import { store } from '../store.js?v=82';
-import { esc, toast, mesNome, norm, hojeISO, dataBR, urlSegura } from '../util.js?v=82';
-import { ic, flor } from '../icons.js?v=82';
-import { formulario } from '../ui.js?v=82';
-import { FORMATOS, pecas } from '../conteudo.js?v=82';
+import { store } from '../store.js?v=83';
+import { esc, toast, mesNome, norm, hojeISO, dataBR, urlSegura } from '../util.js?v=83';
+import { ic, flor } from '../icons.js?v=83';
+import { formulario } from '../ui.js?v=83';
+import { FORMATOS, pecas } from '../conteudo.js?v=83';
+import { igApi } from '../instagram-api.js?v=83';
 
 // Relatório mensal do cliente nas redes sociais. Começa pelo Instagram.
 // Cada mês de cada cliente é um registro `insights` (id "clienteId_AAAA-MM"). Os números chegam por importação
@@ -63,13 +64,22 @@ function cartaoPost(p) {
     <span>${esc(f)}${p.data ? ` · ${esc(dataBR(p.data))}` : ''} · alcance ${num(p.alcance)} · interações ${num(p.interacoes)}${temNumero(p.salvamentos) ? ` · salvamentos ${num(p.salvamentos)}` : ''}</span></div></div>`;
 }
 
+// Conectar o Instagram do cliente (ele autoriza uma vez) e atualizar os números do mês mostrado.
+function botoesInstagram(c, ym) {
+  if (!igApi.disponivel()) return '';
+  const ig = igApi.conexao(c.id);
+  if (ig) return `<button class="btn pri sm" data-act="rel-sync" data-cliente="${esc(c.id)}" data-mes="${ym}">${ic('refresh')}Atualizar do Instagram</button>`;
+  return `<button class="btn pri sm" data-act="rel-conectar" data-cliente="${esc(c.id)}">${ic('link')}Conectar Instagram</button>
+    <button class="btn sec sm" data-act="rel-link-cliente" data-cliente="${esc(c.id)}" title="Copia um link para o dono do Instagram autorizar no celular">${ic('send')}Link para o cliente</button>`;
+}
+
 function blocoCliente(c, ym) {
   const atual = store.obter('insights', idInsight(c.id, ym));
   const antes = store.obter('insights', idInsight(c.id, ymAnterior(ym)));
   const prod = producaoDoMes(c.id, ym);
   const cab = `<div class="card-h"><div><h2>${esc(c.nome)}${c.instagram ? ` <span class="lbl" style="font-weight:600">${esc(c.instagram)}</span>` : ''}</h2>
       <p class="sub">Instagram em ${nomeMes(ym)}${atual?.fonte === 'instagram' ? ', direto do Instagram' : atual ? ', dados importados' : ''}.</p></div>
-      <div class="actions no-print"><button class="btn sec sm" data-act="rel-importar" data-cliente="${esc(c.id)}">${ic('upload')}Importar dados</button>
+      <div class="actions no-print">${botoesInstagram(c, ym)}<button class="btn sec sm" data-act="rel-importar" data-cliente="${esc(c.id)}">${ic('upload')}Importar dados</button>
         ${atual ? `<button class="btn sec sm" data-act="rel-imprimir">${ic('printer')}Imprimir ou salvar PDF</button>` : ''}</div></div>`;
   if (!atual) {
     return `<div class="card">${cab}<div class="empty" style="padding:26px 10px">${flor()}<h2>Sem números deste mês</h2>
@@ -139,6 +149,8 @@ export default {
     if (!clientes.length) return `<div class="card empty">${flor()}<h2>Nenhum cliente com Instagram</h2><p>Preencha o campo “Instagram do cliente” na ficha de um cliente. Ele passa a aparecer aqui.</p><button class="btn pri" data-act="ir" data-rota="clientes">Ir para Clientes</button></div>`;
     const c = clientes.find((x) => x.id === ref) || clientes[0];
     const chips = clientes.map((x) => `<button class="cbtn ${x.id === c.id ? 'on' : ''} no-print" data-act="ir" data-rota="relatorio" data-ref="${esc(x.id)}"><i></i>${esc(x.nome)}</button>`).join('');
+    // Descobre quem já está conectado (uma vez) e redesenha a tela.
+    if (igApi.disponivel() && !igApi.carregado()) igApi.status().then(recarregarTela);
     return `<div class="cbtns no-print" style="margin-bottom:16px">${chips}</div><div class="no-print">${seletorMes(ym)}</div><div id="rel-corpo" data-cliente="${esc(c.id)}">${blocoCliente(c, ym)}</div>`;
   },
 
@@ -149,6 +161,30 @@ export default {
       recarregarTela();
     },
     'rel-importar': (el) => importar(el.dataset.cliente),
+    // Abre a autorização do Instagram (a janela é aberta no clique, antes de esperar a resposta, para o navegador não bloquear).
+    'rel-conectar': async (el) => {
+      const janela = window.open('', '_blank');
+      try {
+        const url = await igApi.linkConectar(el.dataset.cliente);
+        if (janela) janela.location.href = url; else location.href = url;
+      } catch (err) { janela?.close(); toast(err.message, true); }
+    },
+    'rel-link-cliente': async (el) => {
+      try {
+        const url = await igApi.linkConectar(el.dataset.cliente);
+        await navigator.clipboard.writeText(url);
+        toast('Link copiado. Mande para o dono do Instagram abrir e tocar em Permitir (vale por 7 dias).');
+      } catch (err) { toast(err.message, true); }
+    },
+    'rel-sync': async (el) => {
+      el.disabled = true;
+      toast('Buscando os números no Instagram...');
+      try {
+        const r = await igApi.sincronizar(el.dataset.cliente, el.dataset.mes);
+        toast(`Pronto: ${r.publicacoes} ${r.publicacoes === 1 ? 'publicação' : 'publicações'} de ${nomeMes(r.mes)}.`);
+      } catch (err) { toast(err.message, true); }
+      recarregarTela();
+    },
     'rel-imprimir': () => {
       document.body.classList.add('imprimindo');
       window.addEventListener('afterprint', () => document.body.classList.remove('imprimindo'), { once: true });

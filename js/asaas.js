@@ -1,5 +1,5 @@
-import { store } from './store.js?v=82';
-import { config } from './config.js?v=82';
+import { store } from './store.js?v=83';
+import { config } from './config.js?v=83';
 
 // A chave do Asaas nunca fica neste site: ela fica guardada no servidor (função "asaas" do Supabase).
 let cache = null;
