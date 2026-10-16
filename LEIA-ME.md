@@ -206,3 +206,7 @@ seed/                dados validados (fica só no seu computador)
 CNAME                domínio do painel
 CLAUDE.md            regras que o Claude Code segue ao mexer no painel
 ```
+
+## Aparência (visual novo, noturno e rosa)
+
+Em Configurações > Aparência cada pessoa escolhe, só no próprio navegador: **Visual** (atual ou novo), **Modo** (claro ou noturno) e **Cor** (areia ou rosa). Noturno e rosa funcionam sobre o visual novo e o ligam sozinhos. Tudo está em `css/visual-novo.css`: as cores de cada combinação ficam em variáveis no começo do arquivo, então para ajustar um tom basta mudar a variável. A escolha fica guardada no navegador (`bodhi.visual`, `bodhi.modo`, `bodhi.cor`) e também pode vir no endereço (`?visual=novo&modo=noturno&cor=rosa`). A página do relatório do cliente fica sempre no claro. O PDF impresso é sempre claro.

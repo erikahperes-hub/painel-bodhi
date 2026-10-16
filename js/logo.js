@@ -4,6 +4,9 @@ const LOGOS = {"coral": "<svg class=\"logo-svg\" role=\"img\" aria-label=\"Bôdh
 
 let n = 0;
 export function logo(variante = 'coral', fundo = '#ffffff') {
+  // Modo noturno (visual novo): letras claras e o recorte da bolinha na cor do painel escuro.
+  const raiz = typeof document !== 'undefined' ? document.documentElement : null;
+  if (raiz?.dataset.visual === 'novo' && raiz.dataset.modo === 'noturno') { variante = 'claro'; fundo = raiz.dataset.cor === 'rosa' ? '#27151B' : '#0F2832'; }
   const id = '_' + (++n);
   return LOGOS[variante]
     .replaceAll('KNOCK', fundo)

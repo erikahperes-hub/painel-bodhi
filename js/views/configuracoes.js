@@ -1,9 +1,9 @@
-import { store } from '../store.js?v=102';
-import { esc, toast, baixar, hojeISO } from '../util.js?v=102';
-import { ic } from '../icons.js?v=102';
-import { formulario, abrirModal, confirmar } from '../ui.js?v=102';
-import { modeloAtual } from '../docs/contrato.js?v=102';
-import { CLAUSULAS_PADRAO, PREAMBULO_PADRAO, VARIAVEIS } from '../docs/modeloContrato.js?v=102';
+import { store } from '../store.js?v=104';
+import { esc, toast, baixar, hojeISO } from '../util.js?v=104';
+import { ic } from '../icons.js?v=104';
+import { formulario, abrirModal, confirmar } from '../ui.js?v=104';
+import { modeloAtual } from '../docs/contrato.js?v=104';
+import { CLAUSULAS_PADRAO, PREAMBULO_PADRAO, VARIAVEIS } from '../docs/modeloContrato.js?v=104';
 
 function editarModelo() {
   const modelo = modeloAtual();
@@ -45,11 +45,19 @@ export default {
   render() {
     const e = store.cfg('empresa', {});
     const local = store.modo === 'local';
-    const visual = document.documentElement.dataset.visual === 'novo' ? 'novo' : 'antigo';
+    const d = document.documentElement.dataset;
+    const visual = d.visual === 'novo' ? 'novo' : 'antigo';
+    const modo = d.modo === 'noturno' ? 'noturno' : 'claro';
+    const cor = d.cor === 'rosa' ? 'rosa' : 'areia';
+    const op = (k, v, atual, nome) => `<button class="btn ${atual === v ? 'pri' : 'sec'}" data-act="aparencia" data-k="${k}" data-v="${v}" aria-pressed="${atual === v}">${nome}</button>`;
     return `<div class="grid">
       <div class="card c4">
-        <div class="card-h"><div><h2>Aparência</h2><p class="sub">O visual novo tira o branco puro, dá camadas de tom areia e destaca um cartão por tela. Dá para voltar ao atual quando quiser (vale só neste navegador).</p></div></div>
-        <div class="actions"><button class="btn ${visual === 'novo' ? 'pri' : 'sec'}" data-act="visual" data-v="novo">Visual novo (teste)</button><button class="btn ${visual === 'antigo' ? 'pri' : 'sec'}" data-act="visual" data-v="antigo">Visual atual</button></div>
+        <div class="card-h"><div><h2>Aparência</h2><p class="sub">Vale só neste navegador. O visual novo tira o branco puro e dá camadas de tom; o modo noturno e a cor rosa funcionam sobre o visual novo (ao escolher um deles, o visual novo liga sozinho).</p></div></div>
+        <div class="aparencia">
+          <div><span class="lbl">Visual</span><div class="actions">${op('visual', 'antigo', visual, 'Atual')}${op('visual', 'novo', visual, 'Novo')}</div></div>
+          <div><span class="lbl">Modo</span><div class="actions">${op('modo', 'claro', modo, 'Claro')}${op('modo', 'noturno', modo, 'Noturno')}</div></div>
+          <div><span class="lbl">Cor</span><div class="actions">${op('cor', 'areia', cor, 'Areia')}${op('cor', 'rosa', cor, 'Rosa')}</div></div>
+        </div>
       </div>
       <div class="card c2">
         <h2>Conta</h2><p class="sub">${local ? 'Modo local: os dados ficam só neste navegador.' : 'Login com e-mail e senha. Os dados são compartilhados entre as sócias.'}</p>
@@ -92,12 +100,15 @@ export default {
   },
 
   acoes: {
-    visual: (el) => {
-      const v = el.dataset.v === 'novo' ? 'novo' : 'antigo';
-      try { localStorage.setItem('bodhi.visual', v); } catch { /* sem armazenamento: vale só até recarregar */ }
-      if (v === 'novo') document.documentElement.setAttribute('data-visual', 'novo'); else document.documentElement.removeAttribute('data-visual');
-      window.dispatchEvent(new Event('atualizar-tela'));
-      toast(v === 'novo' ? 'Visual novo ligado' : 'Visual atual de volta');
+    // Guarda a escolha e recarrega a página (a logo e as cores são montadas na abertura).
+    aparencia: (el) => {
+      const k = ['visual', 'modo', 'cor'].includes(el.dataset.k) ? el.dataset.k : 'visual';
+      try {
+        localStorage.setItem(`bodhi.${k}`, el.dataset.v);
+        if ((k === 'modo' && el.dataset.v === 'noturno') || (k === 'cor' && el.dataset.v === 'rosa')) localStorage.setItem('bodhi.visual', 'novo');
+        if (k === 'visual' && el.dataset.v === 'antigo') { localStorage.setItem('bodhi.modo', 'claro'); localStorage.setItem('bodhi.cor', 'areia'); }
+      } catch { toast('Este navegador não deixou guardar a escolha.', true); return; }
+      location.reload();
     },
     sair: () => store.sair(),
     'alterar-nome': () => formulario({
