@@ -2,11 +2,11 @@
    Ideia: sem branco puro, camadas de tom areia (página, painel, cartões, poços), cartões grandes de cantos bem redondos sem bordas duras,
    um cartão de destaque na cor da marca, números grandes e gráficos nas duas cores da Bôdhi (verde e petróleo). */
 html[data-visual="novo"]{
-  --creme:#FAF6EC;
-  --canvas:#F1ECDD;
-  --card:#FBF8F0;
-  --poco:#F3EDDF;
-  --pagina:#EEE8D8;
+  --creme:#FCF9F2;
+  --canvas:#F7F3E8;
+  --card:#FDFBF6;
+  --poco:#F6F1E6;
+  --pagina:#F3EEE1;
   --line:rgba(70,58,32,.10);
   --graf-s:rgba(70,58,32,.07);
   --r:28px;
@@ -15,14 +15,14 @@ html[data-visual="novo"]{
 }
 html[data-visual="novo"] body{
   background:
-    radial-gradient(1100px 640px at 6% -10%,#F9F5EA 0,transparent 62%),
-    radial-gradient(900px 720px at 104% 108%,#D6E5D8 0,transparent 58%),
+    radial-gradient(1100px 640px at 6% -10%,#FBF8EF 0,transparent 62%),
+    radial-gradient(900px 720px at 104% 108%,#E0EBDF 0,transparent 58%),
     radial-gradient(700px 520px at 88% 6%,rgba(35,187,132,.14) 0,transparent 60%),
     var(--pagina);
   background-attachment:fixed;
 }
 html[data-visual="novo"] .shell{
-  background:rgba(246,241,228,.66);
+  background:rgba(249,246,236,.7);
   -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
   border-radius:42px;
   box-shadow:0 32px 80px rgba(80,66,36,.13),inset 0 0 0 1px rgba(250,245,232,.7);
@@ -38,21 +38,22 @@ html[data-visual="novo"] .card.clicavel:hover{transform:translateY(-2px)}
 html[data-visual="novo"] .big{font-size:34px}
 
 /* Cartões de números no formato da referência: ícone redondo no canto, número grande embaixo.
-   O primeiro cartão de cada grade vira o destaque, na cor da marca. */
+   O primeiro cartão de cada grade vira o destaque, em petróleo. */
 html[data-visual="novo"] .stat{position:relative;flex-direction:column;align-items:flex-start;justify-content:flex-end;gap:0;min-height:138px;padding:18px 20px}
 html[data-visual="novo"] .stat .big{font-size:36px;letter-spacing:-.02em;margin-top:6px}
 html[data-visual="novo"] .stat .lbl{order:-1;font-weight:700;color:var(--ink-2);margin:0}
 html[data-visual="novo"] .stat>div:first-child{display:flex;flex-direction:column;width:100%}
 html[data-visual="novo"] .stat .stat-ic{position:absolute;top:16px;right:16px;width:40px;height:40px;font-size:18px}
-html[data-visual="novo"] .grid>.stat:first-child{background:var(--verde);color:#0B3B2B;box-shadow:0 18px 40px rgba(35,187,132,.32),inset 0 1px 0 rgba(255,255,255,.3)}
+html[data-visual="novo"] .grid>.stat:first-child{background:var(--petroleo);color:var(--creme);box-shadow:0 18px 40px rgba(7,63,86,.30),inset 0 1px 0 rgba(255,255,255,.14)}
 html[data-visual="novo"] .grid>.stat:first-child .lbl,
-html[data-visual="novo"] .grid>.stat:first-child .hint{color:rgba(11,59,43,.78)}
-html[data-visual="novo"] .grid>.stat:first-child .stat-ic{background:rgba(11,59,43,.14);color:#0B3B2B;box-shadow:none}
-html[data-visual="novo"] .grid>.stat:first-child .chip{background:rgba(11,59,43,.14);color:#0B3B2B}
+html[data-visual="novo"] .grid>.stat:first-child .hint{color:rgba(252,249,242,.78)}
+html[data-visual="novo"] .grid>.stat:first-child .stat-ic{background:rgba(252,249,242,.14);color:var(--creme);box-shadow:none}
+html[data-visual="novo"] .grid>.stat:first-child .chip{background:rgba(252,249,242,.16);color:var(--creme)}
+html[data-visual="novo"] .grid>.stat:first-child .minibars i{background:var(--verde)}
 html[data-visual="novo"] .card.hl{box-shadow:0 18px 40px rgba(7,63,86,.28)}
 
 /* Ícones dos cartões: anel fino, como botões redondos */
-html[data-visual="novo"] .stat-ic{background:rgba(253,250,243,.8);box-shadow:inset 0 0 0 1px var(--line)}
+html[data-visual="novo"] .stat-ic{background:rgba(254,252,248,.88);box-shadow:inset 0 0 0 1px var(--line)}
 html[data-visual="novo"] .tone-verde .stat-ic{color:var(--verde-ink)}
 html[data-visual="novo"] .tone-creme .stat-ic{color:#7A5B1E}
 html[data-visual="novo"] .tone-coral .stat-ic{color:var(--coral-ink)}
@@ -61,23 +62,23 @@ html[data-visual="novo"] .tone-coral .stat-ic{color:var(--coral-ink)}
 html[data-visual="novo"] .tabs{display:inline-flex;gap:4px;padding:5px;background:rgba(70,58,32,.06);border-radius:99px}
 html[data-visual="novo"] .tab{background:transparent;box-shadow:none;padding:9px 18px}
 html[data-visual="novo"] .tab.on{background:var(--petroleo);color:var(--creme);box-shadow:0 6px 14px rgba(7,63,86,.25)}
-html[data-visual="novo"] .cbtn{background:rgba(253,250,243,.9);border-color:var(--line)}
+html[data-visual="novo"] .cbtn{background:rgba(254,252,248,.94);border-color:var(--line)}
 html[data-visual="novo"] .cbtn.on{background:var(--petroleo);border-color:var(--petroleo)}
 html[data-visual="novo"] .bar-track{height:16px;background:rgba(70,58,32,.08)}
 html[data-visual="novo"] .rl-bar i{border-radius:99px 99px 6px 6px}
 html[data-visual="novo"] .minibars i{border-radius:99px}
 
 /* Barra lateral e topo */
-html[data-visual="novo"] .pill{background:rgba(252,249,241,.94);box-shadow:var(--sh)}
+html[data-visual="novo"] .pill{background:rgba(253,251,246,.95);box-shadow:var(--sh)}
 html[data-visual="novo"] .nb .dot,html[data-visual="novo"] .iconbtn .dot{border-color:var(--card)}
 html[data-visual="novo"] .search-box,html[data-visual="novo"] .iconbtn{background:var(--card);box-shadow:var(--sh-leve)}
 html[data-visual="novo"] .results,html[data-visual="novo"] .pop{background:var(--card)}
 
 /* Botões e campos */
-html[data-visual="novo"] .btn.sec{background:rgba(253,250,243,.92);border-color:var(--line)}
+html[data-visual="novo"] .btn.sec{background:rgba(254,252,248,.95);border-color:var(--line)}
 html[data-visual="novo"] .btn.sec:hover{background:var(--poco)}
 html[data-visual="novo"] .field input,html[data-visual="novo"] .field select,html[data-visual="novo"] .field textarea,html[data-visual="novo"] .filtro{background:var(--creme)}
-html[data-visual="novo"] .field input:focus,html[data-visual="novo"] .field select:focus,html[data-visual="novo"] .field textarea:focus{background:#FDFBF5}
+html[data-visual="novo"] .field input:focus,html[data-visual="novo"] .field select:focus,html[data-visual="novo"] .field textarea:focus{background:#FEFCF8}
 html[data-visual="novo"] .ig-aj textarea{background:var(--creme)}
 html[data-visual="novo"] .ig-post{background:var(--card)}
 html[data-visual="novo"] .kol-dica i.claro{background:var(--card)}
@@ -92,4 +93,4 @@ html[data-visual="novo"] .fp-tel{background:var(--card);border-color:rgba(70,58,
 html[data-visual="novo"] .fp-t.sem{background:repeating-linear-gradient(135deg,var(--graf-s) 0 10px,transparent 10px 20px),var(--poco)}
 
 /* Celular: a barra de baixo também sem branco */
-@media (max-width:760px){html[data-visual="novo"] .shell{border-radius:30px;background:rgba(246,241,228,.92)}}
+@media (max-width:760px){html[data-visual="novo"] .shell{border-radius:30px;background:rgba(249,246,236,.94)}}
