@@ -751,3 +751,25 @@ a.chip{text-decoration:none}
   .rl-cap{scroll-margin-top:64px}
 }
 @media print{.rl-c{display:block}.rl-ind{display:none}.rl-corpo{gap:22px}.rl-cap-t span{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+
+/* Balão de explicação (js/dicas.js): fundo petróleo, texto creme, cantos arredondados e setinha */
+[data-dica]{cursor:help}
+.dica-bodhi{position:fixed;z-index:9999;max-width:min(270px,calc(100vw - 20px));pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .14s,transform .14s}
+.dica-bodhi.on{opacity:1;transform:none}
+.dica-bodhi .dica-t{display:block;padding:10px 14px;border-radius:14px;background:var(--petroleo);color:var(--creme);font:400 12.5px/1.45 var(--ui);text-align:left;box-shadow:0 10px 28px rgba(7,63,86,.28)}
+.dica-bodhi .dica-seta{position:absolute;left:var(--seta,50%);bottom:-5px;width:12px;height:12px;background:var(--petroleo);transform:translateX(-50%) rotate(45deg);border-radius:2px}
+.dica-bodhi.baixo .dica-seta{bottom:auto;top:-5px}
+@media print{.dica-bodhi{display:none}}
+
+/* Grade dos cartões do relatório: colunas definidas pela quantidade (6 = 3+3, 4 = 2+2) e a última fileira se estica */
+.rl-grid.cols3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.rl-grid.cols2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.rl-grid.cols1{grid-template-columns:minmax(0,1fr)}
+.rl-grid.cols3.resto1>:last-child{grid-column:span 3}
+.rl-grid.cols3.resto2>:last-child{grid-column:span 2}
+@media (max-width:760px){
+  .rl-grid.cols3{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .rl-grid.cols3.resto1>:last-child,.rl-grid.cols3.resto2>:last-child{grid-column:auto}
+  .rl-grid.cols3>:last-child:nth-child(odd){grid-column:span 2}
+}
+@media (max-width:420px){.rl-grid.cols3,.rl-grid.cols2{grid-template-columns:minmax(0,1fr)}.rl-grid.cols3>:last-child:nth-child(odd){grid-column:auto}}

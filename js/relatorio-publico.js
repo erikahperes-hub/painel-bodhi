@@ -1,8 +1,9 @@
-import { config } from './config.js?v=90';
-import { logo } from './logo.js?v=90';
-import { esc, hojeISO } from './util.js?v=90';
-import { ic, flor } from './icons.js?v=90';
-import { corpoRelatorio, ligarIndice, ymAnterior, ymMais, nomeMes } from './relatorio-html.js?v=90';
+import { config } from './config.js?v=95';
+import { logo } from './logo.js?v=95';
+import { ligarDicas } from './dicas.js?v=95';
+import { esc, hojeISO } from './util.js?v=95';
+import { ic, flor } from './icons.js?v=95';
+import { corpoRelatorio, ligarIndice, ymAnterior, ymMais, nomeMes } from './relatorio-html.js?v=95';
 
 // Página pública do relatório do cliente. Não tem login: o código do link (depois do #) identifica o cliente.
 // O banco só entrega os números DELE (função relatorio_ver): resultados do Instagram, stories, entregas do mês e metas.
@@ -14,6 +15,8 @@ const NOME_FORMATO = { reels: 'Reels', carrossel: 'Carrossel', feed: 'Estático'
 function aviso(titulo, texto) {
   app.innerHTML = `<div class="setup"><div class="card empty">${flor()}<h2>${esc(titulo)}</h2><p>${esc(texto)}</p></div></div>`;
 }
+
+ligarDicas();
 
 async function iniciar() {
   if (!/^[0-9a-f]{20,}$/i.test(token)) return aviso('Link incompleto', 'Confira se você copiou o link inteiro ou peça um novo para a Bôdhi Marketing.');
@@ -54,8 +57,7 @@ async function iniciar() {
       <p class="pub-f">Bôdhi Marketing · Se tiver qualquer dúvida, é só nos chamar.</p></div>`;
     app.querySelectorAll('[data-passo]').forEach((b) => b.addEventListener('click', () => { ym = ymMais(ym, Number(b.dataset.passo)); desenhar(); window.scrollTo(0, 0); }));
     app.querySelector('[data-imprimir]')?.addEventListener('click', () => window.print());
-    delete app.dataset.rlIndice;
-    ligarIndice(app);
+    ligarIndice();
   }
   desenhar();
 }

@@ -1,7 +1,7 @@
-import { esc, iniciais, dataBR, urlSegura } from './util.js?v=90';
-import { ic } from './icons.js?v=90';
-import { urlImagem } from './drive.js?v=90';
-import { ETAPAS, FORMATOS, etapaDe } from './conteudo.js?v=90';
+import { esc, iniciais, dataBR, urlSegura } from './util.js?v=95';
+import { ic } from './icons.js?v=95';
+import { urlImagem } from './drive.js?v=95';
+import { ETAPAS, FORMATOS, etapaDe } from './conteudo.js?v=95';
 
 // Aba "Feed" de Conteúdo: o perfil do cliente simulado como no Instagram (foto, @, números, bio, destaques e grade),
 // com as tarefas do Conteúdo nos lugares onde vão aparecer. Serve para a equipe ver como o feed fica, sem abrir a prévia do cliente.
@@ -35,11 +35,11 @@ function peca(p, i) {
   const capa = capaId(p);
   const icone = p.formato === 'reels' ? 'play' : p.formato === 'carrossel' ? 'layers' : '';
   const dica = [p.titulo || '(sem título)', f.nome, e.nome, p.publicar ? dataBR(p.publicar) : 'sem data'].join(' · ');
-  return `<button class="fp-t ${capa ? '' : 'sem'}" data-act="editar-peca" data-id="${esc(p.id)}" title="${esc(dica)}" aria-label="${esc(dica)}">
+  return `<button class="fp-t ${capa ? '' : 'sem'}" data-act="editar-peca" data-id="${esc(p.id)}" data-dica="${esc(dica)}" aria-label="${esc(dica)}">
     ${capa ? `<img src="${esc(urlImagem(capa, 480))}" data-id="${esc(capa)}" data-w="480" alt="" loading="lazy">` : `<span class="fp-sem">${ic(f.icone || 'image')}<b>${esc(p.titulo || '(sem título)')}</b></span>`}
     ${icone ? `<span class="fp-ic">${ic(icone)}</span>` : ''}
     <span class="fp-d">${p.publicar ? esc(dataBR(p.publicar).slice(0, 5)) : 'sem data'}</span>
-    <i class="fp-st cor-${esc(e.cor)}" title="${esc(e.nome)}"></i></button>`;
+    <i class="fp-st cor-${esc(e.cor)}"></i></button>`;
 }
 
 // ctx: { cliente, pecas, seguidores, filtro, aba ('grade' | 'reels') }

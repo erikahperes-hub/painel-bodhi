@@ -1,24 +1,25 @@
-import { store } from './store.js?v=90';
-import { logo } from './logo.js?v=90';
-import { ic, flor } from './icons.js?v=90';
-import { esc, toast, debounce } from './util.js?v=90';
-import { alertas } from './calc.js?v=90';
-import { igApi } from './instagram-api.js?v=90';
-import { buscar, htmlResultados } from './search.js?v=90';
-import { temModal, fecharTopo, formulario } from './ui.js?v=90';
+import { store } from './store.js?v=95';
+import { logo } from './logo.js?v=95';
+import { ic, flor } from './icons.js?v=95';
+import { esc, toast, debounce } from './util.js?v=95';
+import { alertas } from './calc.js?v=95';
+import { igApi } from './instagram-api.js?v=95';
+import { ligarDicas } from './dicas.js?v=95';
+import { buscar, htmlResultados } from './search.js?v=95';
+import { temModal, fecharTopo, formulario } from './ui.js?v=95';
 
-import inicio from './views/inicio.js?v=90';
-import comercial from './views/comercial.js?v=90';
-import clientes from './views/clientes.js?v=90';
-import conteudo from './views/conteudo.js?v=90';
-import previa from './views/previa.js?v=90';
-import relatorio from './views/relatorio.js?v=90';
-import propostas from './views/propostas.js?v=90';
-import contratos from './views/contratos.js?v=90';
-import financeiro from './views/financeiro.js?v=90';
-import processo from './views/processo.js?v=90';
-import prospeccao from './views/prospeccao.js?v=90';
-import configuracoes from './views/configuracoes.js?v=90';
+import inicio from './views/inicio.js?v=95';
+import comercial from './views/comercial.js?v=95';
+import clientes from './views/clientes.js?v=95';
+import conteudo from './views/conteudo.js?v=95';
+import previa from './views/previa.js?v=95';
+import relatorio from './views/relatorio.js?v=95';
+import propostas from './views/propostas.js?v=95';
+import contratos from './views/contratos.js?v=95';
+import financeiro from './views/financeiro.js?v=95';
+import processo from './views/processo.js?v=95';
+import prospeccao from './views/prospeccao.js?v=95';
+import configuracoes from './views/configuracoes.js?v=95';
 
 const VIEWS = { inicio, comercial, clientes, conteudo, previa, relatorio, propostas, contratos, financeiro, processo, prospeccao, configuracoes };
 const NAV = [
@@ -155,6 +156,7 @@ function abrirApp() {
 
   ligarBusca();
   ligarSino();
+  ligarDicas();
   atualizarSino();
   if (igApi.disponivel()) igApi.status().then(atualizarSino);
   renderRota(true);

@@ -1,4 +1,4 @@
-import { esc, mesNome, dataBR, urlSegura, iniciais } from './util.js?v=90';
+import { esc, mesNome, dataBR, urlSegura, iniciais } from './util.js?v=95';
 
 // O visual do relatório do cliente (baseado no relatório do Reportei, com insights a mais).
 // Só monta o HTML a partir dos dados; é usado pelo painel (js/views/relatorio.js) e pela página que o cliente abre pelo link (relatorio.html).
@@ -45,9 +45,17 @@ const frasePct = (atual, antes) => {
   return Math.abs(p) < 2 ? 'ficou estável' : p > 0 ? `subiu ${pct1(p)}%` : `caiu ${pct1(-p)}%`;
 };
 
+// Grade dos cartões: as colunas dependem de quantos cartões há, para a última fileira nunca ficar com buraco.
+function grade(html) {
+  const n = (html.match(/class="rl-kpi"/g) || []).length;
+  if (!n) return '';
+  const cols = n === 4 || n === 2 ? 2 : n === 1 ? 1 : 3;
+  return `<div class="rl-grid cols${cols} resto${n % cols}">${html}</div>`;
+}
+
 function kpi(nome, dica, atual, antes, extra = '', formato = num) {
   if (!tem(atual)) return '';
-  return `<div class="rl-kpi" title="${esc(dica)}"><div class="rl-kpi-n">${esc(nome)}</div>
+  return `<div class="rl-kpi" data-dica="${esc(dica)}" tabindex="0"><div class="rl-kpi-n">${esc(nome)}</div>
     <div class="rl-kpi-v"><b>${formato(atual)}</b>${variacao(atual, antes)}</div>
     ${tem(antes) ? `<div class="rl-kpi-a"><b>${formato(antes)}</b> no período anterior</div>` : ''}${extra}</div>`;
 }
@@ -88,8 +96,8 @@ function secaoStories(stories, storiesAnt, painel) {
   ].join('');
   const ordem = [...stories].sort((a, b) => String(a.dados?.data || '').localeCompare(String(b.dados?.data || '')) || (a.dados?.hora ?? 0) - (b.dados?.hora ?? 0));
   return `<section class="card rl-sec"><h3>Stories</h3><p class="rl-sub">${r.n} ${r.n === 1 ? 'story' : 'stories'} no mês. Números de cada um, na ordem em que foram publicados.</p></section>
-    <section class="rl-grid">${cards}</section>
-    <section class="card rl-sec"><div class="rl-tabela"><table><thead><tr><th>Quando</th><th>Tipo</th><th>Alcance</th><th>Visualiz.</th><th>Interações</th><th>Respostas</th><th>Compart.</th><th title="Toques para avançar">Avançar</th><th title="Deslizes para o próximo story">Próximo</th><th title="Toques para voltar">Voltar</th><th title="Saídas do story">Sair</th><th title="Saídas ÷ visualizações">Saída</th></tr></thead>
+    ${grade(cards)}
+    <section class="card rl-sec"><div class="rl-tabela"><table><thead><tr><th>Quando</th><th>Tipo</th><th>Alcance</th><th>Visualiz.</th><th>Interações</th><th>Respostas</th><th>Compart.</th><th data-dica="Toques para avançar">Avançar</th><th data-dica="Deslizes para o próximo story">Próximo</th><th data-dica="Toques para voltar">Voltar</th><th data-dica="Saídas do story">Sair</th><th data-dica="Saídas ÷ visualizações">Saída</th></tr></thead>
     <tbody>${ordem.map(linhaStory).join('')}</tbody></table></div></section>`;
 }
 
@@ -108,7 +116,7 @@ function secaoPublico(pub, em, seguidores) {
   const genero = (pub.genero || []).length ? (() => {
     const t = tot(pub.genero);
     const ord = ['F', 'M', 'U'].map((k) => (pub.genero.find((x) => x.k === k) || { k, v: 0 })).filter((x) => x.v > 0);
-    return `<div class="rl-stack">${ord.map((x) => `<i style="width:${(x.v / t) * 100}%;background:${COR_GENERO[x.k]}" title="${ROTULO_GENERO[x.k]}: ${pct1((x.v / t) * 100)}%"></i>`).join('')}</div>
+    return `<div class="rl-stack">${ord.map((x) => `<i style="width:${(x.v / t) * 100}%;background:${COR_GENERO[x.k]}" data-dica="${ROTULO_GENERO[x.k]}: ${pct1((x.v / t) * 100)}%"></i>`).join('')}</div>
       <div class="rl-leg-g">${ord.map((x) => `<span><i style="background:${COR_GENERO[x.k]}"></i>${ROTULO_GENERO[x.k]} <b>${pct1((x.v / t) * 100)}%</b></span>`).join('')}</div>`;
   })() : '';
   const ordemIdade = ['13-17', '18-24', '25-34', '35-44', '45-54', '55-64', '65+'];
@@ -228,7 +236,7 @@ export function corpoRelatorio({ cliente, ym, atual, anterior, serie = {}, produ
     kpi('Contas engajadas', 'Contas diferentes que interagiram com o conteúdo', atual.contasEngajadas, anterior?.contasEngajadas),
   ].join('');
   const seg = tem(atual.seguidores)
-    ? `<div class="rl-kpi" title="Total de seguidores"><div class="rl-kpi-n">Seguidores</div><div class="rl-kpi-v"><b>${num(atual.seguidores)}</b>${tem(atual.seguidoresGanhos) ? `<span class="rl-var ${Number(atual.seguidoresGanhos) >= 0 ? 'up' : 'down'}">${Number(atual.seguidoresGanhos) >= 0 ? '▲ +' : '▼ '}${num(atual.seguidoresGanhos)} no mês</span>` : ''}</div>
+    ? `<div class="rl-kpi" data-dica="Total de seguidores" tabindex="0"><div class="rl-kpi-n">Seguidores</div><div class="rl-kpi-v"><b>${num(atual.seguidores)}</b>${tem(atual.seguidoresGanhos) ? `<span class="rl-var ${Number(atual.seguidoresGanhos) >= 0 ? 'up' : 'down'}">${Number(atual.seguidoresGanhos) >= 0 ? '▲ +' : '▼ '}${num(atual.seguidoresGanhos)} no mês</span>` : ''}</div>
         <div class="rl-kpi-a">${atual.seguidoresEm ? `Em ${esc(dataBR(atual.seguidoresEm))}` : 'Ao fim do mês'}</div></div>` : '';
 
   // Indicadores de qualidade: mostram se o resultado foi bom em proporção, não só em volume.
@@ -256,7 +264,7 @@ export function corpoRelatorio({ cliente, ym, atual, anterior, serie = {}, produ
   ].map(([n, d, a, b, sempre]) => (sempre || tem(a) ? kpi(n, d, a, b) : '')).join('');
 
   const tabela = posts.length ? `<section class="card rl-sec"><h3>Dados orgânicos das publicações</h3><p class="rl-sub">${posts.length} ${posts.length === 1 ? 'publicação' : 'publicações'} em ${esc(nomeMesMin(ym))}, da que mais alcançou para a que menos.</p>
-      <div class="rl-tabela"><table><thead><tr><th>Publicação</th><th>Tipo</th><th>Alcance</th><th>Visualizações</th><th>Interações</th><th title="Interações ÷ alcance">Engaj.</th><th>Curtidas</th><th>Coment.</th><th>Compart.</th><th>Salvos</th><th>Data</th></tr></thead>
+      <div class="rl-tabela"><table><thead><tr><th>Publicação</th><th>Tipo</th><th>Alcance</th><th>Visualizações</th><th>Interações</th><th data-dica="Interações ÷ alcance">Engaj.</th><th>Curtidas</th><th>Coment.</th><th>Compart.</th><th>Salvos</th><th>Data</th></tr></thead>
       <tbody>${posts.map(linhaPost).join('')}</tbody></table></div></section>` : `<section class="card rl-sec"><h3>Publicações</h3><p class="rl-sub">Nenhuma publicação no feed em ${esc(nomeMesMin(ym))}. Os números do perfil acima incluem conteúdos antigos que continuaram sendo vistos.</p></section>`;
 
   const porTipo = posts.length ? Object.entries(posts.reduce((m, p) => { (m[p.tipo || 'Outro'] ||= []).push(Number(p.alcance) || 0); return m; }, {}))
@@ -284,9 +292,9 @@ export function corpoRelatorio({ cliente, ym, atual, anterior, serie = {}, produ
   // Layout em capítulos, com índice ao lado: cada assunto tem o seu capítulo e só aparece quando há conteúdo.
   const capitulos = [
     { id: 'resumo', nome: 'Resumo', titulo: 'Resumo e leitura do mês', html: `${resumo}${leitura}` },
-    { id: 'numeros', nome: 'Números', titulo: 'Os números do mês', html: `<section class="rl-grid">${principais}${seg}</section>${indicadores ? `<section class="rl-bloco"><h3 class="rl-t">Qualidade do resultado</h3><div class="rl-grid">${indicadores}</div></section>` : ''}${secaoMetas(cliente.metas, atual, posts, stories)}` },
+    { id: 'numeros', nome: 'Números', titulo: 'Os números do mês', html: `${grade(principais + seg)}${indicadores ? `<section class="rl-bloco"><h3 class="rl-t">Qualidade do resultado</h3>${grade(indicadores)}</section>` : ''}${secaoMetas(cliente.metas, atual, posts, stories)}` },
     { id: 'evolucao', nome: 'Evolução', titulo: 'Evolução nos últimos meses', html: `${evolucao(serie, ym, 'alcance', 'Evolução do alcance')}${evolucao(serie, ym, 'interacoes', 'Evolução das interações')}` },
-    { id: 'publicacoes', nome: 'Publicações', titulo: 'Publicações do mês', html: `<section class="rl-grid">${contadores}</section>${tabela}${funcionou}` },
+    { id: 'publicacoes', nome: 'Publicações', titulo: 'Publicações do mês', html: `${grade(contadores)}${tabela}${funcionou}` },
     { id: 'stories', nome: 'Stories', titulo: 'Stories', html: secaoStories(stories, storiesAnt, painel) },
     { id: 'publico', nome: 'Público', titulo: 'Quem acompanha o perfil', html: secaoPublico(pubDados.pub, pubDados.em, atual.seguidores) },
     { id: 'entregas', nome: 'Entregas', titulo: 'O que a Bôdhi entregou', html: entregas },
@@ -297,18 +305,60 @@ export function corpoRelatorio({ cliente, ym, atual, anterior, serie = {}, produ
   return `${capa}<div class="rl-c">${indice}<div class="rl-corpo">${corpo}</div></div>`;
 }
 
-// Liga o índice: clicar leva ao capítulo (sem mexer no endereço da página) e o capítulo à vista fica marcado.
-export function ligarIndice(raiz) {
-  const botoes = [...raiz.querySelectorAll('[data-rl-ir]')];
-  if (!botoes.length || raiz.dataset.rlIndice) return;
-  raiz.dataset.rlIndice = '1';
-  botoes.forEach((b) => b.addEventListener('click', () => document.getElementById(b.dataset.rlIr)?.scrollIntoView({ behavior: 'smooth', block: 'start' })));
-  if (!('IntersectionObserver' in window)) return;
-  const vistos = new Map();
-  const marca = () => {
-    const topo = [...vistos.entries()].filter(([, v]) => v).map(([id]) => id)[0];
-    botoes.forEach((b) => b.classList.toggle('on', b.dataset.rlIr === topo));
-  };
-  const obs = new IntersectionObserver((itens) => { itens.forEach((i) => vistos.set(i.target.id, i.isIntersecting)); marca(); }, { rootMargin: '-10% 0px -70% 0px' });
-  botoes.forEach((b) => { const el = document.getElementById(b.dataset.rlIr); if (el) { vistos.set(el.id, false); obs.observe(el); } });
+// Índice dos capítulos: clicar leva ao capítulo (sem mexer no endereço da página) e o capítulo que está na tela fica marcado,
+// tanto ao clicar quanto ao rolar. O clique é ouvido no documento inteiro, então continua valendo depois que a tela é redesenhada.
+let indiceLigado = false;
+let travado = null; // capítulo escolhido por clique: vale até a rolagem suave terminar
+let aguardando = false;
+
+function marcar(id) {
+  document.querySelectorAll('[data-rl-ir]').forEach((b) => {
+    const ativo = b.dataset.rlIr === id;
+    b.classList.toggle('on', ativo);
+    // No celular o índice é uma faixa com rolagem lateral: mantém o botão ativo à vista.
+    const faixa = b.parentElement;
+    if (ativo && faixa && faixa.scrollWidth > faixa.clientWidth) faixa.scrollTo({ left: b.offsetLeft - faixa.clientWidth / 2 + b.clientWidth / 2, behavior: 'smooth' });
+  });
+}
+
+function descobrir() {
+  const caps = [...document.querySelectorAll('.rl-cap')];
+  if (!caps.length) return;
+  let ativo = caps[0].id;
+  for (const c of caps) if (c.getBoundingClientRect().top <= 170) ativo = c.id;
+  // Chegou ao fim da página: o último capítulo (que pode ser curto demais para chegar ao topo) fica marcado.
+  const se = document.scrollingElement;
+  if (se.scrollTop + window.innerHeight >= se.scrollHeight - 3) ativo = caps[caps.length - 1].id;
+  marcar(travado || ativo);
+}
+
+export function ligarIndice() {
+  if (!indiceLigado) {
+    indiceLigado = true;
+    document.addEventListener('click', (e) => {
+      const b = e.target.closest?.('[data-rl-ir]');
+      const alvo = b && document.getElementById(b.dataset.rlIr);
+      if (!alvo) return;
+      travado = b.dataset.rlIr;
+      marcar(travado);
+      // Rolagem suave; se o navegador não anima (ou o usuário pediu menos movimento), pula direto para o capítulo.
+      const antes = alvo.getBoundingClientRect().top;
+      alvo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setTimeout(() => { if (Math.abs(antes) > 24 && Math.abs(alvo.getBoundingClientRect().top - antes) < 2) alvo.scrollIntoView({ block: 'start' }); }, 450);
+      // Acabamento: se a rolagem suave parou antes de chegar (e a página ainda tem para onde rolar), vai direto.
+      setTimeout(() => {
+        const se = document.scrollingElement;
+        const noFim = se.scrollTop + window.innerHeight >= se.scrollHeight - 3;
+        if (!noFim && Math.abs(alvo.getBoundingClientRect().top - 16) > 40) alvo.scrollIntoView({ block: 'start' });
+      }, 1000);
+    });
+    const aoRolar = () => { if (aguardando) return; aguardando = true; requestAnimationFrame(() => { aguardando = false; descobrir(); }); };
+    document.addEventListener('scroll', aoRolar, { passive: true, capture: true });
+    window.addEventListener('resize', aoRolar);
+    // O capítulo escolhido por clique fica marcado até a pessoa rolar por conta própria (roda do mouse, toque ou teclado).
+    const soltar = () => { travado = null; };
+    ['wheel', 'touchstart', 'pointerdown'].forEach((ev) => document.addEventListener(ev, (e) => { if (!e.target.closest?.('[data-rl-ir]')) soltar(); }, { passive: true }));
+    document.addEventListener('keydown', (e) => { if (['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End', ' '].includes(e.key)) soltar(); });
+  }
+  descobrir();
 }
