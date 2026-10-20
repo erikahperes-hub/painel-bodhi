@@ -4,6 +4,9 @@ Lista combinada entre Érika e Milena (15/10/2026). Quem for mexer no painel (co
 
 ## 1. Financeiro: despesas e lucro (responsável: Milena)
 
+Para a Milena começar, siga o `PASSO-A-PASSO-MILENA.md` (convites, chave, skill e arquivos a enviar).
+
+
 Hoje só existe a receita mapeada. Objetivo: subir todos os extratos e gastos da empresa para entender para onde vai o dinheiro e ter despesa e lucro por mês.
 - Milena sobe os extratos (começando pelos últimos 12 meses) e o Claude Code dela monta a tela: categorias de despesa, despesa por mês, lucro (receita menos despesa), gasto fixo x variável.
 - Dados de despesa são sensíveis: ficam no Supabase (kind próprio, ex. `despesa`), só para sócias. Nunca em arquivo público nem no repositório (`seed/` é ignorado pelo git).
@@ -51,3 +54,7 @@ No ar: perfil do cliente simulado (foto, nome, bio, link, seguidores, seguindo e
 ## 6. Aparência (pronta em 16/10/2026)
 
 Visual novo opcional, modo noturno e cores areia, rosa e verde, em Configurações > Aparência. Falta só a Érika decidir se o visual novo vira o padrão e se a aprovação do cliente (`aprovar.html`) também ganha o visual.
+
+## 7. Histórico do Asana dentro do painel (em andamento, 20/10/2026)
+
+Objetivo: cancelar o Asana. Conteúdo ganha as abas Ativos e Inativos; ativos: TRE Clinic, Dr Caio, Dr Germano, Arena Pixel, PTE Smart e Bôdhi (no Asana está "Bhôdi"); o resto vira inativo, com todo o histórico. O histórico fica separado das tarefas do dia a dia para o painel não pesar. Fazer a exportação completa do Asana ANTES de cancelar o plano.
