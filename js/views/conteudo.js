@@ -1,15 +1,15 @@
-import { store } from '../store.js?v=111';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=111';
-import { ic, flor } from '../icons.js?v=111';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=111';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=111';
-import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=111';
-import { feedPerfil } from '../feed-perfil.js?v=111';
-import { igApi } from '../instagram-api.js?v=111';
-import { lerPasta } from '../drive-pasta.js?v=111';
-import { lerTabela } from '../planejamento.js?v=111';
-import { config } from '../config.js?v=111';
-import { histCartao, histMontar, importarHistorico } from '../historico.js?v=111';
+import { store } from '../store.js?v=113';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=113';
+import { ic, flor } from '../icons.js?v=113';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=113';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=113';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=113';
+import { feedPerfil } from '../feed-perfil.js?v=113';
+import { igApi } from '../instagram-api.js?v=113';
+import { lerPasta } from '../drive-pasta.js?v=113';
+import { lerTabela } from '../planejamento.js?v=113';
+import { config } from '../config.js?v=113';
+import { histCartao, histMontar, importarHistorico } from '../historico.js?v=113';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
@@ -486,7 +486,7 @@ function calendario({ filtro, lista, chipsClientes }) {
     const iso = isoDia(d);
     const pecasDia = porDia[iso] || [];
     return `<div class="dia${d.getMonth() !== m - 1 ? ' fora' : ''}${iso === hoje ? ' hoje' : ''}" data-dia="${iso}">
-      <div class="dia-h"><b>${d.getDate()}</b><button class="dia-add" data-act="nova-peca" data-data="${iso}" data-cliente="${esc(filtro)}" aria-label="Nova tarefa em ${dataBR(iso)}" title="Nova tarefa neste dia">+</button></div>
+      <div class="dia-h"><b>${d.getDate()}</b><span class="dia-sem">${DIAS_SEMANA[d.getDay()]}</span><button class="dia-add" data-act="nova-peca" data-data="${iso}" data-cliente="${esc(filtro)}" aria-label="Nova tarefa em ${dataBR(iso)}" title="Nova tarefa neste dia">+</button></div>
       ${pecasDia.map((p) => blocoPeca(p, !filtro)).join('')}</div>`;
   }).join('');
 
@@ -663,13 +663,17 @@ export default {
         subtitulo: 'Envie este link ao cliente. Ele vê só as tarefas dele (as que estão em “Aguardando aprovação” ou depois) e não precisa de senha.',
         corpo: `<div class="field"><label for="link-ap">Link do cliente</label><input id="link-ap" readonly value="${esc(url)}"></div>
           <p class="lbl" style="margin-top:10px">Quem tem este link consegue ver e aprovar as tarefas de ${esc(c.nome)}. Se ele for parar em mãos erradas, gere um novo: o antigo deixa de funcionar.</p>
-          <div class="modal-f"><button class="btn ghost danger" data-renovar>Gerar novo link</button><div class="actions"><button class="btn sec" data-fechar-link>Fechar</button><button class="btn pri" data-copiar>${ic('link')}Copiar link</button></div></div>`,
+          <div class="modal-f"><button class="btn ghost danger" data-renovar>Gerar novo link</button><div class="actions"><button class="btn sec" data-fechar-link>Fechar</button>${navigator.share ? `<button class="btn sec" data-compartilhar>${ic('send')}Compartilhar</button>` : ''}<button class="btn pri" data-copiar>${ic('link')}Copiar link</button></div></div>`,
       });
       const campo = m.el.querySelector('#link-ap');
       campo.addEventListener('focus', () => campo.select());
       m.el.querySelector('[data-fechar-link]').onclick = () => m.fechar();
       m.el.querySelector('[data-copiar]').onclick = async () => {
         try { await navigator.clipboard.writeText(campo.value); toast('Link copiado'); } catch { campo.select(); toast('Selecionei o link: use Ctrl+C para copiar'); }
+      };
+      const compartilhar = m.el.querySelector('[data-compartilhar]');
+      if (compartilhar) compartilhar.onclick = async () => {
+        try { await navigator.share({ title: `Aprovação de conteúdo: ${c.nome}`, text: 'Link para aprovar o conteúdo:', url: campo.value }); } catch { /* a pessoa fechou a janela de compartilhar */ }
       };
       m.el.querySelector('[data-renovar]').onclick = async () => {
         if (!(await confirmar('Gerar um novo link? O link atual deixa de funcionar e você precisa enviar o novo ao cliente.', 'Gerar novo link', true))) return;

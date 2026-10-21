@@ -260,7 +260,7 @@ button.card.clicavel:focus-visible{outline:2px solid var(--verde);outline-offset
 .chk.on:hover{filter:brightness(.92);color:#fff}
 .chk:focus-visible{outline:2px solid var(--petroleo);outline-offset:2px}
 .cal-p{gap:5px}
-.cal-p .chk{width:15px;height:15px;border-width:1.5px;margin-top:0;min-width:15px;flex:none;background:rgba(255,255,255,.55)}
+.cal-p .chk{width:16px;height:16px;border-width:1.5px;margin-top:0;min-width:16px;flex:none;box-sizing:border-box;background:rgba(255,255,255,.55)}
 .cal-p .chk svg{width:9px;height:9px;margin-top:0}
 /* O título pode usar até duas linhas, para não ser cortado por causa do círculo */
 .cal-p b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
@@ -807,7 +807,7 @@ a.chip{text-decoration:none}
 .hi-ax li{padding:2px 0;overflow-wrap:anywhere}
 @media (max-width:640px){.hi summary{flex-wrap:wrap}.hi-m{flex:1 1 100%;text-align:left;padding-left:21px}}
 
-.cal-p .cal-ini{width:17px;height:17px;border-radius:50%;flex:none;display:inline-grid;place-items:center;font:700 10.5px/1 var(--ui);font-style:normal;background:rgba(255,255,255,.7);color:var(--ink);margin-top:1px}
+.cal-p .cal-ini{width:16px;height:16px;min-width:16px;box-sizing:border-box;border-radius:50%;flex:none;display:inline-grid;place-items:center;font:700 10px/1 var(--ui);font-style:normal;background:rgba(255,255,255,.7);color:var(--ink);margin-top:0}
 .cal-p .cal-ini.vazio{background:transparent;border:1.5px dashed var(--ink-3)}
 
 .hc-t{display:flex;align-items:center;gap:6px;width:100%;text-align:left;border:0;border-radius:9px;padding:4px 6px;background:var(--card);font:700 11.5px/1.25 var(--ui);color:var(--ink);cursor:pointer}
@@ -823,3 +823,20 @@ a.chip{text-decoration:none}
 .hi-com li:first-child{border-top:0}
 .hi-com small{display:block;color:var(--ink-2);font-size:12px;margin-bottom:2px}
 .hi-com p{white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
+
+/* Celular: o calendário vira uma agenda (só os dias com tarefa, um embaixo do outro) e os botões do cartão ocupam a largura toda */
+.dia-sem{display:none}
+@media (max-width:700px){
+  .card-h{flex-direction:column;align-items:stretch}
+  .card-h .actions{width:100%}
+  .card-h .actions .btn{flex:1 1 calc(50% - 8px);justify-content:center}
+  .calbox{overflow:visible}
+  .calgrid{display:flex;flex-direction:column;min-width:0;gap:8px}
+  .dow{display:none}
+  .dia{min-height:0}
+  .dia.fora,.dia:not(:has(.cal-p)){display:none}
+  .dia-h{justify-content:flex-start;gap:8px}
+  .dia-sem{display:inline;font:700 11.5px var(--ui);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+  .dia-add{opacity:.8;margin-left:auto}
+  .cal-p b{-webkit-line-clamp:3}
+}

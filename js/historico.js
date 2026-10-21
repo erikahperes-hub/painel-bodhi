@@ -1,7 +1,7 @@
-import { store } from './store.js?v=111';
-import { esc, norm, slug, toast, dataBR } from './util.js?v=111';
-import { ic, flor } from './icons.js?v=111';
-import { confirmar } from './ui.js?v=111';
+import { store } from './store.js?v=113';
+import { esc, norm, slug, toast, dataBR } from './util.js?v=113';
+import { ic, flor } from './icons.js?v=113';
+import { confirmar } from './ui.js?v=113';
 
 // Histórico do Asana: tarefas antigas guardadas à parte (tipo "historico" no banco). Elas NÃO entram na carga normal do painel
 // (store.recarregar as ignora); só são buscadas quando alguém abre o Histórico de um cliente.
@@ -126,9 +126,9 @@ function detalhe(t, projeto, mostrarProjeto, aberto = false) {
   const anexos = (t.a || []).map(([n, b]) => `<li>${esc(n)}${b ? ` <small>${tamanho(b)}</small>` : ''}</li>`).join('');
   const coments = (t.cm || []).map((c) => `<li><small>${esc([c.d ? dataBR(c.d) : '', c.a].filter(Boolean).join(' · '))}</small><p>${links(c.t)}</p></li>`).join('');
   return `<details class="hi"${aberto ? ' open' : ''}><summary><i class="hi-st ${t.c ? 'ok' : ''}" title="${t.c ? 'Concluída' : 'Em aberto'}"></i><span class="hi-t">${esc(t.t || '(sem título)')}</span><span class="hi-m">${esc(meta)}</span></summary>
-    <div class="hi-c">${t.n ? `<p class="hi-n">${links(t.n)}</p>` : '<p class="lbl">Sem descrição.</p>'}
+    <div class="hi-c"><div class="hi-sec"><b>Descrição</b>${t.n ? `<p class="hi-n">${links(t.n)}</p>` : '<p class="lbl">Sem descrição.</p>'}</div>
+      ${coments ? `<div class="hi-sec"><b>Comentários</b><ul class="hi-com">${coments}</ul></div>` : ''}
       ${campos ? `<div class="hi-cf">${campos}</div>` : ''}
-      ${coments ? `<div class="hi-sec"><b>Comentários (legendas e conversa)</b><ul class="hi-com">${coments}</ul></div>` : ''}
       ${subs ? `<div class="hi-sec"><b>Subtarefas</b><ul class="hi-sub">${subs}</ul></div>` : ''}
       ${anexos ? `<div class="hi-sec"><b>Arquivos anexados no Asana</b><ul class="hi-ax">${anexos}</ul><p class="lbl">Os arquivos estão guardados na <a href="${PASTA_DRIVE}" target="_blank" rel="noopener noreferrer">pasta Histórico Asana (backup) do Drive</a>, na subpasta do projeto.</p></div>` : ''}
       ${t.cq ? `<p class="lbl">Concluída em ${esc(dataBR(t.cq))}.</p>` : ''}</div></details>`;
