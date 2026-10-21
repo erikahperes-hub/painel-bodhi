@@ -55,9 +55,9 @@ No ar: perfil do cliente simulado (foto, nome, bio, link, seguidores, seguindo e
 
 Visual novo opcional, modo noturno e cores areia, rosa e verde, em Configurações > Aparência. Falta só a Érika decidir se o visual novo vira o padrão e se a aprovação do cliente (`aprovar.html`) também ganha o visual.
 
-## 7. Histórico do Asana dentro do painel (20/10/2026)
+## 7. Asana dentro do painel (20 e 21/10/2026)
 
-Pronto no código: abas Ativos/Inativos em Conteúdo, aba Histórico, importação do arquivo `seed/asana-historico.json`. Anexos (cerca de 2.000 arquivos, uns 10 GB) copiados para o Drive, pasta Histórico Asana (backup).
-- Falta: importar o arquivo no painel online (Conteúdo > Adicionar em lote > Histórico do Asana) e conferir os números.
-- Falta: comentários das tarefas (não foram trazidos) e a conferência de que o Google Drive terminou de sincronizar.
+Pronto no código: Ativos/Inativos em Conteúdo, tarefas dos ativos no Status/Calendário (com legenda e comentários), histórico dos inativos em calendário, inicial do responsável no calendário. Anexos (cerca de 2.000 arquivos, uns 10 GB) copiados para o Drive, pasta Histórico Asana (backup).
+- Falta: importar os dois arquivos de `seed/` no painel online (passos na LEIA-ME) e conferir os números.
+- Falta: conferir que o Google Drive terminou de enviar os arquivos para a nuvem.
 - Só cancelar o Asana depois disso.

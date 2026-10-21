@@ -1,15 +1,15 @@
-import { store } from '../store.js?v=109';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=109';
-import { ic, flor } from '../icons.js?v=109';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=109';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=109';
-import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=109';
-import { feedPerfil } from '../feed-perfil.js?v=109';
-import { igApi } from '../instagram-api.js?v=109';
-import { lerPasta } from '../drive-pasta.js?v=109';
-import { lerTabela } from '../planejamento.js?v=109';
-import { config } from '../config.js?v=109';
-import { histCartao, histMontar, importarHistorico } from '../historico.js?v=109';
+import { store } from '../store.js?v=111';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=111';
+import { ic, flor } from '../icons.js?v=111';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=111';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=111';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=111';
+import { feedPerfil } from '../feed-perfil.js?v=111';
+import { igApi } from '../instagram-api.js?v=111';
+import { lerPasta } from '../drive-pasta.js?v=111';
+import { lerTabela } from '../planejamento.js?v=111';
+import { config } from '../config.js?v=111';
+import { histCartao, histMontar, importarHistorico } from '../historico.js?v=111';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
@@ -446,12 +446,15 @@ let verLista = false; // depois de escolher um filtro, mostra a lista sem mexer 
 const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const isoDia = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
+// Inicial de quem cuida da tarefa (no lugar do ponto de etapa e do ícone do formato). Sem responsável, um círculo vazio.
+const inicialResp = (p) => `<i class="cal-ini${p.responsavel ? '' : ' vazio'}" title="${esc(p.responsavel ? `Responsável: ${p.responsavel}` : 'Sem responsável')}" aria-hidden="true">${p.responsavel ? esc(String(p.responsavel).trim().charAt(0).toUpperCase()) : ''}</i>`;
+
 function blocoPeca(p, mostrarCliente) {
   const f = FORMATOS[p.formato] || FORMATOS.feed;
   const e = etapaDe(p);
   const cli = store.obter('cliente', p.clienteId)?.nome || '';
   return `<button class="cal-p ${fmCls(p)}${atrasada(p) ? ' atras' : ''}${p.concluida ? ' feita' : ''}${casaFunil(p) && casaTipo(p) && casaRede(p) ? '' : ' apagado'}" data-act="editar-peca" data-id="${p.id}" draggable="true" data-peca="${p.id}" title="${esc([p.titulo, cli, f.nome, REDES[p.rede]?.nome, e.nome, p.concluida ? 'Concluída' : ''].filter(Boolean).join(' · '))}">
-    ${botaoConcluir(p, true)}<i class="cal-dot cor-${e.cor}" title="${esc(e.nome)}"></i>${ic(f.icone)}<span><b>${esc(p.titulo || '(sem título)')}</b>${mostrarCliente && cli ? `<small>${esc(cli)}</small>` : ''}</span></button>`;
+    ${botaoConcluir(p, true)}${inicialResp(p)}<span><b>${esc(p.titulo || '(sem título)')}</b>${mostrarCliente && cli ? `<small>${esc(cli)}</small>` : ''}</span></button>`;
 }
 
 // Escolha do mês, igual no Status e no Calendário (o mês escolhido vale nas duas abas).
@@ -545,8 +548,7 @@ export default {
     const abas = `<div class="tabs" role="tablist" aria-label="Visões de conteúdo">
       <button class="tab ${aba === 'status' ? 'on' : ''}" role="tab" aria-selected="${aba === 'status'}" data-act="aba-conteudo" data-aba="status">${ic('grid')}Status</button>
       <button class="tab ${aba === 'calendario' ? 'on' : ''}" role="tab" aria-selected="${aba === 'calendario'}" data-act="aba-conteudo" data-aba="calendario">${ic('calendar')}Calendário</button>
-      <button class="tab ${aba === 'feed' ? 'on' : ''}" role="tab" aria-selected="${aba === 'feed'}" data-act="aba-conteudo" data-aba="feed">${ic('image')}Feed</button>
-      <button class="tab ${aba === 'historico' ? 'on' : ''}" role="tab" aria-selected="${aba === 'historico'}" data-act="aba-conteudo" data-aba="historico">${ic('layers')}Histórico</button></div>`;
+      <button class="tab ${aba === 'feed' ? 'on' : ''}" role="tab" aria-selected="${aba === 'feed'}" data-act="aba-conteudo" data-aba="feed">${ic('image')}Feed</button></div>`;
     // Cabeça igual nas duas abas, nesta ordem: clientes, números e, logo acima do conteúdo, as abas Status e Calendário.
     const numeros = `<div class="grid" style="margin-bottom:16px">
         <div class="card stat tone-verde"><div><div class="lbl">Em produção</div><div class="big num">${em('briefing', 'criacao').length}</div><div class="hint">Planejamento e criação</div></div><span class="stat-ic">${ic('grid')}</span></div>
@@ -555,10 +557,6 @@ export default {
         <div class="card stat tone-coral"><div><div class="lbl">Atrasadas</div><div class="big num">${lista.filter(atrasada).length}</div><div class="hint">Passaram da data, em todos os meses</div></div><span class="stat-ic">${ic('calendar')}</span></div>
       </div>`;
     const cabeca = `${seg}<div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>${numeros}${abas}`;
-    if (aba === 'historico') {
-      if (!filtro) return `${cabeca}<div class="card empty">${flor()}<h2>Escolha um cliente</h2><p>O histórico do Asana mostra as tarefas antigas de um cliente por vez. Toque no nome do cliente acima.</p></div>`;
-      return cabeca + histCartao(store.obter('cliente', filtro), recarregarTela);
-    }
     if (aba === 'calendario') return cabeca + calendario({ filtro, lista });
     if (aba === 'feed') {
       if (!filtro) return `${cabeca}<div class="card empty">${flor()}<h2>Escolha um cliente</h2><p>O feed mostra o perfil de um cliente por vez, como ele fica no Instagram. Toque no nome do cliente acima.</p></div>`;
@@ -680,7 +678,7 @@ export default {
         toast('Novo link gerado');
       };
     },
-    'aba-conteudo': (el) => { aba = ['calendario', 'feed', 'historico'].includes(el.dataset.aba) ? el.dataset.aba : 'status'; recarregarTela(); },
+    'aba-conteudo': (el) => { aba = ['calendario', 'feed'].includes(el.dataset.aba) ? el.dataset.aba : 'status'; recarregarTela(); },
     // Alterna entre clientes ativos e inativos (volta para a lista, sem cliente escolhido).
     'ver-clientes': (el) => { verInativos = el.dataset.v === 'inativos'; if (location.hash.replace(/^#\/?/, '').split('/').length > 1) location.hash = '#/conteudo'; recarregarTela(); },
     'feed-filtro': (el) => { feedFiltro = el.dataset.filtro || 'tudo'; recarregarTela(); },

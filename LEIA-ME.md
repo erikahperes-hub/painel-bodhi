@@ -164,15 +164,22 @@ Formatos: reels, carrossel, estático e story (no arquivo de lote o código do e
 
 ## Ativos, Inativos e histórico do Asana (Conteúdo)
 
-Em **Conteúdo**, o seletor **Ativos · Inativos** (acima dos nomes dos clientes) separa quem está com a Bôdhi de quem já saiu. **Ativos** (TRE Clinic, Dr Caio, Dr Germano, Arena Pixel, PTE Smart e Bôdhi Marketing) mostram Status, Calendário, Feed e a aba **Histórico**. **Inativos** abrem direto o histórico do cliente.
+Em **Conteúdo**, o seletor **Ativos · Inativos** (acima dos nomes dos clientes) separa quem está com a Bôdhi de quem já saiu.
+- **Ativos** (TRE Clinic, Dr Caio, Dr Germano, Arena Pixel, PTE Smart e Bôdhi Marketing): as tarefas antigas do Asana entraram como tarefas normais, então aparecem no **Status** e no **Calendário** (volte os meses para ver). Cada uma já vem com a **legenda** (tirada dos comentários da Milena e da Érika), a ideia/roteiro, a data, o formato, o funil e o responsável. O resto dos comentários (conversa com o cliente, aprovações), as subtarefas e a lista de arquivos anexados ficam em **Observações internas** da tarefa.
+- **Inativos**: abrem direto o **Histórico do Asana** em formato de **calendário** (volte os meses; as concluídas aparecem marcadas), com busca, filtro Em aberto/Concluídas e, quando o cliente teve mais de um projeto (Hope, HC...), filtro por projeto. Dá para trocar para a visão em Lista. Cada tarefa abre com descrição, comentários, subtarefas e nomes dos arquivos.
+- Os **arquivos** (artes, vídeos, PDFs) estão no Drive, na pasta **Histórico Asana (backup)**, uma subpasta por projeto.
+- **No calendário**, cada tarefa mostra, depois do círculo de concluir, a **inicial de quem cuida dela** (Érika = É, Milena = M; círculo tracejado = sem responsável).
 
-**Histórico do Asana:** tarefas antigas trazidas do Asana (título, data, responsável, coluna, descrição, subtarefas e nome dos arquivos anexados), só para consulta, com busca, filtro Em aberto/Concluídas e, quando o cliente teve mais de um projeto (ex.: Hope Consig, Hope Asset e Stik), filtro por projeto. Os **arquivos** em si (artes, vídeos, PDFs) estão no Drive, na pasta **Histórico Asana (backup)**, uma subpasta por projeto. Comentários do Asana **não** foram trazidos.
+**Como o Asana foi trazido (uma vez; arquivos em `seed/`, dados reais que ficam só no computador, nunca no GitHub):**
+1. **Conteúdo > Adicionar em lote > Histórico do Asana (.json)** com `seed/asana-historico.json`: cria os clientes que não existem (Dr Caio, Dr Germano e os inativos) e guarda o histórico de todos, à parte.
+2. **Conteúdo > Adicionar em lote > Arquivo de tarefas (.json)** com `seed/asana-tarefas-ativos.json`: coloca as tarefas dos ativos no Status e no Calendário. O painel mostra o resumo e pede confirmação; tarefas que já existem só têm os campos vazios completados.
+Rodar de novo não duplica.
 
-**Como o histórico foi trazido (uma vez):** o Claude gerou o arquivo `seed/asana-historico.json` (dados reais: fica só no computador, nunca no GitHub). Para trazer: **Conteúdo > Adicionar em lote > Histórico do Asana (.json)** e escolher esse arquivo. O painel mostra o resumo, cria os clientes que ainda não existem (os de fora da lista de ativos entram como Inativos) e guarda o histórico à parte. Rodar de novo atualiza sem duplicar.
+**O que não entrou no calendário dos ativos (fica só no histórico guardado):** tarefas canceladas, tarefas em aberto há mais de 60 dias e as que não são conteúdo (pautas de reunião, bastidores, listas de leads).
 
-**Por que não pesa:** o histórico é guardado com o tipo `historico` no banco e **não** entra na carga normal do painel (`store.recarregar` o ignora); só é buscado quando alguém abre o Histórico de um cliente. A carga normal também passou a ler em páginas de 1.000 linhas, porque o Supabase corta pedidos maiores sem avisar.
+**Por que não pesa:** o histórico é guardado com o tipo `historico` no banco e **não** entra na carga normal do painel (`store.recarregar` o ignora); só é buscado quando alguém abre um cliente inativo. A carga normal também passou a ler em páginas de 1.000 linhas, porque o Supabase corta pedidos maiores sem avisar.
 
-**Testar sem o banco:** `?local` lê o mesmo arquivo `seed/asana-historico.json` (se existir).
+**Testar sem o banco:** `?local` lê os mesmos arquivos de `seed/` (se existirem).
 
 ## Relatório do cliente e Instagram
 

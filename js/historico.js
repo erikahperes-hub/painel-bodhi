@@ -1,7 +1,7 @@
-import { store } from './store.js?v=109';
-import { esc, norm, slug, toast, dataBR } from './util.js?v=109';
-import { ic, flor } from './icons.js?v=109';
-import { confirmar } from './ui.js?v=109';
+import { store } from './store.js?v=111';
+import { esc, norm, slug, toast, dataBR } from './util.js?v=111';
+import { ic, flor } from './icons.js?v=111';
+import { confirmar } from './ui.js?v=111';
 
 // Histórico do Asana: tarefas antigas guardadas à parte (tipo "historico" no banco). Elas NÃO entram na carga normal do painel
 // (store.recarregar as ignora); só são buscadas quando alguém abre o Histórico de um cliente.
@@ -106,81 +106,155 @@ function garantir(clienteId, redesenhar) {
 
 // ---------- Tela ----------
 
-const f = { busca: '', situacao: 'todas', projeto: '' };
+const f = { busca: '', situacao: 'todas', projeto: '', vista: 'calendario', mes: '', sel: '', dia: '' };
 let atual = null; // { projetos } do cliente que está na tela, usado pelos filtros
 
+const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+const NOME_MES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+const cap = (t) => t.replace(/^./, (c) => c.toUpperCase());
 const tamanho = (b) => (b >= 1048576 ? `${(b / 1048576).toFixed(1).replace('.', ',')} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
 const links = (texto) => esc(texto).replace(/https?:\/\/[^\s<]+/g, (u) => `<a href="${u}" target="_blank" rel="noopener noreferrer">${u.length > 70 ? `${u.slice(0, 67)}…` : u}</a>`);
-const mesDe = (t) => (t.d || t.cr || '').slice(0, 7);
-const NOME_MES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+// Data que posiciona a tarefa: o prazo; sem prazo, a conclusão; sem conclusão, a criação.
+const dataDe = (t) => t.d || t.cq || t.cr || '';
+const mesDe = (t) => dataDe(t).slice(0, 7);
+const isoDia = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
-function linhaTarefa(t, projeto, mostrarProjeto) {
+function detalhe(t, projeto, mostrarProjeto, aberto = false) {
   const meta = [t.d ? dataBR(t.d) : '', t.r, t.s && t.s !== 'Seção sem título' ? t.s : '', mostrarProjeto ? projeto : ''].filter(Boolean).join(' · ');
-  const subs = (t.sb || []).map((s) => `<li class="${s.c ? 'ok' : ''}"><span>${s.c ? '✓' : '○'}</span><div><b>${esc(s.t || '(sem título)')}</b>${s.r || s.d ? `<small>${esc([s.d ? dataBR(s.d) : '', s.r].filter(Boolean).join(' · '))}</small>` : ''}${s.n ? `<p>${links(s.n)}</p>` : ''}</div></li>`).join('');
+  const subs = (t.sb || []).map((x) => `<li class="${x.c ? 'ok' : ''}"><span>${x.c ? '✓' : '○'}</span><div><b>${esc(x.t || '(sem título)')}</b>${x.r || x.d ? `<small>${esc([x.d ? dataBR(x.d) : '', x.r].filter(Boolean).join(' · '))}</small>` : ''}${x.n ? `<p>${links(x.n)}</p>` : ''}</div></li>`).join('');
   const campos = Object.entries(t.cf || {}).map(([k, v]) => `<span class="chip mute">${esc(k)}: ${esc(v)}</span>`).join('');
   const anexos = (t.a || []).map(([n, b]) => `<li>${esc(n)}${b ? ` <small>${tamanho(b)}</small>` : ''}</li>`).join('');
-  return `<details class="hi"><summary><i class="hi-st ${t.c ? 'ok' : ''}" title="${t.c ? 'Concluída' : 'Em aberto'}"></i><span class="hi-t">${esc(t.t || '(sem título)')}</span><span class="hi-m">${esc(meta)}</span></summary>
+  const coments = (t.cm || []).map((c) => `<li><small>${esc([c.d ? dataBR(c.d) : '', c.a].filter(Boolean).join(' · '))}</small><p>${links(c.t)}</p></li>`).join('');
+  return `<details class="hi"${aberto ? ' open' : ''}><summary><i class="hi-st ${t.c ? 'ok' : ''}" title="${t.c ? 'Concluída' : 'Em aberto'}"></i><span class="hi-t">${esc(t.t || '(sem título)')}</span><span class="hi-m">${esc(meta)}</span></summary>
     <div class="hi-c">${t.n ? `<p class="hi-n">${links(t.n)}</p>` : '<p class="lbl">Sem descrição.</p>'}
       ${campos ? `<div class="hi-cf">${campos}</div>` : ''}
+      ${coments ? `<div class="hi-sec"><b>Comentários (legendas e conversa)</b><ul class="hi-com">${coments}</ul></div>` : ''}
       ${subs ? `<div class="hi-sec"><b>Subtarefas</b><ul class="hi-sub">${subs}</ul></div>` : ''}
       ${anexos ? `<div class="hi-sec"><b>Arquivos anexados no Asana</b><ul class="hi-ax">${anexos}</ul><p class="lbl">Os arquivos estão guardados na <a href="${PASTA_DRIVE}" target="_blank" rel="noopener noreferrer">pasta Histórico Asana (backup) do Drive</a>, na subpasta do projeto.</p></div>` : ''}
       ${t.cq ? `<p class="lbl">Concluída em ${esc(dataBR(t.cq))}.</p>` : ''}</div></details>`;
 }
 
-function listaHtml() {
-  if (!atual) return '';
-  const projetos = atual.projetos.filter((p) => !f.projeto || p.gid === f.projeto);
+// Tarefas que passam pelos filtros (busca, situação, projeto): [[tarefa, nomeDoProjeto], ...]
+function filtradas() {
+  if (!atual) return [];
   const q = norm(f.busca).trim();
-  const achadas = [];
-  for (const p of projetos) {
+  const out = [];
+  for (const p of atual.projetos.filter((x) => !f.projeto || x.gid === f.projeto)) {
     for (const t of p.tarefas) {
       if (f.situacao === 'abertas' && t.c) continue;
       if (f.situacao === 'concluidas' && !t.c) continue;
-      if (q) {
-        const palheiro = norm([t.t, t.n, t.r, t.s, ...(t.sb || []).flatMap((s) => [s.t, s.n]), ...(t.a || []).map((a) => a[0])].join(' '));
-        if (!palheiro.includes(q)) continue;
-      }
-      achadas.push([t, p.nome]);
+      if (q && !norm([t.t, t.n, t.r, t.s, ...(t.sb || []).flatMap((x) => [x.t, x.n]), ...(t.cm || []).map((c) => c.t), ...(t.a || []).map((a) => a[0])].join(' ')).includes(q)) continue;
+      out.push([t, p.nome]);
     }
   }
-  achadas.sort((a, b) => (b[0].d || b[0].cr || '').localeCompare(a[0].d || a[0].cr || ''));
+  return out;
+}
+
+function listaHtml() {
+  const achadas = filtradas().sort((a, b) => dataDe(b[0]).localeCompare(dataDe(a[0])));
   if (!achadas.length) return '<p class="lbl" style="padding:18px 4px">Nenhuma tarefa com esse filtro.</p>';
-  const mostrar = achadas.slice(0, MOSTRAR);
+  const mostrar = achadas.slice(0, 150);
   const multi = atual.projetos.length > 1;
   let mes = null;
   const html = mostrar.map(([t, p]) => {
     const m = mesDe(t);
-    const cab = m !== mes ? `<h3 class="hi-mes">${m ? `${NOME_MES[Number(m.slice(5, 7)) - 1].replace(/^./, (c) => c.toUpperCase())} de ${m.slice(0, 4)}` : 'Sem data'}</h3>` : '';
+    const cab = m !== mes ? `<h3 class="hi-mes">${m ? `${cap(NOME_MES[Number(m.slice(5, 7)) - 1])} de ${m.slice(0, 4)}` : 'Sem data'}</h3>` : '';
     mes = m;
-    return cab + linhaTarefa(t, p, multi);
+    return cab + detalhe(t, p, multi);
   }).join('');
   return `${html}${achadas.length > mostrar.length ? `<p class="lbl" style="padding:14px 4px">Mostrando as ${mostrar.length} mais recentes de ${achadas.length}. Use a busca para achar as outras.</p>` : ''}<p class="lbl" style="padding:6px 4px">${achadas.length.toLocaleString('pt-BR')} ${achadas.length === 1 ? 'tarefa' : 'tarefas'}.</p>`;
 }
 
+// Calendário do mês: cada tarefa no dia do prazo, com o círculo verde nas concluídas.
+function calendarioHtml() {
+  const achadas = filtradas();
+  if (!achadas.length) return '<p class="lbl" style="padding:18px 4px">Nenhuma tarefa com esse filtro.</p>';
+  const meses = [...new Set(achadas.map(([t]) => mesDe(t)).filter(Boolean))].sort();
+  if (!f.mes || !/^\d{4}-\d{2}$/.test(f.mes)) f.mes = meses[meses.length - 1] || isoDia(new Date()).slice(0, 7);
+  const [a, m] = f.mes.split('-').map(Number);
+  const porDia = {};
+  const semData = [];
+  for (const par of achadas) { const d = dataDe(par[0]); if (!d) semData.push(par); else (porDia[d] ||= []).push(par); }
+  const primeiro = new Date(a, m - 1, 1).getDay();
+  const semanas = Math.ceil((primeiro + new Date(a, m, 0).getDate()) / 7);
+  let doMes = 0, feitas = 0;
+  const celulas = Array.from({ length: semanas * 7 }, (_, i) => {
+    const d = new Date(a, m - 1, 1 - primeiro + i);
+    const iso = isoDia(d);
+    const dentro = d.getMonth() === m - 1;
+    const tarefas = porDia[iso] || [];
+    if (dentro) { doMes += tarefas.length; feitas += tarefas.filter(([t]) => t.c).length; }
+    const chips = tarefas.slice(0, 4).map(([t]) => `<button type="button" class="hc-t${t.c ? ' ok' : ''}${f.sel === t.i ? ' sel' : ''}" data-hist-abrir="${esc(t.i)}" title="${esc(t.t || '')}"><i class="hi-st ${t.c ? 'ok' : ''}"></i><span>${esc(t.t || '(sem título)')}</span></button>`).join('');
+    const mais = tarefas.length > 4 ? `<button type="button" class="hc-mais" data-hist-dia="${iso}">+${tarefas.length - 4} mais</button>` : '';
+    return `<div class="dia${dentro ? '' : ' fora'}"><div class="dia-h"><b>${d.getDate()}</b></div>${chips}${mais}</div>`;
+  }).join('');
+  const multi = atual.projetos.length > 1;
+  let painel = '';
+  if (f.sel) {
+    const par = achadas.find(([t]) => t.i === f.sel);
+    if (par) painel = `<div class="hc-det">${detalhe(par[0], par[1], multi, true)}</div>`;
+  } else if (f.dia && porDia[f.dia]) {
+    painel = `<div class="hc-det"><h3 class="hi-mes">${esc(dataBR(f.dia))}</h3>${porDia[f.dia].map(([t, p]) => detalhe(t, p, multi)).join('')}</div>`;
+  }
+  return `<div class="toolbar" style="margin-bottom:12px"><div class="mes">
+      <button type="button" class="iconbtn" data-hist-mes="-1" aria-label="Mês anterior"><span style="display:grid;transform:scaleX(-1)">${ic('chev')}</span></button>
+      <b>${cap(NOME_MES[m - 1])} de ${a}</b>
+      <button type="button" class="iconbtn" data-hist-mes="1" aria-label="Próximo mês">${ic('chev')}</button>
+      <button type="button" class="btn ghost sm" data-hist-mes="ultimo">Último mês com tarefas</button></div>
+      <span class="lbl">${doMes} ${doMes === 1 ? 'tarefa' : 'tarefas'} neste mês, ${feitas} concluídas</span></div>
+    <div class="calbox"><div class="calgrid">${DIAS.map((d) => `<div class="dow">${d}</div>`).join('')}${celulas}</div></div>
+    ${painel}
+    ${semData.length ? `<p class="lbl" style="padding:10px 4px">${semData.length} ${semData.length === 1 ? 'tarefa sem nenhuma data não aparece' : 'tarefas sem nenhuma data não aparecem'} no calendário (veja na lista).</p>` : ''}`;
+}
+
+const corpoHtml = () => (f.vista === 'lista' ? listaHtml() : calendarioHtml());
+
 export function histCartao(cliente, redesenhar) {
   const d = garantir(cliente.id, redesenhar);
-  const cab = `<div class="card-h"><div><h2>Histórico do Asana: ${esc(cliente.nome)}</h2><p class="sub">Tarefas antigas trazidas do Asana, só para consulta. Os arquivos anexados estão no Drive.</p></div><a class="btn sec sm" href="${PASTA_DRIVE}" target="_blank" rel="noopener noreferrer">${ic('link')}Abrir pasta no Drive</a></div>`;
+  const cab = `<div class="card-h"><div><h2>Histórico do Asana: ${esc(cliente.nome)}</h2><p class="sub">Tarefas antigas trazidas do Asana, só para consulta, com os comentários (legendas e conversa). Os arquivos anexados estão no Drive.</p></div><a class="btn sec sm" href="${PASTA_DRIVE}" target="_blank" rel="noopener noreferrer">${ic('link')}Abrir pasta no Drive</a></div>`;
   if (d.estado === 'carregando') return `<div class="card">${cab}<p class="lbl" style="padding:18px 4px">Abrindo o histórico…</p></div>`;
   if (d.estado === 'erro') return `<div class="card">${cab}<div class="aviso">${ic('alert')}<span>${esc(d.erro)}</span></div></div>`;
   if (!d.projetos.length) return `<div class="card">${cab}<div class="empty" style="padding:30px 10px">${flor()}<h2>Sem histórico do Asana</h2><p>Este cliente não tem tarefas trazidas do Asana. Se ele tinha projeto lá, use Adicionar em lote > Histórico do Asana.</p></div></div>`;
   atual = d;
   const todas = d.projetos.flatMap((p) => p.tarefas);
-  const datas = todas.map((t) => t.d || t.cr || '').filter(Boolean).sort();
-  const resumo = `${todas.length.toLocaleString('pt-BR')} tarefas${datas.length ? `, de ${dataBR(datas[0])} a ${dataBR(datas[datas.length - 1])}` : ''}`;
+  const datas = todas.map(dataDe).filter(Boolean).sort();
+  const feitas = todas.filter((t) => t.c).length;
+  const resumo = `${todas.length.toLocaleString('pt-BR')} tarefas (${feitas.toLocaleString('pt-BR')} concluídas)${datas.length ? `, de ${dataBR(datas[0])} a ${dataBR(datas[datas.length - 1])}` : ''}`;
   const projetos = d.projetos.length > 1 ? `<select data-hist-projeto aria-label="Projeto"><option value="">Todos os projetos</option>${d.projetos.map((p) => `<option value="${esc(p.gid)}" ${f.projeto === p.gid ? 'selected' : ''}>${esc(p.nome)} (${p.tarefas.length})</option>`).join('')}</select>` : '';
   return `<div class="card">${cab}
     <p class="lbl" style="margin:-4px 0 12px">${esc(resumo)}</p>
-    <div class="hi-filtros"><input type="search" data-hist-busca placeholder="Buscar no histórico" value="${esc(f.busca)}" aria-label="Buscar no histórico">
+    <div class="hi-filtros"><div class="seg" style="margin:0" role="group" aria-label="Forma de ver"><button type="button" class="seg-b ${f.vista === 'calendario' ? 'on' : ''}" data-hist-vista="calendario">Calendário</button><button type="button" class="seg-b ${f.vista === 'lista' ? 'on' : ''}" data-hist-vista="lista">Lista</button></div>
+      <input type="search" data-hist-busca placeholder="Buscar no histórico (título, legenda, comentário)" value="${esc(f.busca)}" aria-label="Buscar no histórico">
       <select data-hist-situacao aria-label="Situação"><option value="todas" ${f.situacao === 'todas' ? 'selected' : ''}>Todas</option><option value="abertas" ${f.situacao === 'abertas' ? 'selected' : ''}>Em aberto</option><option value="concluidas" ${f.situacao === 'concluidas' ? 'selected' : ''}>Concluídas</option></select>${projetos}</div>
-    <div class="hi-lista" data-hist-lista>${listaHtml()}</div></div>`;
+    <div class="hi-lista" data-hist-lista>${corpoHtml()}</div></div>`;
 }
 
-// Liga busca e filtros sem redesenhar a tela inteira (para o cursor não sair do campo).
+// Liga busca, filtros, mudança de mês e abertura de tarefa sem redesenhar a tela inteira (o cursor não sai do campo).
 export function histMontar(el) {
   const lista = el.querySelector('[data-hist-lista]');
   if (!lista) return;
-  const pintar = () => { lista.innerHTML = listaHtml(); };
-  el.querySelector('[data-hist-busca]')?.addEventListener('input', (ev) => { f.busca = ev.target.value; pintar(); });
-  el.querySelector('[data-hist-situacao]')?.addEventListener('change', (ev) => { f.situacao = ev.target.value; pintar(); });
-  el.querySelector('[data-hist-projeto]')?.addEventListener('change', (ev) => { f.projeto = ev.target.value; pintar(); });
+  const pintar = () => { lista.innerHTML = corpoHtml(); };
+  el.querySelector('[data-hist-busca]')?.addEventListener('input', (ev) => { f.busca = ev.target.value; f.sel = ''; f.dia = ''; pintar(); });
+  el.querySelector('[data-hist-situacao]')?.addEventListener('change', (ev) => { f.situacao = ev.target.value; f.sel = ''; f.dia = ''; pintar(); });
+  el.querySelector('[data-hist-projeto]')?.addEventListener('change', (ev) => { f.projeto = ev.target.value; f.sel = ''; f.dia = ''; pintar(); });
+  el.querySelectorAll('[data-hist-vista]').forEach((b) => b.addEventListener('click', () => {
+    f.vista = b.dataset.histVista;
+    el.querySelectorAll('[data-hist-vista]').forEach((x) => x.classList.toggle('on', x === b));
+    pintar();
+  }));
+  lista.addEventListener('click', (ev) => {
+    const mes = ev.target.closest('[data-hist-mes]');
+    if (mes) {
+      const v = mes.dataset.histMes;
+      if (v === 'ultimo') f.mes = '';
+      else { const [a, m] = f.mes.split('-').map(Number); const d = new Date(a, m - 1 + Number(v), 1); f.mes = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; }
+      f.sel = ''; f.dia = '';
+      pintar();
+      return;
+    }
+    const abrir = ev.target.closest('[data-hist-abrir]');
+    if (abrir) { f.sel = f.sel === abrir.dataset.histAbrir ? '' : abrir.dataset.histAbrir; f.dia = ''; pintar(); lista.querySelector('.hc-det')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return; }
+    const dia = ev.target.closest('[data-hist-dia]');
+    if (dia) { f.dia = dia.dataset.histDia; f.sel = ''; pintar(); lista.querySelector('.hc-det')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+  });
 }
