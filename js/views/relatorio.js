@@ -1,10 +1,10 @@
-import { store } from '../store.js?v=107';
-import { esc, toast, norm, hojeISO } from '../util.js?v=107';
-import { ic, flor } from '../icons.js?v=107';
-import { formulario, confirmar } from '../ui.js?v=107';
-import { FORMATOS, pecas } from '../conteudo.js?v=107';
-import { igApi } from '../instagram-api.js?v=107';
-import { corpoRelatorio, frasesResumo, ligarIndice, ymAnterior, ymMais, nomeMes } from '../relatorio-html.js?v=107';
+import { store } from '../store.js?v=109';
+import { esc, toast, norm, hojeISO } from '../util.js?v=109';
+import { ic, flor } from '../icons.js?v=109';
+import { formulario, confirmar } from '../ui.js?v=109';
+import { FORMATOS, pecas } from '../conteudo.js?v=109';
+import { igApi } from '../instagram-api.js?v=109';
+import { corpoRelatorio, frasesResumo, ligarIndice, ymAnterior, ymMais, nomeMes } from '../relatorio-html.js?v=109';
 
 // Relatório mensal do cliente nas redes sociais. Começa pelo Instagram.
 // Cada mês de cada cliente é um registro `insights` (id "clienteId_AAAA-MM"). Os números chegam direto do Instagram

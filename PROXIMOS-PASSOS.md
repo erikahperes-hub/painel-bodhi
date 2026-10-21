@@ -55,6 +55,9 @@ No ar: perfil do cliente simulado (foto, nome, bio, link, seguidores, seguindo e
 
 Visual novo opcional, modo noturno e cores areia, rosa e verde, em Configurações > Aparência. Falta só a Érika decidir se o visual novo vira o padrão e se a aprovação do cliente (`aprovar.html`) também ganha o visual.
 
-## 7. Histórico do Asana dentro do painel (em andamento, 20/10/2026)
+## 7. Histórico do Asana dentro do painel (20/10/2026)
 
-Objetivo: cancelar o Asana. Conteúdo ganha as abas Ativos e Inativos; ativos: TRE Clinic, Dr Caio, Dr Germano, Arena Pixel, PTE Smart e Bôdhi (no Asana está "Bhôdi"); o resto vira inativo, com todo o histórico. O histórico fica separado das tarefas do dia a dia para o painel não pesar. Fazer a exportação completa do Asana ANTES de cancelar o plano.
+Pronto no código: abas Ativos/Inativos em Conteúdo, aba Histórico, importação do arquivo `seed/asana-historico.json`. Anexos (cerca de 2.000 arquivos, uns 10 GB) copiados para o Drive, pasta Histórico Asana (backup).
+- Falta: importar o arquivo no painel online (Conteúdo > Adicionar em lote > Histórico do Asana) e conferir os números.
+- Falta: comentários das tarefas (não foram trazidos) e a conferência de que o Google Drive terminou de sincronizar.
+- Só cancelar o Asana depois disso.

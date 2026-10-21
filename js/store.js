@@ -1,5 +1,5 @@
-import { config } from './config.js?v=107';
-import { uid } from './util.js?v=107';
+import { config } from './config.js?v=109';
+import { uid } from './util.js?v=109';
 
 const KINDS = ['cliente', 'proposta', 'contrato', 'pendencia', 'lancamento', 'processo', 'conteudo', 'insights', 'config'];
 const LS_KEY = 'bodhi.painel.v1';
@@ -162,10 +162,17 @@ export const store = {
 
   async recarregar(silencioso = false) {
     if (!sb) return;
-    const { data, error } = await sb.from('records').select('kind,id,data');
-    if (error) { if (!silencioso) throw error; return; }
+    // O banco devolve no máximo 1.000 linhas por pedido: lê em páginas para nada ficar de fora.
+    // O histórico do Asana (tipo "historico") não entra aqui; só é buscado quando alguém abre o Histórico de um cliente.
+    const todos = [];
+    for (let de = 0; ; de += 1000) {
+      const { data, error } = await sb.from('records').select('kind,id,data').neq('kind', 'historico').order('kind').order('id').range(de, de + 999);
+      if (error) { if (!silencioso) throw error; return; }
+      todos.push(...data);
+      if (data.length < 1000) break;
+    }
     const antes = assinatura;
-    carregarRegistros(data);
+    carregarRegistros(todos);
     if (assinatura !== antes) avisar();
   },
 

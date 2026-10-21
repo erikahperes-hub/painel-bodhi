@@ -1,14 +1,15 @@
-import { store } from '../store.js?v=107';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=107';
-import { ic, flor } from '../icons.js?v=107';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=107';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=107';
-import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=107';
-import { feedPerfil } from '../feed-perfil.js?v=107';
-import { igApi } from '../instagram-api.js?v=107';
-import { lerPasta } from '../drive-pasta.js?v=107';
-import { lerTabela } from '../planejamento.js?v=107';
-import { config } from '../config.js?v=107';
+import { store } from '../store.js?v=109';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=109';
+import { ic, flor } from '../icons.js?v=109';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=109';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=109';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=109';
+import { feedPerfil } from '../feed-perfil.js?v=109';
+import { igApi } from '../instagram-api.js?v=109';
+import { lerPasta } from '../drive-pasta.js?v=109';
+import { lerTabela } from '../planejamento.js?v=109';
+import { config } from '../config.js?v=109';
+import { histCartao, histMontar, importarHistorico } from '../historico.js?v=109';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
@@ -137,7 +138,8 @@ function escolherAdicionar(clienteId = '') {
   const opcoes = [
     ['planejamento', 'edit', 'Colar planejamento', 'Cole a tabela de ideias do mês (a que o Claude entrega). Cada linha vira uma ideia na coluna Planejamento.'],
     ['pasta', 'download', 'Importar da pasta do Drive', 'Lê as artes e os vídeos de uma pasta do Drive pelo nome do arquivo e liga às tarefas.'],
-    ['arquivo', 'file', 'Arquivo de tarefas (.json)', 'Para casos especiais, como trazer o histórico de outra ferramenta. É um arquivo preparado pelo Claude.'],
+    ['arquivo', 'file', 'Arquivo de tarefas (.json)', 'Para casos especiais, como trazer tarefas de outra ferramenta. É um arquivo preparado pelo Claude.'],
+    ['asana', 'layers', 'Histórico do Asana (.json)', 'Traz o histórico de tarefas de todos os clientes do Asana, só para consulta. Fica guardado à parte e não deixa o painel lento.'],
   ];
   const m = abrirModal({
     titulo: 'Adicionar em lote',
@@ -151,6 +153,7 @@ function escolherAdicionar(clienteId = '') {
     const o = b.dataset.opcao;
     if (o === 'planejamento') colarPlanejamento(clienteId);
     else if (o === 'pasta') importarDaPasta();
+    else if (o === 'asana') document.querySelector('[data-asana]')?.click();
     else document.querySelector('[data-lote]')?.click();
   });
 }
@@ -160,7 +163,7 @@ function botoesCabecalho(filtro) {
   return `<div class="actions">${filtro ? `<button class="btn sec sm" data-act="ir" data-rota="previa" data-ref="${esc(filtro)}">${ic('image')}Prévia do cliente</button><button class="btn sec sm" data-act="enviar-planejamento" data-cliente="${esc(filtro)}">${ic('send')}Enviar planejamento</button><button class="btn sec sm" data-act="link-aprovacao" data-cliente="${esc(filtro)}">${ic('link')}Link de aprovação</button>` : ''}
     <button class="btn sec sm" data-act="adicionar-pecas" data-cliente="${esc(filtro)}">${ic('upload')}Adicionar em lote</button>
     <button class="btn pri sm" data-act="nova-peca" data-cliente="${esc(filtro)}">${ic('plus')}Nova tarefa</button>
-    <input type="file" accept="application/json,.json" hidden data-lote></div>`;
+    <input type="file" accept="application/json,.json" hidden data-lote><input type="file" accept="application/json,.json" hidden data-asana></div>`;
 }
 
 const DATA_ISO = /^\d{4}-\d{2}-\d{2}$/;
@@ -437,6 +440,7 @@ let feedAba = 'grade'; // 'grade' ou 'reels'
 let mesCal = null;
 const recarregarTela = () => window.dispatchEvent(new Event('atualizar-tela'));
 const perfilPedido = new Set(); // clientes cujo perfil do Instagram já foi pedido nesta abertura do painel
+let verInativos = false; // Ativos ou Inativos na lista de clientes
 let verLista = false; // depois de escolher um filtro, mostra a lista sem mexer no resto da tela
 
 const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -509,11 +513,21 @@ export default {
   sub: () => 'O que está sendo criado para cada cliente e em que etapa está cada tarefa.',
 
   render({ ref }) {
-    const clientes = clientesDeTrabalho();
-    if (!clientes.length) {
+    const ativos = clientesDeTrabalho();
+    const inativos = store.todos('cliente').filter((c) => c.status === 'inativo').sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || '')));
+    if (!ativos.length && !inativos.length) {
       return `<div class="card empty">${flor()}<h2>Cadastre um cliente primeiro</h2><p>As tarefas de conteúdo ficam ligadas a um cliente. Cadastre o cliente e volte aqui.</p><button class="btn pri" data-act="ir" data-rota="clientes">Ir para Clientes</button></div>`;
     }
-    const filtro = store.obter('cliente', ref) ? ref : '';
+    const refCli = store.obter('cliente', ref);
+    if (refCli) verInativos = refCli.status === 'inativo';
+    const clientes = verInativos ? inativos : ativos;
+    const filtro = refCli && (refCli.status === 'inativo') === verInativos ? ref : '';
+    const seg = `<div class="seg" role="group" aria-label="Clientes ativos ou inativos"><button type="button" class="seg-b ${verInativos ? '' : 'on'}" data-act="ver-clientes" data-v="ativos" aria-pressed="${!verInativos}">Ativos · ${ativos.length}</button><button type="button" class="seg-b ${verInativos ? 'on' : ''}" data-act="ver-clientes" data-v="inativos" aria-pressed="${verInativos}">Inativos · ${inativos.length}</button></div>`;
+    if (verInativos) {
+      const chipsIn = inativos.map((c) => `<button class="cbtn ex ${c.id === filtro ? 'on' : ''}" data-act="ir" data-rota="conteudo" data-ref="${c.id}"><i></i>${esc(c.nome || '(sem nome)')}</button>`).join('');
+      const corpoIn = filtro ? histCartao(store.obter('cliente', filtro), recarregarTela) : `<div class="card empty">${flor()}<h2>Escolha um cliente inativo</h2><p>Aqui ficam os clientes que já saíram, com todo o histórico de tarefas que vinha do Asana. Toque no nome do cliente acima.</p></div>`;
+      return `${seg}<div class="cbtns" style="margin-bottom:16px">${chipsIn}</div>${corpoIn}`;
+    }
     const todas = pecas();
     const lista = filtro ? todas.filter((p) => p.clienteId === filtro) : todas;
     // Mês escolhido (vale no Status e no Calendário). Status e números mostram esse mês, mais as tarefas sem data (para não sumirem).
@@ -531,7 +545,8 @@ export default {
     const abas = `<div class="tabs" role="tablist" aria-label="Visões de conteúdo">
       <button class="tab ${aba === 'status' ? 'on' : ''}" role="tab" aria-selected="${aba === 'status'}" data-act="aba-conteudo" data-aba="status">${ic('grid')}Status</button>
       <button class="tab ${aba === 'calendario' ? 'on' : ''}" role="tab" aria-selected="${aba === 'calendario'}" data-act="aba-conteudo" data-aba="calendario">${ic('calendar')}Calendário</button>
-      <button class="tab ${aba === 'feed' ? 'on' : ''}" role="tab" aria-selected="${aba === 'feed'}" data-act="aba-conteudo" data-aba="feed">${ic('image')}Feed</button></div>`;
+      <button class="tab ${aba === 'feed' ? 'on' : ''}" role="tab" aria-selected="${aba === 'feed'}" data-act="aba-conteudo" data-aba="feed">${ic('image')}Feed</button>
+      <button class="tab ${aba === 'historico' ? 'on' : ''}" role="tab" aria-selected="${aba === 'historico'}" data-act="aba-conteudo" data-aba="historico">${ic('layers')}Histórico</button></div>`;
     // Cabeça igual nas duas abas, nesta ordem: clientes, números e, logo acima do conteúdo, as abas Status e Calendário.
     const numeros = `<div class="grid" style="margin-bottom:16px">
         <div class="card stat tone-verde"><div><div class="lbl">Em produção</div><div class="big num">${em('briefing', 'criacao').length}</div><div class="hint">Planejamento e criação</div></div><span class="stat-ic">${ic('grid')}</span></div>
@@ -539,7 +554,11 @@ export default {
         <div class="card stat tone-coral"><div><div class="lbl">Pedidos de ajuste</div><div class="big num">${em('ajustes').length}</div><div class="hint">Para refazer</div></div><span class="stat-ic">${ic('edit')}</span></div>
         <div class="card stat tone-coral"><div><div class="lbl">Atrasadas</div><div class="big num">${lista.filter(atrasada).length}</div><div class="hint">Passaram da data, em todos os meses</div></div><span class="stat-ic">${ic('calendar')}</span></div>
       </div>`;
-    const cabeca = `<div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>${numeros}${abas}`;
+    const cabeca = `${seg}<div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>${numeros}${abas}`;
+    if (aba === 'historico') {
+      if (!filtro) return `${cabeca}<div class="card empty">${flor()}<h2>Escolha um cliente</h2><p>O histórico do Asana mostra as tarefas antigas de um cliente por vez. Toque no nome do cliente acima.</p></div>`;
+      return cabeca + histCartao(store.obter('cliente', filtro), recarregarTela);
+    }
     if (aba === 'calendario') return cabeca + calendario({ filtro, lista });
     if (aba === 'feed') {
       if (!filtro) return `${cabeca}<div class="card empty">${flor()}<h2>Escolha um cliente</h2><p>O feed mostra o perfil de um cliente por vez, como ele fica no Instagram. Toque no nome do cliente acima.</p></div>`;
@@ -596,6 +615,13 @@ export default {
         if (c && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); ev.stopPropagation(); c.click(); }
       });
     }
+    histMontar(el);
+    el.querySelector('[data-asana]')?.addEventListener('change', async (ev) => {
+      const f = ev.target.files[0];
+      ev.target.value = '';
+      if (!f) return;
+      try { await importarHistorico(JSON.parse(await f.text())); recarregarTela(); } catch (err) { toast(err instanceof SyntaxError ? 'Este arquivo não é válido.' : (err.message || 'Não foi possível trazer o histórico.'), true); }
+    });
     if (verLista) {
       verLista = false;
       el.querySelector('.funil-lista')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -654,7 +680,9 @@ export default {
         toast('Novo link gerado');
       };
     },
-    'aba-conteudo': (el) => { aba = ['calendario', 'feed'].includes(el.dataset.aba) ? el.dataset.aba : 'status'; recarregarTela(); },
+    'aba-conteudo': (el) => { aba = ['calendario', 'feed', 'historico'].includes(el.dataset.aba) ? el.dataset.aba : 'status'; recarregarTela(); },
+    // Alterna entre clientes ativos e inativos (volta para a lista, sem cliente escolhido).
+    'ver-clientes': (el) => { verInativos = el.dataset.v === 'inativos'; if (location.hash.replace(/^#\/?/, '').split('/').length > 1) location.hash = '#/conteudo'; recarregarTela(); },
     'feed-filtro': (el) => { feedFiltro = el.dataset.filtro || 'tudo'; recarregarTela(); },
     'feed-puxar': async (el) => {
       const perfil = await igApi.perfil(el.dataset.cliente, true);

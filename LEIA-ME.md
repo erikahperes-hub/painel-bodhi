@@ -162,6 +162,18 @@ Formatos: reels, carrossel, estático e story (no arquivo de lote o código do e
 
 **Observações:** o título da tarefa aparece para o cliente na lista do calendário, então use nomes que ele possa ler. Os vídeos tocam no player do Drive. O Google às vezes demora ou recusa uma imagem; a página tenta de novo sozinha.
 
+## Ativos, Inativos e histórico do Asana (Conteúdo)
+
+Em **Conteúdo**, o seletor **Ativos · Inativos** (acima dos nomes dos clientes) separa quem está com a Bôdhi de quem já saiu. **Ativos** (TRE Clinic, Dr Caio, Dr Germano, Arena Pixel, PTE Smart e Bôdhi Marketing) mostram Status, Calendário, Feed e a aba **Histórico**. **Inativos** abrem direto o histórico do cliente.
+
+**Histórico do Asana:** tarefas antigas trazidas do Asana (título, data, responsável, coluna, descrição, subtarefas e nome dos arquivos anexados), só para consulta, com busca, filtro Em aberto/Concluídas e, quando o cliente teve mais de um projeto (ex.: Hope Consig, Hope Asset e Stik), filtro por projeto. Os **arquivos** em si (artes, vídeos, PDFs) estão no Drive, na pasta **Histórico Asana (backup)**, uma subpasta por projeto. Comentários do Asana **não** foram trazidos.
+
+**Como o histórico foi trazido (uma vez):** o Claude gerou o arquivo `seed/asana-historico.json` (dados reais: fica só no computador, nunca no GitHub). Para trazer: **Conteúdo > Adicionar em lote > Histórico do Asana (.json)** e escolher esse arquivo. O painel mostra o resumo, cria os clientes que ainda não existem (os de fora da lista de ativos entram como Inativos) e guarda o histórico à parte. Rodar de novo atualiza sem duplicar.
+
+**Por que não pesa:** o histórico é guardado com o tipo `historico` no banco e **não** entra na carga normal do painel (`store.recarregar` o ignora); só é buscado quando alguém abre o Histórico de um cliente. A carga normal também passou a ler em páginas de 1.000 linhas, porque o Supabase corta pedidos maiores sem avisar.
+
+**Testar sem o banco:** `?local` lê o mesmo arquivo `seed/asana-historico.json` (se existir).
+
 ## Relatório do cliente e Instagram
 
 Na aba **Relatório** cada cliente com Instagram tem um relatório mensal (no estilo do Reportei, com insights a mais), e o cliente pode abrir o dele por um link.
