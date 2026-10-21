@@ -1,4 +1,4 @@
-import { esc, mesNome, dataBR, urlSegura, iniciais } from './util.js?v=113';
+import { esc, mesNome, dataBR, urlSegura, iniciais } from './util.js?v=115';
 
 // O visual do relatório do cliente (baseado no relatório do Reportei, com insights a mais).
 // Só monta o HTML a partir dos dados; é usado pelo painel (js/views/relatorio.js) e pela página que o cliente abre pelo link (relatorio.html).
@@ -219,11 +219,19 @@ export function corpoRelatorio({ cliente, ym, atual, anterior, serie = {}, produ
   const posts = [...(atual.posts || [])].sort((a, b) => (Number(b.alcance) || 0) - (Number(a.alcance) || 0));
   const postsAnt = anterior?.posts || [];
   const nome = cliente.nome || '';
+  const mesTxt = mesNome(Number(ym.slice(5, 7)) - 1);
+  const mesAntTxt = mesNome(Number(ymAnterior(ym).slice(5, 7)) - 1);
   const capa = `<section class="card rl-capa">
-      <div class="rl-av">${cliente.imagem ? `<img src="${esc(cliente.imagem)}" alt="">` : esc(iniciais(nome))}</div>
-      <h2>Relatório de ${esc(nome)}</h2><p class="rl-sub">Análise de desempenho no Instagram${cliente.instagram ? ` · ${esc(cliente.instagram)}` : ''}</p>
-      <div class="rl-periodos"><div><small>Período de análise</small><b>${dataBR(primeiroDia(ym))} a ${dataBR(ultimoDia(ym))}</b></div>
-        <div><small>Período de comparação</small><b>${dataBR(primeiroDia(ymAnterior(ym)))} a ${dataBR(ultimoDia(ymAnterior(ym)))}</b></div></div></section>`;
+      <span class="rl-flor-w" aria-hidden="true"><svg class="rl-flor" width="120" height="120" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="38" r="26"/><circle cx="38" cy="72" r="26"/><circle cx="82" cy="72" r="26"/></svg></span>
+      <div class="rl-capa-l">
+        <div class="rl-capa-top"><div class="rl-av">${cliente.imagem ? `<img src="${esc(cliente.imagem)}" alt="">` : esc(iniciais(nome))}</div>
+          <span class="rl-sub">Instagram${cliente.instagram ? ` · ${esc(cliente.instagram)}` : ''}</span></div>
+        <p class="rl-ey">Relatório de desempenho</p>
+        <h2>${esc(nome)}</h2><i class="rl-traco"></i>
+        <div class="rl-periodos"><div><small>Período de análise</small><b>${dataBR(primeiroDia(ym))} a ${dataBR(ultimoDia(ym))}</b></div>
+          <div><small>Período de comparação</small><b>${dataBR(primeiroDia(ymAnterior(ym)))} a ${dataBR(ultimoDia(ymAnterior(ym)))}</b></div></div>
+      </div>
+      <div class="rl-mes"><small>${esc(mesTxt)}</small><b>${esc(ym.slice(0, 4))}</b><span>vs. ${esc(mesAntTxt)}</span></div></section>`;
 
   const frases = frasesResumo({ ym, atual, anterior, serie, stories });
   const resumo = frases.length ? `<section class="card rl-sec rl-resumo"><h3>Resumo do mês</h3><ul>${frases.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></section>` : '';
