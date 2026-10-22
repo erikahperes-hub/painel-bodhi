@@ -1067,3 +1067,22 @@ a.chip{text-decoration:none}
 .ft-ed .ft-pill.sel.rd-facebook{background:#D6E2F7;color:#244C8F}
 .ft-ed .ft-pill.sel.rd-pinterest{background:#EBD0C2;color:#7A3A1F}
 .ft-ed .ft-pill.sel.rd-linkedin{background:#E0D8F1;color:#4B3A87}
+
+/* Círculo de concluir ao lado do título (lembra o do calendário) */
+.ft-linha{display:flex;align-items:center;gap:14px}
+.ft-linha .ft-titulo{flex:1;min-width:0;width:auto;margin:0 0 0 -4px}
+.ft-chk-w{display:flex;flex-direction:column;align-items:center;gap:3px;flex:none}
+.ft-chk{width:48px;height:48px;border-radius:50%;border:2.5px solid var(--ink-3);background:transparent;color:transparent;display:grid;place-items:center;cursor:pointer;transition:background .15s,border-color .15s,color .15s,transform .1s}
+.ft-chk svg{width:26px;height:26px}
+.ft-chk:hover:not(:disabled){border-color:var(--verde);color:var(--verde)}
+.ft-chk:active:not(:disabled){transform:scale(.94)}
+.ft-chk.on{background:var(--verde);border-color:var(--verde);color:#fff}
+.ft-chk:disabled{opacity:.4;cursor:not-allowed}
+.ft-chk-l{font:700 11px var(--ui);color:var(--ink-3)}
+.ft-chk.on+.ft-chk-l{color:var(--verde-ink)}
+@media (max-width:860px){.ft-chk{width:40px;height:40px}.ft-chk svg{width:22px;height:22px}}
+
+/* Tarefa concluída: borda verde em volta da ficha toda */
+.gv{position:relative}
+.gv::after{content:'';position:absolute;inset:0;border:0 solid var(--verde);border-radius:inherit;pointer-events:none;transition:border-width .2s;z-index:5}
+.gv.feita::after{border-width:4px}

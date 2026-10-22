@@ -1,9 +1,9 @@
-import { store } from './store.js?v=126';
-import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=126';
-import { ic } from './icons.js?v=126';
-import { confirmar, abrirGaveta } from './ui.js?v=126';
-import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=126';
-import { idDrive, urlAbrir, urlImagem } from './drive.js?v=126';
+import { store } from './store.js?v=128';
+import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=128';
+import { ic } from './icons.js?v=128';
+import { confirmar, abrirGaveta } from './ui.js?v=128';
+import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=128';
+import { idDrive, urlAbrir, urlImagem } from './drive.js?v=128';
 
 // Ficha da tarefa de conteúdo. Pensada para o dia a dia de quem cria posts:
 //  - em cima, o caminho da tarefa (planejamento até publicado) com o próximo passo em destaque;
@@ -72,6 +72,12 @@ export function abrirTarefa(p = null, padrao = {}) {
       .sort((a, b) => String(a.publicar || '9999').localeCompare(String(b.publicar || '9999')) || String(a.titulo || '').localeCompare(String(b.titulo || '')));
   };
 
+  // O círculo de concluir, como no calendário: vazio quando em aberto, verde com o visto quando concluída.
+  const marca = (t) => {
+    const on = !!t.concluida;
+    return `<span class="ft-chk-w"><button type="button" class="ft-chk${on ? ' on' : ''}" data-t="concluir" aria-pressed="${on}" ${id ? '' : 'disabled'} title="${id ? (on ? 'Concluída. Clique para reabrir' : 'Marcar como concluída') : 'Crie a tarefa primeiro'}" aria-label="${on ? 'Tarefa concluída' : 'Marcar tarefa como concluída'}">${ic('check')}</button><span class="ft-chk-l">${on ? 'Concluída' : 'Concluir'}</span></span>`;
+  };
+
   // ---------- partes da tela ----------
   const topo = (t) => {
     const lista = vizinhas();
@@ -80,7 +86,7 @@ export function abrirTarefa(p = null, padrao = {}) {
     return `<header class="ft-top">
       <div class="ft-id">
         ${eyebrow(t)}
-        <input class="ft-titulo" data-campo="titulo" value="${esc(t.titulo || '')}" placeholder="Título da tarefa" aria-label="Título da tarefa" maxlength="200">
+        <div class="ft-linha">${marca(t)}<input class="ft-titulo" data-campo="titulo" value="${esc(t.titulo || '')}" placeholder="Título da tarefa" aria-label="Título da tarefa" maxlength="200"></div>
       </div>
       <div class="ft-topo-d"><span class="ft-salvo" data-salvo aria-live="polite"></span>${nav}${id ? `<button type="button" class="iconbtn ft-ib" data-t="excluir" aria-label="Excluir tarefa" title="Excluir tarefa">${ic('trash')}</button>` : ''}<button type="button" class="iconbtn ft-ib" data-t="fechar" aria-label="Fechar" title="Fechar (Esc)">${ic('x')}</button></div>
     </header>`;
@@ -93,7 +99,7 @@ export function abrirTarefa(p = null, padrao = {}) {
     const proximos = (PROXIMOS[t.etapa] || []).map(([para, texto, estilo]) => `<button type="button" class="btn ${estilo || 'pri'} sm" data-t="etapa" data-v="${para}">${esc(texto)}</button>`).join('');
     return `<div class="ft-jor">
       <ol class="ft-passos" aria-label="Caminho da tarefa">${ETAPAS.map((e, i) => `<li class="${i < at ? 'feito' : i === at ? 'atual' : ''}"><button type="button" data-t="etapa" data-v="${e.id}" aria-current="${i === at ? 'step' : 'false'}" title="Mover para ${esc(e.nome)}"><i>${i < at ? ic('check') : i + 1}</i><span>${esc(e.nome)}</span></button></li>`).join('')}</ol>
-      <div class="ft-acoes">${proximos}<button type="button" class="ft-ok${on ? ' on' : ''}" data-t="concluir" aria-pressed="${on}" ${id ? '' : 'disabled title="Crie a tarefa primeiro"'}>${ic('check')}<span>${on ? 'Concluída' : 'Concluir'}</span></button></div>
+      <div class="ft-acoes">${proximos}</div>
     </div>`;
   };
 
@@ -245,6 +251,8 @@ export function abrirTarefa(p = null, padrao = {}) {
   const pintarTopo = () => {
     const t = atual();
     q('.ft-eyebrow').outerHTML = eyebrow(t);
+    q('.ft-chk-w').outerHTML = marca(t);
+    g.el.classList.toggle('feita', !!t.concluida);
     q('[data-ed]').innerHTML = editor(t);
     q('.ft-jor').outerHTML = jornada(t);
   };
@@ -334,6 +342,7 @@ export function abrirTarefa(p = null, padrao = {}) {
   };
 
   const iniciar = () => {
+    g.el.classList.toggle('feita', !!atual().concluida);
     g.el.querySelectorAll('textarea').forEach(crescer);
     const w = q('.ft-dir-c'); if (w) w.scrollTop = w.scrollHeight;
   };
