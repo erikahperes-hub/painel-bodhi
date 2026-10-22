@@ -1,9 +1,9 @@
-import { store } from './store.js?v=124';
-import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=124';
-import { ic } from './icons.js?v=124';
-import { confirmar, abrirGaveta } from './ui.js?v=124';
-import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=124';
-import { idDrive, urlAbrir, urlImagem } from './drive.js?v=124';
+import { store } from './store.js?v=126';
+import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=126';
+import { ic } from './icons.js?v=126';
+import { confirmar, abrirGaveta } from './ui.js?v=126';
+import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=126';
+import { idDrive, urlAbrir, urlImagem } from './drive.js?v=126';
 
 // Ficha da tarefa de conteúdo. Pensada para o dia a dia de quem cria posts:
 //  - em cima, o caminho da tarefa (planejamento até publicado) com o próximo passo em destaque;
@@ -124,17 +124,21 @@ export function abrirTarefa(p = null, padrao = {}) {
     const cli = store.obter('cliente', t.clienteId);
     const chip = (cls, txt) => `<button type="button" class="chip ${cls} ft-chipb" data-t="classe" title="Alterar a classificação" aria-expanded="${classeAberta}">${txt}</button>`;
     const falta = (nome) => `<button type="button" class="chip ft-add-c" data-t="classe" title="Adicionar ${nome.toLowerCase()}">+ ${nome}</button>`;
-    return `<div class="ft-eyebrow"><span class="ft-cli">${esc(cli?.nome || 'Escolha o cliente')}</span><span class="ft-pontos">${chip(`fm-${FORMATOS[t.formato] ? t.formato : 'feed'}`, `${ic(f.icone)}${esc(f.nome)}`)}${FUNIL[t.funil] ? chip('mute', esc(FUNIL[t.funil])) : falta('Funil')}${REDES[t.rede] ? chip('mute', esc(REDES[t.rede].nome)) : falta('Rede')}<button type="button" class="ft-lapis" data-t="classe" aria-label="Alterar a classificação" title="Alterar a classificação">${ic('edit')}</button></span></div>`;
+    return `<div class="ft-eyebrow"><span class="ft-cli">${esc(cli?.nome || 'Escolha o cliente')}</span><span class="ft-pontos">${chip(`fm-${FORMATOS[t.formato] ? t.formato : 'feed'}`, `${ic(f.icone)}${esc(f.nome)}`)}${FUNIL[t.funil] ? chip('mute', esc(FUNIL[t.funil])) : falta('Funil')}${REDES[t.rede] ? chip(`rd-${t.rede}`, esc(REDES[t.rede].nome)) : falta('Rede')}<button type="button" class="ft-lapis" data-t="classe" aria-label="Alterar a classificação" title="Alterar a classificação">${ic('edit')}</button></span></div>`;
   };
 
   // Seletores de formato, funil e rede: ficam escondidos e só abrem quando a pessoa clica nos chips.
   const editor = (t) => {
     if (!classeAberta) return '';
-    const pill = (nome, v, texto) => `<button type="button" class="ft-pill${String(v) === String(t[nome] || '') ? ' on' : ''}" data-t="set" data-n="${nome}" data-v="${esc(v)}" aria-pressed="${String(v) === String(t[nome] || '')}">${esc(texto)}</button>`;
+    // O item escolhido aparece com a mesma cor do chip lá em cima (e um contorno), igual às cores do calendário.
+    const pill = (nome, v, texto, cor, icone = '') => {
+      const sel = String(v) === String(t[nome] || (nome === 'formato' ? 'feed' : ''));
+      return `<button type="button" class="ft-pill${sel ? ` sel ${cor}` : ''}" data-t="set" data-n="${nome}" data-v="${esc(v)}" aria-pressed="${sel}">${icone}${esc(texto)}</button>`;
+    };
     return `<div class="ft-ed">
-      <div><span class="ft-rot">Formato</span><div class="ft-pills">${Object.entries(FORMATOS).map(([v, f]) => `<button type="button" class="ft-pill${(t.formato || 'feed') === v ? ' on' : ''}" data-t="set" data-n="formato" data-v="${v}" aria-pressed="${(t.formato || 'feed') === v}">${ic(f.icone)}${esc(f.nome)}</button>`).join('')}</div></div>
-      <div><span class="ft-rot">Etapa do funil</span><div class="ft-pills">${Object.entries(FUNIL).map(([v, n]) => pill('funil', v, n.replace(' de funil', ''))).join('')}</div></div>
-      <div><span class="ft-rot">Rede</span><div class="ft-pills">${Object.entries(REDES).map(([v, r]) => pill('rede', v, r.nome)).join('')}</div></div>
+      <div><span class="ft-rot">Formato</span><div class="ft-pills">${Object.entries(FORMATOS).map(([v, f]) => pill('formato', v, f.nome, `fm-${v}`, ic(f.icone))).join('')}</div></div>
+      <div><span class="ft-rot">Etapa do funil</span><div class="ft-pills">${Object.entries(FUNIL).map(([v, n]) => pill('funil', v, n.replace(' de funil', ''), 'mute')).join('')}</div></div>
+      <div><span class="ft-rot">Rede</span><div class="ft-pills">${Object.entries(REDES).map(([v, r]) => pill('rede', v, r.nome, `rd-${v}`)).join('')}</div></div>
     </div>`;
   };
 

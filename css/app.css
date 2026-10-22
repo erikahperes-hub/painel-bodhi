@@ -1053,3 +1053,17 @@ a.chip{text-decoration:none}
 .ft-plano .chip{padding:7px 12px}
 .ft-plano .chip svg{width:13px;height:13px}
 .ft-ajuda-l{font-size:12.5px;color:var(--ink-3);flex:1 1 220px}
+
+/* Escolha da classificação: o selecionado usa a cor do calendário */
+.ft-ed .ft-pill.sel{border-color:transparent;box-shadow:inset 0 0 0 2px currentColor;font-weight:700}
+.ft-ed .ft-pill.sel.mute{background:var(--graf-s);color:var(--ink)}
+.ft-ed .ft-pill.sel:hover{filter:none}
+.ft-ed .ft-pill.sel.fm-reels{background:#D3E2EA;color:#073F56}
+.ft-ed .ft-pill.sel.fm-carrossel{background:#CDEFE1;color:#0C6646}
+.ft-ed .ft-pill.sel.fm-story{background:#F8D5D5;color:#A13A3A}
+.ft-ed .ft-pill.sel.fm-feed{background:#F3E4BE;color:#7A5B1E}
+.ft-ed .ft-pill.sel.rd-instagram{background:#F4D6E6;color:#8A2C5E}
+.ft-ed .ft-pill.sel.rd-tiktok{background:#D9DBD8;color:#2B2D2F}
+.ft-ed .ft-pill.sel.rd-facebook{background:#D6E2F7;color:#244C8F}
+.ft-ed .ft-pill.sel.rd-pinterest{background:#EBD0C2;color:#7A3A1F}
+.ft-ed .ft-pill.sel.rd-linkedin{background:#E0D8F1;color:#4B3A87}
