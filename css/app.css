@@ -1095,3 +1095,7 @@ a.chip{text-decoration:none}
 .ln-check small{display:block;font:400 12.5px var(--ui);color:var(--ink-3);margin-top:2px}
 .modal textarea#ln-msg{min-height:130px}
 @media (max-width:860px){.ft-env span{display:none}.ft-env{padding:8px 10px}}
+
+/* Post aberto igual ao Instagram: a arte ocupa a largura toda do cartão, sem margens nem bordas ao redor */
+.ig-media,.ig-media.v,.ig-media.h{margin:0;border-radius:0;width:100%}
+.ig-post.vert{width:min(100%,clamp(300px,calc((100dvh - 250px) * 9 / 16),440px))}

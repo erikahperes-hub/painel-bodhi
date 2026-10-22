@@ -1,7 +1,7 @@
-import { store } from './store.js?v=131';
-import { sum, diasAte, diasTxt, dataBR } from './util.js?v=131';
-import { atrasada } from './conteudo.js?v=131';
-import { igApi } from './instagram-api.js?v=131';
+import { store } from './store.js?v=132';
+import { sum, diasAte, diasTxt, dataBR } from './util.js?v=132';
+import { atrasada } from './conteudo.js?v=132';
+import { igApi } from './instagram-api.js?v=132';
 
 export function faixaProposta(p) {
   const valores = (p.pacotes || []).map((x) => Number(x.preco) || 0).filter((v) => v > 0);

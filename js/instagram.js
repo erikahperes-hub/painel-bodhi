@@ -1,7 +1,7 @@
-import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=131';
-import { ic } from './icons.js?v=131';
-import { urlImagem, urlPlayer } from './drive.js?v=131';
-import { config } from './config.js?v=131';
+import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=132';
+import { ic } from './icons.js?v=132';
+import { urlImagem, urlPlayer } from './drive.js?v=132';
+import { config } from './config.js?v=132';
 
 // Visual de Instagram usado na prévia do painel e na página de aprovação do cliente.
 // Recebe os dados prontos, então funciona com ou sem login.
@@ -346,7 +346,7 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
 
   function post(p) {
     const f = fmt(p);
-    return `<article class="ig-post" role="dialog" aria-modal="true" aria-label="${esc(p.titulo || 'Publicação')}">
+    return `<article class="ig-post${f.vertical ? ' vert' : ''}" role="dialog" aria-modal="true" aria-label="${esc(p.titulo || 'Publicação')}">
       <header class="ig-ph">${avatar()}<div><b>${esc(handle)}</b><small>${esc(f.nome)}${p.publicar ? ' · ' + esc(dataBR(p.publicar)) : ''}</small></div>
         <button class="iconbtn" data-ig-fechar aria-label="Fechar" style="width:40px;height:40px;font-size:18px;box-shadow:none;margin-left:auto">${ic('x')}</button></header>
       ${midia(p)}
