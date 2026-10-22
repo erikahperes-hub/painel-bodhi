@@ -1,7 +1,7 @@
-import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=132';
-import { ic } from './icons.js?v=132';
-import { urlImagem, urlPlayer } from './drive.js?v=132';
-import { config } from './config.js?v=132';
+import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=133';
+import { ic } from './icons.js?v=133';
+import { urlImagem, urlPlayer } from './drive.js?v=133';
+import { config } from './config.js?v=133';
 
 // Visual de Instagram usado na prévia do painel e na página de aprovação do cliente.
 // Recebe os dados prontos, então funciona com ou sem login.
@@ -107,6 +107,12 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
     return `<div class="ig-grade${stories ? ' story' : ''}">${porDataAsc(itens).map((p, i) => tile(p, { num: String(i + 1).padStart(2, '0') })).join('')}</div>`;
   }
 
+  // No calendário do cliente cada publicação aparece pelo NOME, na cor do tipo e com a bolinha da etapa (igual ao calendário do painel).
+  function chipDia(p) {
+    const st = STATUS[p.etapa] || STATUS.aprovacao;
+    return `<button class="ig-pl-chip fm-${fmId(p)}" data-ig-abrir="${esc(p.id)}" title="${esc(`${p.titulo || 'Peça'} · ${fmt(p).nome} · ${st[1]}`)}"><i class="st-${st[0]}"></i><span>${esc(p.titulo || 'Peça')}</span></button>`;
+  }
+
   function calendario(itensMes) {
     const hoje = hojeISO();
     const [a, m] = estado.mes.split('-').map(Number);
@@ -117,7 +123,7 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
     const celulas = Array.from({ length: semanas * 7 }, (_, i) => {
       const d = new Date(a, m - 1, 1 - primeiro + i);
       const iso = isoDia(d);
-      return `<div class="ig-dia${d.getMonth() !== m - 1 ? ' fora' : ''}${iso === hoje ? ' hoje' : ''}"><span>${d.getDate()}</span><div>${(dias[iso] || []).map((p) => tile(p, { pequeno: true })).join('')}</div></div>`;
+      return `<div class="ig-dia${d.getMonth() !== m - 1 ? ' fora' : ''}${iso === hoje ? ' hoje' : ''}"><span>${d.getDate()}</span><div>${(dias[iso] || []).map(chipDia).join('')}</div></div>`;
     }).join('');
     const linhas = porDataAsc(itensMes).map((p) => {
       const st = STATUS[p.etapa] || STATUS.aprovacao;
@@ -127,6 +133,7 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
         <span class="chip cor-${st[0]}">${esc(st[1])}</span></button>`;
     }).join('');
     return `<div class="calbox"><div class="ig-cal">${DIAS.map((d) => `<div class="dow">${d}</div>`).join('')}${celulas}</div></div>
+      <div class="ig-pl-fmts" title="A cor de cada publicação é o tipo de conteúdo; a bolinha mostra se já foi aprovada">${Object.entries(FORMATO).map(([id, x]) => `<span class="chip fm-${id}">${esc(x.nome)}</span>`).join('')}</div>
       ${linhas ? `<h4 class="ig-sub">Calendário do mês</h4><div class="ig-lista">${linhas}</div>` : '<div class="ig-nada"><p>Nenhuma publicação neste mês.</p></div>'}`;
   }
 
