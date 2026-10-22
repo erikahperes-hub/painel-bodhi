@@ -1,7 +1,7 @@
-import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=133';
-import { ic } from './icons.js?v=133';
-import { urlImagem, urlPlayer } from './drive.js?v=133';
-import { config } from './config.js?v=133';
+import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=137';
+import { ic } from './icons.js?v=137';
+import { urlImagem, urlPlayer } from './drive.js?v=137';
+import { config } from './config.js?v=137';
 
 // Visual de Instagram usado na prévia do painel e na página de aprovação do cliente.
 // Recebe os dados prontos, então funciona com ou sem login.
@@ -351,10 +351,24 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
       <p class="ig-erro" role="alert" hidden></p></div>`;
   }
 
+  // Setas do post aberto: passam para a publicação anterior ou seguinte do mesmo mês, na ordem das datas.
+  function vizinhas(p) {
+    const grupo = p.publicar ? lista.filter((x) => x.publicar && doMes(x, p.publicar.slice(0, 7))) : lista.filter((x) => !x.publicar);
+    return porDataAsc(grupo);
+  }
+  function posicao(p) {
+    const seq = vizinhas(p);
+    const i = seq.findIndex((x) => x.id === p.id);
+    return { total: seq.length, pos: i + 1, ant: seq[i - 1]?.id || '', prox: seq[i + 1]?.id || '' };
+  }
+  const setaNav = (dir, alvo, cls, rotulo) => `<button type="button" class="${cls} ${dir < 0 ? 'e' : 'd'}" data-ig-nav="${dir}" aria-label="${rotulo}"${alvo ? '' : ' disabled'}><span style="display:grid;${dir < 0 ? 'transform:scaleX(-1)' : ''}">${ic('chev')}</span></button>`;
+
   function post(p) {
     const f = fmt(p);
+    const nav = posicao(p);
     return `<article class="ig-post${f.vertical ? ' vert' : ''}" role="dialog" aria-modal="true" aria-label="${esc(p.titulo || 'Publicação')}">
       <header class="ig-ph">${avatar()}<div><b>${esc(handle)}</b><small>${esc(f.nome)}${p.publicar ? ' · ' + esc(dataBR(p.publicar)) : ''}</small></div>
+        ${nav.total > 1 ? `<span class="ig-nav-h">${setaNav(-1, nav.ant, 'ig-nav-b', 'Publicação anterior')}<small>${nav.pos} de ${nav.total}</small>${setaNav(1, nav.prox, 'ig-nav-b', 'Próxima publicação')}</span>` : ''}
         <button class="iconbtn" data-ig-fechar aria-label="Fechar" style="width:40px;height:40px;font-size:18px;box-shadow:none;margin-left:auto">${ic('x')}</button></header>
       ${midia(p)}
       <div class="ig-acts"><button data-ig-curtir aria-label="Curtir">${ic('heart')}</button><span>${ic('comment')}</span><span>${ic('send')}</span><span class="ig-sv">${ic('bookmark')}</span></div>
@@ -368,10 +382,12 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
     const p = lista.find((x) => x.id === id);
     if (!p) return;
     estado.aberta = id;
+    const trocando = !!overlay; // passando de uma publicação para outra: sem animação de entrada
     fechar(false);
     overlay = document.createElement('div');
-    overlay.className = 'overlay ig-ov';
-    overlay.innerHTML = post(p);
+    overlay.className = `overlay ig-ov${trocando ? ' troca' : ''}`;
+    const nav = posicao(p);
+    overlay.innerHTML = post(p) + (nav.total > 1 ? setaNav(-1, nav.ant, 'ig-nav', 'Publicação anterior') + setaNav(1, nav.prox, 'ig-nav', 'Próxima publicação') : '');
     document.body.appendChild(overlay);
     document.body.style.overflow = 'hidden';
     ligarCarrossel();
@@ -400,6 +416,12 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
   }
 
   const atual = () => lista.find((x) => x.id === estado.aberta);
+  function navegar(delta) {
+    const p = atual();
+    if (!p || !overlay) return;
+    const alvo = posicao(p)[delta < 0 ? 'ant' : 'prox'];
+    if (alvo) abrir(alvo);
+  }
   function erro(t) { const e = overlay?.querySelector('.ig-erro'); if (e) { e.textContent = t; e.hidden = !t; } }
 
   async function responder(acao, comentario = '') {
@@ -433,6 +455,8 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
     const q = (s) => e.target.closest(s);
     if (q('[data-ig-fechar]')) return fechar();
     if (q('[data-ig-curtir]')) return q('[data-ig-curtir]').classList.toggle('on');
+    const nav = q('[data-ig-nav]');
+    if (nav) return navegar(Number(nav.dataset.igNav));
     const seta = q('[data-ig-seta]');
     if (seta) {
       const car = overlay.querySelector('[data-ig-car]');
@@ -483,6 +507,7 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
 
   fecharAberto?.();
   fecharAberto = () => { fechar(); fecharPlano(); };
+  navegarAberto = (d) => { if (overlay && !planoOv) navegar(d); };
   desenhar();
   // Link de uma tarefa só: já abre a tarefa para o cliente aprovar. Ao fechar, ele vê o feed (ou só ela, se o link não libera o resto).
   if (foco) {
@@ -493,4 +518,8 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
 
 // Um único ouvinte de Esc para qualquer feed montado (o painel remonta a tela a cada alteração).
 let fecharAberto = null;
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharAberto?.(); });
+let navegarAberto = null;
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') fecharAberto?.();
+  else if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) navegarAberto?.(e.key === 'ArrowLeft' ? -1 : 1);
+});

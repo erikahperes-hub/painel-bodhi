@@ -1,16 +1,16 @@
-import { store } from '../store.js?v=133';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=133';
-import { ic, flor } from '../icons.js?v=133';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=133';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=133';
-import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=133';
-import { feedPerfil } from '../feed-perfil.js?v=133';
-import { igApi } from '../instagram-api.js?v=133';
-import { lerPasta } from '../drive-pasta.js?v=133';
-import { lerTabela } from '../planejamento.js?v=133';
-import { config } from '../config.js?v=133';
-import { histCartao, histMontar, importarHistorico } from '../historico.js?v=133';
-import { abrirTarefa } from '../tarefa.js?v=133';
+import { store } from '../store.js?v=137';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=137';
+import { ic, flor } from '../icons.js?v=137';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=137';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=137';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=137';
+import { feedPerfil } from '../feed-perfil.js?v=137';
+import { igApi } from '../instagram-api.js?v=137';
+import { lerPasta } from '../drive-pasta.js?v=137';
+import { lerTabela } from '../planejamento.js?v=137';
+import { config } from '../config.js?v=137';
+import { histCartao, histMontar, importarHistorico } from '../historico.js?v=137';
+import { abrirTarefa } from '../tarefa.js?v=137';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
@@ -39,31 +39,66 @@ const nFiltros = () => [filtroTipo, filtroFunil, filtroRede].filter(Boolean).len
 // Etiqueta da rede no cartão (cada rede tem a sua cor).
 const redeChip = (p) => (REDES[p.rede] ? `<span class="chip rd-${p.rede}">${esc(REDES[p.rede].nome)}</span>` : '');
 
-// Linha "Rede" dos filtros que ficam abaixo do calendário (só aparece se alguma tarefa do mês tem rede).
-function linhaRede(lista) {
-  const n = (k) => lista.filter((p) => p.rede === k).length;
-  const sem = lista.filter((p) => !REDES[p.rede]).length;
-  if (!Object.keys(REDES).some((k) => n(k))) return '';
-  const botao = (k, texto, qtd, cls) => `<button type="button" class="chip ${cls} funil-btn rede-btn${filtroRede === k ? ' on' : ''}" data-act="filtro-rede" data-rede="${k}" aria-pressed="${filtroRede === k}">${esc(texto)} ${qtd}</button>`;
-  const botoes = `${Object.entries(REDES).filter(([k]) => n(k)).map(([k, r]) => botao(k, r.nome, n(k), `rd-${k}`)).join('')}${sem ? botao('sem', 'Sem rede', sem, 'cor-mute') : ''}`;
-  return `<div class="filtros-linha"><span class="filtros-rot">Rede</span><div class="legenda" title="Clique para ver só as tarefas de cada rede">${botoes}</div></div>`;
+// Botão "Filtros" ao lado de "Nova tarefa": responsável, tipo, funil e rede num painel só.
+// Tipo, funil e rede só valem no Calendário; o responsável vale no Status, Calendário e Feed.
+let filtrosAberto = false;
+let baseFiltros = []; // tarefas do mês mostrado (do cliente escolhido), para os números dentro do painel
+const nAtivos = () => (filtroPessoa ? 1 : 0) + (aba === 'calendario' ? nFiltros() : 0);
+
+function painelFiltros() {
+  const eu = meuNome();
+  const cal = aba === 'calendario';
+  const doMes = baseFiltros.filter(casaPessoa);
+  const chip = (cls, act, attr, on, html) => `<button type="button" class="chip ${cls} funil-btn${on ? ' on' : ''}" data-act="${act}" ${attr} aria-pressed="${on}">${html}</button>`;
+  const grupo = (rot, botoes) => `<div class="fl-g"><span class="filtros-rot">${rot}</span><div class="fl-bt">${botoes}</div></div>`;
+
+  const pessoas = ['Érika', 'Milena'].sort((x, y) => (y === eu) - (x === eu));
+  const nPessoa = (f) => baseFiltros.filter(f).length;
+  const resp = grupo('Responsável', [
+    chip('cor-mute', 'filtro-pessoa', 'data-v=""', !filtroPessoa, `Todas ${baseFiltros.length}`),
+    ...pessoas.map((r) => chip('cor-mute', 'filtro-pessoa', `data-v="${esc(r)}"`, filtroPessoa === r, `${r === eu ? 'Minhas' : esc(r)} ${nPessoa((p) => p.responsavel === r)}`)),
+    chip('cor-mute', 'filtro-pessoa', 'data-v="sem"', filtroPessoa === 'sem', `Sem responsável ${nPessoa((p) => !p.responsavel)}`),
+  ].join(''));
+
+  let resto = '';
+  if (cal) {
+    const tipo = grupo('Tipo', Object.entries(FORMATOS).map(([id, f]) => chip(`fm-${id} tipo-btn`, 'filtro-tipo', `data-tipo="${id}"`, filtroTipo === id,
+      `${ic(f.icone)}${esc(f.nome)} ${doMes.filter((p) => (FORMATOS[p.formato] ? p.formato : 'feed') === id).length}`)).join(''));
+
+    const nf = (k) => doMes.filter((p) => p.funil === k).length;
+    const semFunil = doMes.filter((p) => !FUNIL_COR[p.funil]).length;
+    const funil = nf('topo') + nf('meio') + nf('fundo') === 0 ? '' : grupo('Funil', [
+      ...['topo', 'meio', 'fundo'].map((k) => chip('cor-mute', 'filtro-funil', `data-funil="${k}"`, filtroFunil === k, `${FUNIL[k].replace(' de funil', '')} ${nf(k)}`)),
+      semFunil ? chip('cor-mute', 'filtro-funil', 'data-funil="sem"', filtroFunil === 'sem', `Sem funil ${semFunil}`) : '',
+    ].join(''));
+
+    const nr = (k) => doMes.filter((p) => p.rede === k).length;
+    const semRede = doMes.filter((p) => !REDES[p.rede]).length;
+    const rede = !Object.keys(REDES).some((k) => nr(k)) ? '' : grupo('Rede', [
+      ...Object.entries(REDES).filter(([k]) => nr(k)).map(([k, r]) => chip(`rd-${k}`, 'filtro-rede', `data-rede="${k}"`, filtroRede === k, `${esc(r.nome)} ${nr(k)}`)),
+      semRede ? chip('cor-mute', 'filtro-rede', 'data-rede="sem"', filtroRede === 'sem', `Sem rede ${semRede}`) : '',
+    ].join(''));
+    resto = tipo + funil + rede;
+  }
+
+  const n = nAtivos();
+  return `<div class="fl-fundo"></div><div class="fl-pop" role="dialog" aria-label="Filtros">
+    <div class="fl-h"><b>Filtros</b><span>Números do mês mostrado</span></div>
+    ${resp}${resto}
+    <div class="fl-f"><button type="button" class="btn ghost sm" data-act="limpar-tudo"${n ? '' : ' disabled'}>Limpar filtros</button><button type="button" class="btn pri sm" data-act="fechar-filtros">Pronto</button></div></div>`;
 }
 
-// Resumo "Topo 3 · Meio 4 · Fundo 2": cada um é um botão que mostra a lista das tarefas daquele grupo.
-function resumoFunil(lista, cru = false) {
-  const n = (k) => lista.filter((p) => p.funil === k).length;
-  const sem = lista.filter((p) => !FUNIL_COR[p.funil]).length;
-  if (n('topo') + n('meio') + n('fundo') === 0) return '';
-  const botao = (k, texto, qtd) => `<button type="button" class="chip cor-mute funil-btn${filtroFunil === k ? ' on' : ''}" data-act="filtro-funil" data-funil="${k}" aria-pressed="${filtroFunil === k}">${texto} ${qtd}</button>`;
-  const botoes = `${['topo', 'meio', 'fundo'].map((k) => botao(k, FUNIL[k].replace(' de funil', ''), n(k))).join('')}${sem ? botao('sem', 'Sem funil', sem) : ''}`;
-  return cru ? botoes : `<div class="legenda" style="margin:-4px 0 14px" title="Clique para ver só as tarefas de cada etapa do funil">${botoes}</div>`;
+function botaoFiltros() {
+  const n = nAtivos();
+  const eu = meuNome();
+  const minhas = eu ? `<button type="button" class="fl-eu${filtroPessoa === eu ? ' on' : ''}" data-act="filtro-pessoa" data-v="${esc(eu)}" aria-pressed="${filtroPessoa === eu}" aria-label="Só as minhas tarefas" title="Só as minhas tarefas">${esc(eu.charAt(0))}</button>` : '';
+  return `<span class="fl-wrap">${minhas}<button type="button" class="btn sec sm fl-b${n ? ' ativo' : ''}" data-act="abrir-filtros" aria-expanded="${filtrosAberto}" aria-haspopup="dialog">${ic('sliders')}Filtros${n ? ` · ${n}` : ''}</button>${filtrosAberto ? painelFiltros() : ''}</span>`;
 }
-
-// Linha "Funil" dos filtros que ficam abaixo do calendário.
-function linhaFunil(lista) {
-  const botoes = resumoFunil(lista, true);
-  return botoes ? `<div class="filtros-linha"><span class="filtros-rot">Funil</span><div class="legenda" title="Clique para ver só as tarefas de cada etapa do funil">${botoes}</div></div>` : '';
-}
+window.addEventListener('hashchange', () => { filtrosAberto = false; });
+// O painel fecha ao clicar fora dele ou com Esc.
+const fecharFiltros = () => { if (filtrosAberto) { filtrosAberto = false; window.dispatchEvent(new Event('atualizar-tela')); } };
+document.addEventListener('click', (ev) => { if (filtrosAberto && ev.target.isConnected && !ev.target.closest('.fl-pop, [data-act="abrir-filtros"]')) fecharFiltros(); });
+document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') fecharFiltros(); });
 
 // Lista das tarefas do grupo escolhido no funil, logo abaixo do calendário.
 function listaFunil(lista, mostrarCliente) {
@@ -131,6 +166,7 @@ function escolherAdicionar(clienteId = '') {
 function botoesCabecalho(filtro) {
   return `<div class="actions">${filtro ? `<button class="btn sec sm" data-act="ir" data-rota="previa" data-ref="${esc(filtro)}">${ic('image')}Prévia do cliente</button><button class="btn sec sm" data-act="enviar-planejamento" data-cliente="${esc(filtro)}">${ic('send')}Enviar planejamento</button><button class="btn sec sm" data-act="link-aprovacao" data-cliente="${esc(filtro)}">${ic('link')}Link de aprovação</button>` : ''}
     <button class="btn sec sm" data-act="adicionar-pecas" data-cliente="${esc(filtro)}">${ic('upload')}Adicionar em lote</button>
+    ${botaoFiltros()}
     <button class="btn pri sm" data-act="nova-peca" data-cliente="${esc(filtro)}">${ic('plus')}Nova tarefa</button>
     <input type="file" accept="application/json,.json" hidden data-lote><input type="file" accept="application/json,.json" hidden data-asana></div>`;
 }
@@ -410,7 +446,6 @@ let mesCal = null;
 const recarregarTela = () => window.dispatchEvent(new Event('atualizar-tela'));
 const perfilPedido = new Set(); // clientes cujo perfil do Instagram já foi pedido nesta abertura do painel
 let verInativos = false; // Ativos ou Inativos na lista de clientes
-let verLista = false; // depois de escolher um filtro, mostra a lista sem mexer no resto da tela
 
 const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const isoDia = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -464,7 +499,6 @@ function calendario({ filtro, lista, chipsClientes }) {
       ${botoesCabecalho(filtro)}</div>
     ${seletorMes(ym)}
     <div class="calbox"><div class="calgrid">${DIAS_SEMANA.map((d) => `<div class="dow">${d}</div>`).join('')}${celulas}</div></div>
-    <div class="filtros-cal${nFiltros() >= 2 ? ' juntos' : ''}"${nFiltros() >= 2 ? ' title="Mais de um filtro está ligado ao mesmo tempo"' : ''}><div class="filtros-linha"><span class="filtros-rot">Tipo</span><div class="legenda" title="Clique em um tipo para ver só as tarefas dele. A cor é o tipo de conteúdo">${Object.entries(FORMATOS).map(([id, f]) => `<button type="button" class="chip fm-${id} funil-btn tipo-btn${filtroTipo === id ? ' on' : ''}" data-act="filtro-tipo" data-tipo="${id}" aria-pressed="${filtroTipo === id}">${ic(f.icone)}${esc(f.nome)} ${listaMes.filter((p) => (FORMATOS[p.formato] ? p.formato : 'feed') === id).length}</button>`).join('')}</div></div>${linhaFunil(listaMes)}${linhaRede(listaMes)}</div>
     ${listaFunil(listaMes, !filtro)}
     ${semData.length ? `<div class="semdata"><h3>Sem data de publicação</h3><p class="lbl">Abra a tarefa e escolha a data para ela aparecer no calendário.</p><div class="semdata-l">${semData.map((p) => blocoPeca(p, !filtro)).join('')}</div></div>` : ''}
   </div>`;
@@ -526,19 +560,14 @@ export default {
         <div class="card stat tone-coral"><div><div class="lbl">Pedidos de ajuste</div><div class="big num">${em('ajustes').length}</div><div class="hint">Para refazer</div></div><span class="stat-ic">${ic('edit')}</span></div>
         <div class="card stat tone-coral"><div><div class="lbl">Atrasadas</div><div class="big num">${lista.filter(atrasada).length}</div><div class="hint">Passaram da data, em todos os meses</div></div><span class="stat-ic">${ic('calendar')}</span></div>
       </div>`;
-    // Filtro por responsável: "Minhas" (quem está logada), a outra pessoa e "Sem responsável", com o número do mês mostrado.
+    // Números do painel Filtros: tarefas do mês mostrado (do cliente escolhido), antes de aplicar o responsável.
     const baseMes = (filtro ? todasBase.filter((p) => p.clienteId === filtro) : todasBase).filter((p) => !!p.publicar && p.publicar.slice(0, 7) === ymChips);
-    const eu = meuNome();
-    const botaoPessoa = (v, texto, n) => `<button class="cbtn ${filtroPessoa === v ? 'on' : ''}" data-act="filtro-pessoa" data-v="${esc(v)}" aria-pressed="${filtroPessoa === v}">${esc(texto)} · ${n}</button>`;
-    const pessoas = ['Érika', 'Milena'].sort((x, y) => (y === eu) - (x === eu));
-    const chipsPessoa = `<div class="cbtns cbtns-p" style="margin:-6px 0 16px" role="group" aria-label="Filtrar por responsável"><span class="lbl" style="align-self:center;margin-right:2px">Responsável</span>
-      <button class="cbtn ${filtroPessoa ? '' : 'on'}" data-act="filtro-pessoa" data-v="" aria-pressed="${!filtroPessoa}">Todas</button>
-      ${pessoas.map((r) => botaoPessoa(r, r === eu ? 'Minhas' : r, baseMes.filter((p) => p.responsavel === r).length)).join('')}
-      ${botaoPessoa('sem', 'Sem responsável', baseMes.filter((p) => !p.responsavel).length)}</div>`;
-    const cabeca = `${seg}<div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>${chipsPessoa}${numeros}${abas}`;
+    baseFiltros = baseMes;
+    const cabeca = `${seg}<div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>${numeros}${abas}`;
     if (aba === 'calendario') return cabeca + calendario({ filtro, lista });
     if (aba === 'feed') {
-      if (!filtro) return `${cabeca}<div class="card empty">${flor()}<h2>Escolha um cliente</h2><p>O feed mostra o perfil de um cliente por vez, como ele fica no Instagram. Toque no nome do cliente acima.</p></div>`;
+      const cabecaFeed = `${cabeca}<div class="actions barra-filtros">${botaoFiltros()}</div>`;
+      if (!filtro) return `${cabecaFeed}<div class="card empty">${flor()}<h2>Escolha um cliente</h2><p>O feed mostra o perfil de um cliente por vez, como ele fica no Instagram. Toque no nome do cliente acima.</p></div>`;
       const cli = store.obter('cliente', filtro);
       const ultimo = store.todos('insights').filter((i) => i.clienteId === filtro && Number.isFinite(Number(i.seguidores))).sort((a, b) => String(b.mes).localeCompare(String(a.mes)))[0];
       // Perfil real do Instagram, quando o cliente está conectado: busca uma vez e redesenha quando chegar.
@@ -547,7 +576,7 @@ export default {
         perfilPedido.add(filtro);
         igApi.perfil(filtro).then(recarregarTela);
       }
-      return cabeca + feedPerfil({ cliente: cli, pecas: lista, seguidores: ultimo?.seguidores, filtro: feedFiltro, aba: feedAba, real: conectado ? igApi.perfilGuardado(filtro) : null, conectado });
+      return cabecaFeed + feedPerfil({ cliente: cli, pecas: lista, seguidores: ultimo?.seguidores, filtro: feedFiltro, aba: feedAba, real: conectado ? igApi.perfilGuardado(filtro) : null, conectado });
     }
 
     const colunas = ETAPAS.map((e) => {
@@ -599,10 +628,6 @@ export default {
       if (!f) return;
       try { await importarHistorico(JSON.parse(await f.text())); recarregarTela(); } catch (err) { toast(err instanceof SyntaxError ? 'Este arquivo não é válido.' : (err.message || 'Não foi possível trazer o histórico.'), true); }
     });
-    if (verLista) {
-      verLista = false;
-      el.querySelector('.funil-lista')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
     el.querySelector('[data-lote]')?.addEventListener('change', async (ev) => {
       const f = ev.target.files[0];
       ev.target.value = '';
@@ -624,10 +649,13 @@ export default {
       for (const p of prontas) await store.salvar('conteudo', { ...p, planejamento: 'aprovacao' });
       toast(`${prontas.length} ${prontas.length === 1 ? 'ideia enviada' : 'ideias enviadas'} para aprovação`);
     },
-    'filtro-tipo': (el) => { filtroTipo = el.dataset.tipo === filtroTipo ? '' : el.dataset.tipo; verLista = !!filtroTipo; recarregarTela(); },
+    'abrir-filtros': () => { filtrosAberto = !filtrosAberto; recarregarTela(); },
+    'fechar-filtros': () => { filtrosAberto = false; recarregarTela(); },
+    'limpar-tudo': () => { filtroPessoa = ''; filtroFunil = ''; filtroTipo = ''; filtroRede = ''; recarregarTela(); },
+    'filtro-tipo': (el) => { filtroTipo = el.dataset.tipo === filtroTipo ? '' : el.dataset.tipo; recarregarTela(); },
     'limpar-filtros': () => { filtroFunil = ''; filtroTipo = ''; filtroRede = ''; recarregarTela(); },
-    'filtro-rede': (el) => { filtroRede = el.dataset.rede === filtroRede ? '' : el.dataset.rede; verLista = !!filtroRede; recarregarTela(); },
-    'filtro-funil': (el) => { filtroFunil = el.dataset.funil === filtroFunil ? '' : el.dataset.funil; verLista = !!filtroFunil; recarregarTela(); },
+    'filtro-rede': (el) => { filtroRede = el.dataset.rede === filtroRede ? '' : el.dataset.rede; recarregarTela(); },
+    'filtro-funil': (el) => { filtroFunil = el.dataset.funil === filtroFunil ? '' : el.dataset.funil; recarregarTela(); },
     'adicionar-lote': () => document.querySelector('[data-lote]')?.click(),
     'adicionar-pecas': (el) => escolherAdicionar(el.dataset.cliente),
     'importar-pasta': () => importarDaPasta(),
