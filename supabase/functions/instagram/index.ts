@@ -20,8 +20,6 @@ const SUPA = Deno.env.get('SUPABASE_URL')!;
 const RETORNO = `${SUPA}/functions/v1/instagram`; // este endereço exato é cadastrado no app da Meta
 const GRAPH = 'https://graph.instagram.com/v23.0';
 const SCOPES = 'instagram_business_basic,instagram_business_manage_insights';
-// Só pedida a quem vai agendar posts (hoje, a conta da Bôdhi). Os clientes continuam só com leitura.
-const SCOPES_PUBLICAR = `${SCOPES},instagram_business_content_publish`;
 const admin = createClient(SUPA, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
 /* ---------- estado assinado (liga o retorno do Instagram ao cliente certo, sem guardar nada) ---------- */
@@ -324,22 +322,8 @@ Deno.serve(async (req) => {
     const { acao, ...d } = await req.json();
     if (acao === 'url') {
       const estado = await criarEstado(String(d.clienteId));
-      const link = `https://www.instagram.com/oauth/authorize?${new URLSearchParams({ client_id: APP_ID, redirect_uri: RETORNO, response_type: 'code', scope: d.publicar ? SCOPES_PUBLICAR : SCOPES, state: estado, force_reauth: 'true' })}`;
+      const link = `https://www.instagram.com/oauth/authorize?${new URLSearchParams({ client_id: APP_ID, redirect_uri: RETORNO, response_type: 'code', scope: SCOPES, state: estado, force_reauth: 'true' })}`;
       return json({ configurado: true, url: link });
-    }
-    // TESTE só com a conta @bodhi.mkt: cria o "rascunho" de uma imagem em branco e NÃO publica. Aqui não existe chamada media_publish.
-    if (acao === 'teste-rascunho') {
-      const { data: c } = await admin.from('ig_conexoes').select('*').eq('username', 'bodhi.mkt').maybeSingle();
-      if (!c) return json({ erro: 'A conta @bodhi.mkt não está conectada.' }, 400);
-      const token = await tokenValido(c);
-      const q = consulta(token);
-      const posts = async () => ((await pegar(`${GRAPH}/me/media?${q({ fields: 'id,timestamp', limit: '5' })}`)).data ?? []).map((x: any) => x.id);
-      const antes = await posts();
-      const rascunho = await pegar(`${GRAPH}/${c.ig_user_id}/media`, { method: 'POST', body: new URLSearchParams({ image_url: 'https://painel.bodhi.marketing/assets/teste-branco.jpg', access_token: token }) });
-      let situacao = '';
-      try { situacao = (await pegar(`${GRAPH}/${rascunho.id}?${q({ fields: 'status_code' })}`)).status_code ?? ''; } catch { /* a situação é só informação extra */ }
-      const depois = await posts();
-      return json({ configurado: true, rascunho: rascunho.id, situacao, novosPosts: depois.filter((id: string) => !antes.includes(id)).length });
     }
     if (acao === 'sincronizar') return json({ configurado: true, ...(await sincronizar(String(d.clienteId), String(d.mes))) });
     if (acao === 'stories') return json({ configurado: true, ...(await lerStories(String(d.clienteId))) });
