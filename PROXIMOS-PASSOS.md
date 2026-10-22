@@ -61,3 +61,14 @@ Pronto no código: Ativos/Inativos em Conteúdo, tarefas dos ativos no Status/Ca
 - Falta: importar os dois arquivos de `seed/` no painel online (passos na LEIA-ME) e conferir os números.
 - Falta: conferir que o Google Drive terminou de enviar os arquivos para a nuvem.
 - Só cancelar o Asana depois disso.
+
+## 8. Agendamento de posts no Instagram (em pausa desde 22/10/2026)
+
+Nada publica hoje. O painel só LÊ o Instagram. Não rode nada que publique (`media_publish`) sem a Érika pedir com todas as letras.
+- **Opções avaliadas:** (A) app próprio da Meta ligado ao painel, grátis, com fila e travas; (B) Metricool pelo conector do Claude (grátis só para 1 marca e 20 posts por mês); (C) Meta Business Suite, grátis e manual; (D) Buffer ou Publer no plano grátis (3 canais). Recomendação: começar pelo Business Suite e deixar o app próprio para depois. Decisão final com a Érika.
+- **Análise da Meta:** contas com função no app (admin, desenvolvedor, testador) usam a permissão de publicar sem análise. Só contas sem função (outras agências, no plano de venda) exigem análise (verificação da empresa, política de privacidade, vídeo de demonstração; prazo e aprovação incertos). Dados de blogs, não da documentação da Meta: confirmar antes de prometer.
+- **Estado no app da Meta "Painel Bodhi Marketing":** a permissão `instagram_business_content_publish` está adicionada (status "Pronto para teste"), mas ninguém autorizou. O login do @bodhi.mkt travou no código do autenticador, então não existe nenhum token com permissão de publicar. Os tokens dos clientes são só de leitura.
+- **Regras da Érika para qualquer teste:** só no @bodhi.mkt, nada de cliente, post totalmente em branco e sem legenda; a fila de publicação precisa de travas (só publica o aprovado pelo cliente, mostra status, avisa se falhar).
+- **A API do Instagram não apaga posts.** Para testar sem postar, crie só o "rascunho" da mídia (container) e não chame a publicação; ele expira em 24 horas.
+- **Alternativa ao login do Instagram:** conexão pelo login do Facebook, ligada a uma Página (`instagram_content_publish`, `pages_show_list`). Falta conferir se o @bodhi.mkt está ligado a uma Página que a Érika administra.
+- Um teste de rascunho foi feito no código e depois removido (a função `instagram` no Supabase deve estar igual a `supabase/functions/instagram/index.ts` do repositório, sem ação `teste-rascunho`).
