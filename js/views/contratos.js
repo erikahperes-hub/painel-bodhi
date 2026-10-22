@@ -1,9 +1,9 @@
-import { store } from '../store.js?v=121';
-import { metricas, faixaProposta } from '../calc.js?v=121';
-import { brl, esc, dataBR, diasAte, diasTxt, toast } from '../util.js?v=121';
-import { ic, flor } from '../icons.js?v=121';
-import { formulario, confirmar } from '../ui.js?v=121';
-import { gerarContrato } from '../docs/contrato.js?v=121';
+import { store } from '../store.js?v=122';
+import { metricas, faixaProposta } from '../calc.js?v=122';
+import { brl, esc, dataBR, diasAte, diasTxt, toast } from '../util.js?v=122';
+import { ic, flor } from '../icons.js?v=122';
+import { formulario, confirmar } from '../ui.js?v=122';
+import { gerarContrato } from '../docs/contrato.js?v=122';
 
 function campos() {
   const clientes = store.todos('cliente').map((c) => ({ v: c.id, t: c.nome }));

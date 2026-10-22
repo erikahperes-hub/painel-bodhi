@@ -1,9 +1,9 @@
-import { store } from './store.js?v=121';
-import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=121';
-import { ic } from './icons.js?v=121';
-import { confirmar, abrirGaveta } from './ui.js?v=121';
-import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=121';
-import { idDrive, urlAbrir, urlImagem } from './drive.js?v=121';
+import { store } from './store.js?v=122';
+import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=122';
+import { ic } from './icons.js?v=122';
+import { confirmar, abrirGaveta } from './ui.js?v=122';
+import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=122';
+import { idDrive, urlAbrir, urlImagem } from './drive.js?v=122';
 
 // Ficha da tarefa de conteúdo. Pensada para o dia a dia de quem cria posts:
 //  - em cima, o caminho da tarefa (planejamento até publicado) com o próximo passo em destaque;
@@ -167,19 +167,20 @@ export function abrirTarefa(p = null, padrao = {}) {
       <section class="ft-s"><div class="ft-h"><h3>Legenda</h3><span class="ft-h-d"><small class="ft-cont" data-cont>${contar(t.legenda)}</small><button type="button" class="btn ghost sm" data-t="copiar">${ic('link')}Copiar</button></span></div><textarea data-campo="legenda" rows="4" placeholder="Texto que o cliente vê junto com a arte na hora de aprovar.">${esc(t.legenda || '')}</textarea></section>`;
   };
 
-  // Nota fixa da equipe (era "Observações internas"): fica no alto da coluna de comentários, só a equipe vê.
-  const nota = (t) => `<section class="ft-nota"><div class="ft-nota-h">${ic('bookmark')}<b>Nota fixa da equipe</b><small>o cliente nunca vê</small></div><textarea data-campo="briefing" rows="2" placeholder="Combinados, lembretes e links úteis desta tarefa.">${esc(t.briefing || '')}</textarea></section>`;
-
-  // Comentários em destaque. O que mudou na tarefa (etapa, responsável, data...) fica recolhido, para não poluir.
+  // Comentários em destaque; os fixados ficam no alto (é para onde vão os combinados que não podem se perder).
+  // O que mudou na tarefa (etapa, responsável, data...) fica recolhido, para não poluir.
   const conversa = (t) => {
     const coms = [...(t.comentarios || [])].sort((x, y) => String(x.d).localeCompare(String(y.d)));
+    const fixados = coms.filter((c) => c.fixado);
+    const resto = coms.filter((c) => !c.fixado);
     const ativ = [...(t.atividade || [])];
     if (t.criadoEm && !ativ.some((a) => a.t === 'criou esta tarefa')) ativ.push({ d: t.criadoEm, a: '', t: 'Tarefa criada' });
     ativ.sort((x, y) => String(x.d).localeCompare(String(y.d)));
-    const com = (c) => `<li class="ft-m"><i class="ft-av g">${esc(inicial(c.a))}</i><div class="ft-balao"><div class="ft-m-h"><b>${esc(primeiroNome(c.a))}</b><small>${esc(quando(c.d))}</small>${c.id ? `<button type="button" class="ft-m-x" data-t="rm-com" data-id="${esc(c.id)}" aria-label="Excluir comentário" title="Excluir comentário">${ic('x')}</button>` : ''}</div><p>${links(c.t)}</p></div></li>`;
+    const com = (c) => `<li class="ft-m${c.fixado ? ' fixado' : ''}"><i class="ft-av g">${esc(inicial(c.a))}</i><div class="ft-balao"><div class="ft-m-h"><b>${esc(primeiroNome(c.a))}</b><small>${c.fixado ? 'Fixado · ' : ''}${esc(quando(c.d))}</small>${c.id ? `<span class="ft-m-b"><button type="button" class="ft-m-p${c.fixado ? ' on' : ''}" data-t="fixar" data-id="${esc(c.id)}" aria-label="${c.fixado ? 'Desafixar comentário' : 'Fixar comentário no alto'}" title="${c.fixado ? 'Desafixar' : 'Fixar no alto'}">${ic('bookmark')}</button><button type="button" class="ft-m-x" data-t="rm-com" data-id="${esc(c.id)}" aria-label="Excluir comentário" title="Excluir comentário">${ic('x')}</button></span>` : ''}</div><p>${links(c.t)}</p></div></li>`;
     const ev = (a) => `<li class="ft-ev">${a.a ? `<b>${esc(primeiroNome(a.a))}</b> ` : ''}${esc(a.t)} <small>${esc(quando(a.d))}</small></li>`;
     return `<h3>Comentários${coms.length ? ` <span class="ft-n">${coms.length}</span>` : ''}</h3>
-      <ul class="ft-conv">${coms.map(com).join('') || '<li class="ft-vazio">Nenhum comentário ainda. Use este espaço para combinados, legendas alternativas e avisos da equipe.</li>'}</ul>
+      ${fixados.length ? `<ul class="ft-conv ft-fix">${fixados.map(com).join('')}</ul>` : ''}
+      <ul class="ft-conv">${resto.map(com).join('') || (fixados.length ? '' : '<li class="ft-vazio">Nenhum comentário ainda. Use este espaço para combinados, legendas alternativas e avisos da equipe. Para não perder um aviso, clique no marcador do comentário para fixá-lo no alto.</li>')}</ul>
       ${ativ.length ? `<details class="ft-ativ" data-ativ${ativAberta ? ' open' : ''}><summary>Histórico de mudanças <span class="ft-n">${ativ.length}</span></summary><ul class="ft-conv">${ativ.map(ev).join('')}</ul></details>` : ''}`;
   };
 
@@ -194,7 +195,6 @@ export function abrirTarefa(p = null, padrao = {}) {
           <div class="ft-dir-c">
             <div data-detalhes>${detalhes(t)}</div>
             ${arte(t)}
-            ${nota(t)}
             <section class="ft-conv-w" data-conversa>${id ? conversa(t) : ''}</section>
           </div>
           ${id ? rodapeConversa() : '<div class="ft-novo cria"><button type="button" class="btn sec" data-t="fechar">Cancelar</button><button type="button" class="btn pri" data-t="criar">Criar tarefa</button></div>'}
@@ -274,7 +274,7 @@ export function abrirTarefa(p = null, padrao = {}) {
     if (capa && !idDrive(capa)) { toast('A capa precisa ser um link de arquivo do Google Drive.', true); return; }
     const novo = {
       ...t, titulo, link: urlSegura(link), capa: idDrive(capa),
-      roteiro: campo('roteiro'), legenda: campo('legenda'), briefing: campo('briefing'), planejamento: campo('planejamento') || '',
+      roteiro: campo('roteiro'), legenda: campo('legenda'), planejamento: campo('planejamento') || '',
       criadoEm: new Date().toISOString(), concluida: false,
     };
     try {
@@ -371,6 +371,11 @@ export function abrirTarefa(p = null, padrao = {}) {
       pintarArquivos();
       return;
     }
+    if (a === 'fixar') {
+      await mudar({ comentarios: (atual().comentarios || []).map((c) => (c.id === b.dataset.id ? { ...c, fixado: !c.fixado } : c)) });
+      pintarConversa();
+      return;
+    }
     if (a === 'rm-com') {
       if (!(await confirmar('Excluir este comentário?', 'Excluir', true))) return;
       await mudar({ comentarios: (atual().comentarios || []).filter((c) => c.id !== b.dataset.id) });
@@ -428,6 +433,16 @@ export function abrirTarefa(p = null, padrao = {}) {
     setTimeout(() => { img.src = urlImagem(img.dataset.id, 640, 1); }, 600);
   }, true);
   iniciar();
+
+  // As antigas "observações internas" viram um comentário fixado (uma vez só, ao abrir a tarefa).
+  const migrarNota = () => {
+    const t = atual();
+    const txt = String(t.briefing || '').trim();
+    if (!id || !txt) return;
+    const c = { id: `nota-${Date.now().toString(36)}`, a: 'Equipe', d: t.atualizadoEm || t.criadoEm || new Date().toISOString(), t: txt, fixado: true };
+    mudar({ comentarios: [...(t.comentarios || []), c], briefing: '' }).then(pintarConversa);
+  };
+  migrarNota();
 
   // Veio do botão "Pediu ajuste" (ou outro atalho): já aplica a etapa e leva o cursor para onde anotar.
   if (p && padrao.etapa && padrao.etapa !== p.etapa) {

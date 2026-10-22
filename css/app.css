@@ -1035,3 +1035,15 @@ a.chip{text-decoration:none}
 .ft-nota-h small{margin-left:auto;color:var(--ink-2);font:600 11.5px var(--ui)}
 .ft-nota textarea{width:100%;background:rgba(255,255,255,.75);border:1px solid rgba(41,43,45,.10);border-radius:12px;padding:9px 12px;font:400 14.5px/1.5 var(--body);min-height:44px;max-height:240px;resize:none;overflow:auto}
 .ft-nota textarea:focus{background:#fff;border-color:var(--verde);outline:0}
+
+/* Comentários fixados */
+.ft-fix{margin-bottom:12px}
+.ft-m.fixado .ft-balao{background:rgba(232,185,74,.18);box-shadow:inset 0 0 0 1px rgba(232,185,74,.55)}
+.ft-m.fixado p{max-height:240px;overflow:auto}
+.ft-m-b{margin-left:auto;display:inline-flex;gap:2px}
+.ft-m-b .ft-m-x{margin-left:0}
+.ft-m-p{border:0;background:transparent;opacity:0;cursor:pointer;color:var(--ink-3);padding:2px;line-height:0}
+.ft-m-p svg{width:14px;height:14px}
+.ft-m:hover .ft-m-p,.ft-m-p:focus-visible,.ft-m-p.on{opacity:1}
+.ft-m-p.on{color:#B07A00}
+.ft-m-p:hover{color:var(--ink)}
