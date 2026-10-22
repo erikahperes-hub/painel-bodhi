@@ -1,9 +1,9 @@
-import { store } from './store.js?v=119';
-import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=119';
-import { ic } from './icons.js?v=119';
-import { confirmar, abrirGaveta } from './ui.js?v=119';
-import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=119';
-import { idDrive, urlAbrir, urlImagem } from './drive.js?v=119';
+import { store } from './store.js?v=120';
+import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=120';
+import { ic } from './icons.js?v=120';
+import { confirmar, abrirGaveta } from './ui.js?v=120';
+import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=120';
+import { idDrive, urlAbrir, urlImagem } from './drive.js?v=120';
 
 // Ficha da tarefa de conteúdo. Pensada para o dia a dia de quem cria posts:
 //  - em cima, o caminho da tarefa (planejamento até publicado) com o próximo passo em destaque;
@@ -50,6 +50,7 @@ export function abrirTarefa(p = null, padrao = {}) {
   let id = p?.id || '';
   let rascunho = p ? null : { etapa: 'briefing', formato: 'feed', midias: [], ...padrao };
   let classeAberta = false;
+  let ativAberta = false;
   let fila = Promise.resolve();
   const pendentes = new Map(); // campos de texto esperando para salvar
   const timers = {};
@@ -148,6 +149,14 @@ export function abrirTarefa(p = null, padrao = {}) {
     </dl>`;
   };
 
+  // Arte e arquivos num lugar só (lado direito): prévia do post, miniaturas, campo para adicionar e opções extras.
+  const arte = (t) => `<section class="ft-arte"><h3>Arte e arquivos</h3><div data-previa>${previa(t)}</div><div data-arquivos>${arquivos(t)}</div>
+    <details class="ft-mais"><summary>Mais opções</summary>
+      <label class="ft-lbl" for="ft_capa">Capa (imagem)</label><input id="ft_capa" data-campo="capa" value="${esc(t.capa ? urlAbrir(t.capa) : '')}" placeholder="Link da imagem de capa no Drive">
+      <label class="ft-lbl" for="ft_link">Arquivo editável (só a equipe vê)</label><input id="ft_link" data-campo="link" value="${esc(t.link || '')}" placeholder="Canva, Drive ou onde estiver">
+      <label class="ft-lbl" for="ft_plano">Planejamento no link do cliente</label><select id="ft_plano" data-campo="planejamento">${Object.entries(PLANO).map(([v, n]) => `<option value="${v}"${v === (t.planejamento || '') ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select>
+    </details></section>`;
+
   const esquerda = (t) => {
     const ajustes = t.etapa === 'ajustes' || t.ajuste;
     const ajustesPlano = t.planejamento === 'ajustes' || t.ajustePlano;
@@ -156,27 +165,20 @@ export function abrirTarefa(p = null, padrao = {}) {
       ${ajustesPlano ? `<section class="ft-s ft-alerta"><h3>${ic('alert')}Alteração pedida no planejamento</h3><textarea data-campo="ajustePlano" rows="2" placeholder="O que o cliente pediu para mudar na ideia ou no roteiro">${esc(t.ajustePlano || '')}</textarea></section>` : ''}
       <section class="ft-s"><h3>Ideia e roteiro</h3><textarea data-campo="roteiro" rows="4" placeholder="Qual é a ideia? Como é o vídeo, cena a cena? Quando o planejamento é enviado para aprovação, o cliente lê este texto: escreva sem comentário interno.">${esc(t.roteiro || '')}</textarea></section>
       <section class="ft-s"><div class="ft-h"><h3>Legenda</h3><span class="ft-h-d"><small class="ft-cont" data-cont>${contar(t.legenda)}</small><button type="button" class="btn ghost sm" data-t="copiar">${ic('link')}Copiar</button></span></div><textarea data-campo="legenda" rows="4" placeholder="Texto que o cliente vê junto com a arte na hora de aprovar.">${esc(t.legenda || '')}</textarea></section>
-      <section class="ft-s"><h3>Arquivos</h3><div data-arquivos>${arquivos(t)}</div>
-        <details class="ft-mais"><summary>Mais opções</summary>
-          <label class="ft-lbl" for="ft_capa">Capa (imagem)</label><input id="ft_capa" data-campo="capa" value="${esc(t.capa ? urlAbrir(t.capa) : '')}" placeholder="Link da imagem de capa no Drive">
-          <label class="ft-lbl" for="ft_link">Arquivo editável (só a equipe vê)</label><input id="ft_link" data-campo="link" value="${esc(t.link || '')}" placeholder="Canva, Drive ou onde estiver">
-          <label class="ft-lbl" for="ft_plano">Planejamento no link do cliente</label><select id="ft_plano" data-campo="planejamento">${Object.entries(PLANO).map(([v, n]) => `<option value="${v}"${v === (t.planejamento || '') ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select>
-        </details></section>
       <section class="ft-s"><h3>Observações internas</h3><textarea data-campo="briefing" rows="2" placeholder="Anotações só da equipe. O cliente nunca vê.">${esc(t.briefing || '')}</textarea></section>`;
   };
 
-  // Conversa da equipe: comentários e, mais discretos, o que mudou na tarefa. Do mais antigo para o mais novo.
+  // Comentários em destaque. O que mudou na tarefa (etapa, responsável, data...) fica recolhido, para não poluir.
   const conversa = (t) => {
-    const out = [];
-    for (const c of t.comentarios || []) out.push({ tipo: 'com', d: c.d, c });
-    for (const a of t.atividade || []) out.push({ tipo: 'ativ', d: a.d, a });
-    if (t.criadoEm && !(t.atividade || []).some((a) => a.t === 'criou esta tarefa')) out.push({ tipo: 'ativ', d: t.criadoEm, a: { a: '', t: 'Tarefa criada' } });
-    out.sort((x, y) => String(x.d).localeCompare(String(y.d)));
-    const linha = (x) => (x.tipo === 'com'
-      ? `<li class="ft-m"><i class="ft-av g">${esc(inicial(x.c.a))}</i><div class="ft-balao"><div class="ft-m-h"><b>${esc(primeiroNome(x.c.a))}</b><small>${esc(quando(x.c.d))}</small>${x.c.id ? `<button type="button" class="ft-m-x" data-t="rm-com" data-id="${esc(x.c.id)}" aria-label="Excluir comentário" title="Excluir comentário">${ic('x')}</button>` : ''}</div><p>${links(x.c.t)}</p></div></li>`
-      : `<li class="ft-ev">${x.a.a ? `<b>${esc(primeiroNome(x.a.a))}</b> ` : ''}${esc(x.a.t)} <small>${esc(quando(x.d))}</small></li>`);
-    const n = (t.comentarios || []).length;
-    return `<h3>Conversa${n ? ` <span class="ft-n">${n}</span>` : ''}</h3><ul class="ft-conv">${out.map(linha).join('') || '<li class="ft-vazio">Nenhum comentário ainda. Use este espaço para combinados, legendas alternativas e avisos da equipe.</li>'}</ul>`;
+    const coms = [...(t.comentarios || [])].sort((x, y) => String(x.d).localeCompare(String(y.d)));
+    const ativ = [...(t.atividade || [])];
+    if (t.criadoEm && !ativ.some((a) => a.t === 'criou esta tarefa')) ativ.push({ d: t.criadoEm, a: '', t: 'Tarefa criada' });
+    ativ.sort((x, y) => String(x.d).localeCompare(String(y.d)));
+    const com = (c) => `<li class="ft-m"><i class="ft-av g">${esc(inicial(c.a))}</i><div class="ft-balao"><div class="ft-m-h"><b>${esc(primeiroNome(c.a))}</b><small>${esc(quando(c.d))}</small>${c.id ? `<button type="button" class="ft-m-x" data-t="rm-com" data-id="${esc(c.id)}" aria-label="Excluir comentário" title="Excluir comentário">${ic('x')}</button>` : ''}</div><p>${links(c.t)}</p></div></li>`;
+    const ev = (a) => `<li class="ft-ev">${a.a ? `<b>${esc(primeiroNome(a.a))}</b> ` : ''}${esc(a.t)} <small>${esc(quando(a.d))}</small></li>`;
+    return `<h3>Comentários${coms.length ? ` <span class="ft-n">${coms.length}</span>` : ''}</h3>
+      <ul class="ft-conv">${coms.map(com).join('') || '<li class="ft-vazio">Nenhum comentário ainda. Use este espaço para combinados, legendas alternativas e avisos da equipe.</li>'}</ul>
+      ${ativ.length ? `<details class="ft-ativ" data-ativ${ativAberta ? ' open' : ''}><summary>Histórico de mudanças <span class="ft-n">${ativ.length}</span></summary><ul class="ft-conv">${ativ.map(ev).join('')}</ul></details>` : ''}`;
   };
 
   const rodapeConversa = () => `<form class="ft-novo" data-novo><i class="ft-av g">${esc(inicial(quem()))}</i><textarea rows="1" data-comentar placeholder="Escreva um comentário (Enter envia)" aria-label="Comentário"></textarea><button type="submit" class="btn pri sm" aria-label="Enviar comentário">${ic('send')}</button></form>`;
@@ -188,8 +190,8 @@ export function abrirTarefa(p = null, padrao = {}) {
         <div class="ft-esq" data-esq>${esquerda(t)}</div>
         <aside class="ft-dir">
           <div class="ft-dir-c">
-            <div data-previa>${previa(t)}</div>
             <div data-detalhes>${detalhes(t)}</div>
+            ${arte(t)}
             <section class="ft-conv-w" data-conversa>${id ? conversa(t) : ''}</section>
           </div>
           ${id ? rodapeConversa() : '<div class="ft-novo cria"><button type="button" class="btn sec" data-t="fechar">Cancelar</button><button type="button" class="btn pri" data-t="criar">Criar tarefa</button></div>'}
@@ -384,6 +386,7 @@ export function abrirTarefa(p = null, padrao = {}) {
     aoFechar: descarregar,
   });
   g.el.addEventListener('click', aoClicar);
+  g.el.addEventListener('toggle', (e) => { if (e.target.matches('[data-ativ]')) ativAberta = e.target.open; }, true);
   g.el.addEventListener('input', (e) => {
     const el = e.target;
     if (el.matches('textarea')) crescer(el);

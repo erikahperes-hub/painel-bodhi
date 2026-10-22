@@ -1013,3 +1013,17 @@ a.chip{text-decoration:none}
 .ft-ed-w .ft-ed>div{display:grid;gap:6px}
 .ft-ed-w .ft-pill svg{width:14px;height:14px}
 @media (max-width:860px){.ft-ed-w{padding:0 16px}}
+
+/* Arte e arquivos juntos no lado direito; histórico de mudanças recolhido */
+.ft-arte{display:grid;gap:12px}
+.ft-arte h3{font:700 15px var(--ui);margin:0}
+.ft-arte .ft-ths{margin-bottom:0}
+.ft-arte .ft-add{grid-template-columns:96px minmax(0,1fr) auto}
+.ft-arte input,.ft-arte select{width:100%;background:#fff;border:1px solid var(--line);border-radius:14px;padding:9px 12px;font:400 14.5px var(--body);min-height:40px}
+.ft-arte input:focus,.ft-arte select:focus{border-color:var(--verde);outline:0}
+.ft-ativ{margin-top:12px}
+.ft-ativ summary{cursor:pointer;color:var(--ink-2);font:600 12.5px var(--ui);display:flex;align-items:center;gap:8px;list-style:none}
+.ft-ativ summary::-webkit-details-marker{display:none}
+.ft-ativ summary::before{content:'';width:7px;height:7px;border-right:2px solid var(--ink-3);border-bottom:2px solid var(--ink-3);transform:rotate(-45deg);transition:transform .15s}
+.ft-ativ[open] summary::before{transform:rotate(45deg)}
+.ft-ativ .ft-conv{margin-top:10px}
