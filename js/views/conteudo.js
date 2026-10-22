@@ -1,16 +1,16 @@
-import { store } from '../store.js?v=137';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=137';
-import { ic, flor } from '../icons.js?v=137';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=137';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=137';
-import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=137';
-import { feedPerfil } from '../feed-perfil.js?v=137';
-import { igApi } from '../instagram-api.js?v=137';
-import { lerPasta } from '../drive-pasta.js?v=137';
-import { lerTabela } from '../planejamento.js?v=137';
-import { config } from '../config.js?v=137';
-import { histCartao, histMontar, importarHistorico } from '../historico.js?v=137';
-import { abrirTarefa } from '../tarefa.js?v=137';
+import { store } from '../store.js?v=139';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=139';
+import { ic, flor } from '../icons.js?v=139';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=139';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=139';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=139';
+import { feedPerfil } from '../feed-perfil.js?v=139';
+import { igApi } from '../instagram-api.js?v=139';
+import { lerPasta } from '../drive-pasta.js?v=139';
+import { lerTabela } from '../planejamento.js?v=139';
+import { config } from '../config.js?v=139';
+import { histCartao, histMontar, importarHistorico } from '../historico.js?v=139';
+import { abrirTarefa } from '../tarefa.js?v=139';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
@@ -90,9 +90,7 @@ function painelFiltros() {
 
 function botaoFiltros() {
   const n = nAtivos();
-  const eu = meuNome();
-  const minhas = eu ? `<button type="button" class="fl-eu${filtroPessoa === eu ? ' on' : ''}" data-act="filtro-pessoa" data-v="${esc(eu)}" aria-pressed="${filtroPessoa === eu}" aria-label="Só as minhas tarefas" title="Só as minhas tarefas">${esc(eu.charAt(0))}</button>` : '';
-  return `<span class="fl-wrap">${minhas}<button type="button" class="btn sec sm fl-b${n ? ' ativo' : ''}" data-act="abrir-filtros" aria-expanded="${filtrosAberto}" aria-haspopup="dialog">${ic('sliders')}Filtros${n ? ` · ${n}` : ''}</button>${filtrosAberto ? painelFiltros() : ''}</span>`;
+  return `<span class="fl-wrap"><button type="button" class="btn sec sm fl-b${n ? ' ativo' : ''}" data-act="abrir-filtros" aria-expanded="${filtrosAberto}" aria-haspopup="dialog">${ic('sliders')}Filtros${n ? ` · ${n}` : ''}</button>${filtrosAberto ? painelFiltros() : ''}</span>`;
 }
 window.addEventListener('hashchange', () => { filtrosAberto = false; });
 // O painel fecha ao clicar fora dele ou com Esc.
