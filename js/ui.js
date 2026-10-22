@@ -1,6 +1,6 @@
-import { esc, toast, reduzirImagem, urlSegura } from './util.js?v=115';
-import { ic } from './icons.js?v=115';
-import { idDrive, urlAbrir } from './drive.js?v=115';
+import { esc, toast, reduzirImagem, urlSegura } from './util.js?v=118';
+import { ic } from './icons.js?v=118';
+import { idDrive, urlAbrir } from './drive.js?v=118';
 
 let pilha = [];
 
@@ -31,6 +31,30 @@ export function abrirModal({ titulo, subtitulo = '', corpo = '', largo = false, 
   aoAbrir?.(api);
   const primeiro = ov.querySelector('input:not([type=hidden]):not([type=file]),textarea,select');
   primeiro?.focus();
+  return api;
+}
+
+// Gaveta: painel que desliza pela direita (usado na ficha da tarefa). Fecha com Esc, clicando fora ou no X, como o modal.
+export function abrirGaveta({ titulo, corpo = '', aoAbrir, aoFechar }) {
+  const ov = document.createElement('div');
+  ov.className = 'overlay gaveta';
+  ov.innerHTML = `<aside class="gv" role="dialog" aria-modal="true" aria-label="${esc(titulo)}">${corpo}</aside>`;
+  document.body.appendChild(ov);
+  document.body.style.overflow = 'hidden';
+  const anterior = document.activeElement;
+  const api = {
+    el: ov.querySelector('.gv'),
+    fechar() {
+      ov.remove();
+      pilha = pilha.filter((x) => x !== api);
+      if (!pilha.length) document.body.style.overflow = '';
+      anterior?.focus?.();
+      aoFechar?.();
+    },
+  };
+  ov.addEventListener('mousedown', (e) => { if (e.target === ov && !api.travado) api.fechar(); });
+  pilha.push(api);
+  aoAbrir?.(api);
   return api;
 }
 

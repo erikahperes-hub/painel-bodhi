@@ -1,15 +1,16 @@
-import { store } from '../store.js?v=115';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=115';
-import { ic, flor } from '../icons.js?v=115';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=115';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=115';
-import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=115';
-import { feedPerfil } from '../feed-perfil.js?v=115';
-import { igApi } from '../instagram-api.js?v=115';
-import { lerPasta } from '../drive-pasta.js?v=115';
-import { lerTabela } from '../planejamento.js?v=115';
-import { config } from '../config.js?v=115';
-import { histCartao, histMontar, importarHistorico } from '../historico.js?v=115';
+import { store } from '../store.js?v=118';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=118';
+import { ic, flor } from '../icons.js?v=118';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=118';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=118';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=118';
+import { feedPerfil } from '../feed-perfil.js?v=118';
+import { igApi } from '../instagram-api.js?v=118';
+import { lerPasta } from '../drive-pasta.js?v=118';
+import { lerTabela } from '../planejamento.js?v=118';
+import { config } from '../config.js?v=118';
+import { histCartao, histMontar, importarHistorico } from '../historico.js?v=118';
+import { abrirTarefa } from '../tarefa.js?v=118';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
@@ -89,48 +90,8 @@ const clientesDeTrabalho = () => store.todos('cliente')
   .filter((c) => c.status !== 'inativo')
   .sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || '')));
 
-function abrirPeca(p = null, padrao = {}) {
-  const clientes = clientesDeTrabalho();
-  const atual = p ? store.obter('cliente', p.clienteId) : null;
-  if (atual && !clientes.includes(atual)) clientes.push(atual);
-  formulario({
-    titulo: p ? 'Editar tarefa' : 'Nova tarefa de conteúdo',
-    subtitulo: 'Cada reels, carrossel, estático ou story do cliente vira uma tarefa acompanhada daqui.',
-    largo: true,
-    campos: [
-      { nome: 'clienteId', rotulo: 'Cliente', tipo: 'select', obrigatorio: true, opcoes: [{ v: '', t: 'Escolha o cliente' }, ...clientes.map((c) => ({ v: c.id, t: c.nome || '(sem nome)' }))] },
-      { nome: 'titulo', rotulo: 'Título da tarefa', obrigatorio: true, placeholder: 'Ex.: Post de lançamento da coleção' },
-      { nome: 'formato', rotulo: 'Formato', tipo: 'select', opcoes: Object.entries(FORMATOS).map(([v, f]) => ({ v, t: f.nome })) },
-      { nome: 'rede', rotulo: 'Rede', tipo: 'select', opcoes: [{ v: '', t: 'Sem rede definida' }, ...Object.entries(REDES).map(([v, r]) => ({ v, t: r.nome }))] },
-      { nome: 'funil', rotulo: 'Etapa do funil', tipo: 'select', opcoes: Object.entries(FUNIL).map(([v, t]) => ({ v, t })) },
-      { nome: 'etapa', rotulo: 'Etapa', tipo: 'select', opcoes: ETAPAS.map((e) => ({ v: e.id, t: e.nome })) },
-      { nome: 'publicar', rotulo: 'Data de publicação', tipo: 'data' },
-      { nome: 'concluida', rotulo: 'Tarefa', tipo: 'select', opcoes: [{ v: '', t: 'Em aberto' }, { v: 'sim', t: 'Concluída' }] },
-      { nome: 'responsavel', rotulo: 'Responsável', tipo: 'select', opcoes: [{ v: '', t: 'Sem responsável' }, ...RESPONSAVEIS.map((r) => ({ v: r, t: r }))] },
-      { nome: 'roteiro', rotulo: 'Ideia e roteiro', tipo: 'area', cheio: true, linhas: 7, ajuda: 'O cliente lê este texto quando o planejamento é enviado para aprovação, então escreva sem comentário interno. Notas só da equipe vão em “Observações internas”.' },
-      { nome: 'planejamento', rotulo: 'Planejamento no link do cliente', tipo: 'select', cheio: true, opcoes: Object.entries(PLANO).map(([v, t]) => ({ v, t })), ajuda: 'Escolha “Aguardando aprovação” para o cliente ver esta ideia e o roteiro no link dele e aprovar antes da produção.' },
-      { nome: 'ajustePlano', rotulo: 'Pedido de alteração no planejamento', tipo: 'area', cheio: true, linhas: 2, ajuda: 'O que o cliente pediu para mudar na ideia ou no roteiro.' },
-      { nome: 'legenda', rotulo: 'Legenda', tipo: 'area', cheio: true, linhas: 6, ajuda: 'É o texto que o cliente vai ver junto com a arte na hora de aprovar.' },
-      { nome: 'secao', tipo: 'secao', rotulo: 'Arquivos para o cliente aprovar' },
-      { nome: 'midias', rotulo: 'Arquivos da tarefa', tipo: 'midias', cheio: true, ajuda: 'Cole o link de cada arquivo da pasta de aprovação no Drive. Carrossel: uma imagem por linha, na ordem dos slides. Reels e story em vídeo: escolha “Vídeo”.' },
-      { nome: 'capa', rotulo: 'Capa (imagem)', cheio: true, placeholder: 'Link da imagem de capa no Drive', ajuda: 'Aparece na grade do feed e antes de o vídeo tocar. Se vazio, usa a primeira imagem.' },
-      { nome: 'link', rotulo: 'Link do arquivo editável (uso interno)', cheio: true, placeholder: 'Canva, Drive ou onde estiver', ajuda: 'Só vocês veem. Não aparece para o cliente.' },
-      { nome: 'ajuste', rotulo: 'Pedido de ajuste do cliente', tipo: 'area', cheio: true, linhas: 3, ajuda: 'O que o cliente pediu para mudar. Aparece em destaque no cartão enquanto estiver em Ajustes.' },
-      { nome: 'briefing', rotulo: 'Observações internas', tipo: 'area', cheio: true, linhas: 3 },
-    ],
-    valores: p ? { ...p, ...padrao, concluida: p.concluida ? 'sim' : '', capa: p.capa ? urlAbrir(p.capa) : '' } : { etapa: 'briefing', formato: 'feed', ...padrao },
-    async aoSalvar(v) {
-      if (v.link && !urlSegura(v.link)) { toast('O link precisa começar com http:// ou https://', true); return false; }
-      if (v.capa && !idDrive(v.capa)) { toast('A capa precisa ser um link de arquivo do Google Drive.', true); return false; }
-      const feita = v.concluida === 'sim';
-      await store.salvar('conteudo', { ...(p || { criadoEm: new Date().toISOString() }), ...v, concluida: feita, concluidaEm: feita ? (p?.concluidaEm || new Date().toISOString()) : '', link: urlSegura(v.link), capa: idDrive(v.capa) });
-      toast('Tarefa salva');
-    },
-    aoExcluir: p ? async (m) => {
-      if (await confirmar(`Excluir a tarefa “${p.titulo}”?`, 'Excluir', true)) { await store.remover('conteudo', p.id); m.fechar(); toast('Tarefa excluída'); }
-    } : null,
-  });
-}
+// A ficha da tarefa (painel lateral, salva sozinha, com comentários) fica em js/tarefa.js.
+const abrirPeca = (p = null, padrao = {}) => abrirTarefa(p, padrao);
 
 // "Adicionar em lote": um só botão no topo que abre a escolha entre as três formas de trazer várias tarefas de uma vez.
 // (Para criar uma tarefa só, usa-se "Nova tarefa".)
