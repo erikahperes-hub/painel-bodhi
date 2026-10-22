@@ -1,16 +1,16 @@
-import { store } from '../store.js?v=139';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=139';
-import { ic, flor } from '../icons.js?v=139';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=139';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=139';
-import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=139';
-import { feedPerfil } from '../feed-perfil.js?v=139';
-import { igApi } from '../instagram-api.js?v=139';
-import { lerPasta } from '../drive-pasta.js?v=139';
-import { lerTabela } from '../planejamento.js?v=139';
-import { config } from '../config.js?v=139';
-import { histCartao, histMontar, importarHistorico } from '../historico.js?v=139';
-import { abrirTarefa } from '../tarefa.js?v=139';
+import { store } from '../store.js?v=141';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=141';
+import { ic, flor } from '../icons.js?v=141';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=141';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=141';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=141';
+import { feedPerfil } from '../feed-perfil.js?v=141';
+import { igApi } from '../instagram-api.js?v=141';
+import { lerPasta } from '../drive-pasta.js?v=141';
+import { lerTabela } from '../planejamento.js?v=141';
+import { config } from '../config.js?v=141';
+import { histCartao, histMontar, importarHistorico } from '../historico.js?v=141';
+import { abrirTarefa } from '../tarefa.js?v=141';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
@@ -162,7 +162,7 @@ function escolherAdicionar(clienteId = '') {
 
 // Botões do topo do cartão, iguais nas abas Status e Calendário.
 function botoesCabecalho(filtro) {
-  return `<div class="actions">${filtro ? `<button class="btn sec sm" data-act="ir" data-rota="previa" data-ref="${esc(filtro)}">${ic('image')}Prévia do cliente</button><button class="btn sec sm" data-act="enviar-planejamento" data-cliente="${esc(filtro)}">${ic('send')}Enviar planejamento</button><button class="btn sec sm" data-act="link-aprovacao" data-cliente="${esc(filtro)}">${ic('link')}Link de aprovação</button>` : ''}
+  return `<div class="actions">${filtro ? `<button class="btn sec sm" data-act="enviar-planejamento" data-cliente="${esc(filtro)}">${ic('send')}Enviar planejamento</button><button class="btn sec sm" data-act="link-aprovacao" data-cliente="${esc(filtro)}">${ic('link')}Link de aprovação</button>` : ''}
     <button class="btn sec sm" data-act="adicionar-pecas" data-cliente="${esc(filtro)}">${ic('upload')}Adicionar em lote</button>
     ${botaoFiltros()}
     <button class="btn pri sm" data-act="nova-peca" data-cliente="${esc(filtro)}">${ic('plus')}Nova tarefa</button>
@@ -665,14 +665,15 @@ export default {
       let url = montar(await store.linkAprovacao(c.id));
       const m = abrirModal({
         titulo: `Link de aprovação: ${c.nome}`,
-        subtitulo: 'Envie este link ao cliente. Ele vê só as tarefas dele (as que estão em “Aguardando aprovação” ou depois) e não precisa de senha.',
+        subtitulo: 'Envie este link ao cliente. Ele vê só as tarefas dele (as que estão em “Aguardando aprovação” ou depois) e não precisa de senha. Para ver como ele enxerga, use “Prévia do cliente”.',
         corpo: `<div class="field"><label for="link-ap">Link do cliente</label><input id="link-ap" readonly value="${esc(url)}"></div>
           <p class="lbl" style="margin-top:10px">Quem tem este link consegue ver e aprovar as tarefas de ${esc(c.nome)}. Se ele for parar em mãos erradas, gere um novo: o antigo deixa de funcionar.</p>
-          <div class="modal-f"><button class="btn ghost danger" data-renovar>Gerar novo link</button><div class="actions"><button class="btn sec" data-fechar-link>Fechar</button>${navigator.share ? `<button class="btn sec" data-compartilhar>${ic('send')}Compartilhar</button>` : ''}<button class="btn pri" data-copiar>${ic('link')}Copiar link</button></div></div>`,
+          <div class="modal-f"><button class="btn ghost danger" data-renovar>Gerar novo link</button><div class="actions"><button class="btn sec" data-fechar-link>Fechar</button><button class="btn sec" data-previa>${ic('image')}Prévia do cliente</button>${navigator.share ? `<button class="btn sec" data-compartilhar>${ic('send')}Compartilhar</button>` : ''}<button class="btn pri" data-copiar>${ic('link')}Copiar link</button></div></div>`,
       });
       const campo = m.el.querySelector('#link-ap');
       campo.addEventListener('focus', () => campo.select());
       m.el.querySelector('[data-fechar-link]').onclick = () => m.fechar();
+      m.el.querySelector('[data-previa]').onclick = () => { m.fechar(); location.hash = `#/previa/${c.id}`; };
       m.el.querySelector('[data-copiar]').onclick = async () => {
         try { await navigator.clipboard.writeText(campo.value); toast('Link copiado'); } catch { campo.select(); toast('Selecionei o link: use Ctrl+C para copiar'); }
       };

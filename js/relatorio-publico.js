@@ -1,9 +1,9 @@
-import { config } from './config.js?v=139';
-import { logo } from './logo.js?v=139';
-import { ligarDicas } from './dicas.js?v=139';
-import { esc, hojeISO } from './util.js?v=139';
-import { ic, flor } from './icons.js?v=139';
-import { corpoRelatorio, ligarIndice, ymAnterior, ymMais, nomeMes } from './relatorio-html.js?v=139';
+import { config } from './config.js?v=141';
+import { logo } from './logo.js?v=141';
+import { ligarDicas } from './dicas.js?v=141';
+import { esc, hojeISO } from './util.js?v=141';
+import { ic, flor } from './icons.js?v=141';
+import { corpoRelatorio, ligarIndice, ymAnterior, ymMais, nomeMes } from './relatorio-html.js?v=141';
 
 // Página pública do relatório do cliente. Não tem login: o código do link (depois do #) identifica o cliente.
 // O banco só entrega os números DELE (função relatorio_ver): resultados do Instagram, stories, entregas do mês e metas.

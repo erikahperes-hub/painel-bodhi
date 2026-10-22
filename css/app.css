@@ -1102,8 +1102,8 @@ a.chip{text-decoration:none}
 
 /* Botão Filtros (Conteúdo): painel com responsável, tipo, funil e rede */
 .fl-wrap{position:relative;display:inline-flex;align-items:center;gap:8px}
-.fl-b.ativo,.fl-b.ativo:hover,.fl-b.ativo:focus-visible{background:var(--petroleo);border-color:var(--petroleo);color:var(--creme)}
-.fl-b.ativo:hover{filter:brightness(1.25)}
+.btn.sec.fl-b.ativo,.btn.sec.fl-b.ativo:hover,.btn.sec.fl-b.ativo:focus,.btn.sec.fl-b.ativo:active,.btn.sec.fl-b.ativo:focus-visible{background:var(--petroleo)!important;border-color:var(--petroleo)!important;color:var(--creme)!important}
+.btn.sec.fl-b.ativo:hover{filter:brightness(1.2)}
 .fl-fundo{display:none}
 .fl-pop{position:absolute;right:0;top:calc(100% + 8px);z-index:40;width:min(380px,92vw);display:flex;flex-direction:column;gap:14px;padding:16px;background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:0 18px 40px rgba(7,63,86,.18);text-align:left}
 .fl-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
