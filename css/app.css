@@ -996,3 +996,20 @@ a.chip{text-decoration:none}
   .ft-add{grid-template-columns:minmax(0,1fr) auto}
   .ft-add select{grid-column:1/-1}
 }
+
+/* Cliente e classificação em cima do título */
+.ft-eyebrow{text-transform:none;letter-spacing:0;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.ft-cli{font:700 14px var(--ui);color:var(--petroleo)}
+.ft-cli::after{content:'';display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--ink-3);margin-left:10px;vertical-align:middle}
+.ft-pontos{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}
+.ft-chipb{border:0;cursor:pointer}
+.ft-chipb:hover{filter:brightness(.96)}
+.chip.ft-add-c{background:transparent;border:1px dashed var(--ink-3);color:var(--ink-2);cursor:pointer}
+.ft-lapis{width:26px;height:26px;border-radius:50%;border:0;background:transparent;color:var(--ink-3);display:grid;place-items:center;cursor:pointer;font-size:14px}
+.ft-lapis:hover{background:var(--graf-s);color:var(--ink)}
+.ft-ed-w{padding:0 26px;flex:none}
+.ft-ed-w:empty{display:none}
+.ft-ed-w .ft-ed{display:flex;flex-wrap:wrap;gap:12px 28px;margin:4px 0 12px;padding:12px 14px;background:var(--creme);border-radius:16px;box-shadow:inset 0 0 0 1px var(--line)}
+.ft-ed-w .ft-ed>div{display:grid;gap:6px}
+.ft-ed-w .ft-pill svg{width:14px;height:14px}
+@media (max-width:860px){.ft-ed-w{padding:0 16px}}

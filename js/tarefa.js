@@ -1,9 +1,9 @@
-import { store } from './store.js?v=118';
-import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=118';
-import { ic } from './icons.js?v=118';
-import { confirmar, abrirGaveta } from './ui.js?v=118';
-import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=118';
-import { idDrive, urlAbrir, urlImagem } from './drive.js?v=118';
+import { store } from './store.js?v=119';
+import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=119';
+import { ic } from './icons.js?v=119';
+import { confirmar, abrirGaveta } from './ui.js?v=119';
+import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=119';
+import { idDrive, urlAbrir, urlImagem } from './drive.js?v=119';
 
 // Ficha da tarefa de conteúdo. Pensada para o dia a dia de quem cria posts:
 //  - em cima, o caminho da tarefa (planejamento até publicado) com o próximo passo em destaque;
@@ -73,14 +73,12 @@ export function abrirTarefa(p = null, padrao = {}) {
 
   // ---------- partes da tela ----------
   const topo = (t) => {
-    const f = FORMATOS[t.formato] || FORMATOS.feed;
-    const cli = store.obter('cliente', t.clienteId);
     const lista = vizinhas();
     const pos = lista.findIndex((x) => x.id === id);
     const nav = lista.length > 1 ? `<span class="ft-nav"><button type="button" class="iconbtn ft-ib" data-t="viz" data-v="-1" aria-label="Tarefa anterior" title="Tarefa anterior (Alt + ←)" ${pos <= 0 ? 'disabled' : ''}><span class="ft-seta e">${ic('chev')}</span></button><button type="button" class="iconbtn ft-ib" data-t="viz" data-v="1" aria-label="Próxima tarefa" title="Próxima tarefa (Alt + →)" ${pos >= lista.length - 1 ? 'disabled' : ''}><span class="ft-seta d">${ic('chev')}</span></button></span>` : '';
     return `<header class="ft-top">
       <div class="ft-id">
-        <div class="ft-eyebrow"><span class="chip fm-${FORMATOS[t.formato] ? t.formato : 'feed'}">${ic(f.icone)}${esc(f.nome)}</span><span>${esc(cli?.nome || 'Escolha o cliente')}</span></div>
+        ${eyebrow(t)}
         <input class="ft-titulo" data-campo="titulo" value="${esc(t.titulo || '')}" placeholder="Título da tarefa" aria-label="Título da tarefa" maxlength="200">
       </div>
       <div class="ft-topo-d"><span class="ft-salvo" data-salvo aria-live="polite"></span>${nav}${id ? `<button type="button" class="iconbtn ft-ib" data-t="excluir" aria-label="Excluir tarefa" title="Excluir tarefa">${ic('trash')}</button>` : ''}<button type="button" class="iconbtn ft-ib" data-t="fechar" aria-label="Fechar" title="Fechar (Esc)">${ic('x')}</button></div>
@@ -119,17 +117,24 @@ export function abrirTarefa(p = null, padrao = {}) {
     </div>`;
   };
 
-  // Linha única com a classificação; só abre os seletores quando a pessoa quer mudar.
-  const classe = (t) => {
-    const fm = FORMATOS[t.formato] || FORMATOS.feed;
-    const chips = [`<span class="chip fm-${FORMATOS[t.formato] ? t.formato : 'feed'}">${ic(fm.icone)}${esc(fm.nome)}</span>`, FUNIL[t.funil] ? `<span class="chip mute">${esc(FUNIL[t.funil])}</span>` : '', REDES[t.rede] ? `<span class="chip mute">${esc(REDES[t.rede].nome)}</span>` : ''].filter(Boolean).join('');
+  // Em cima do título: primeiro o cliente, depois a classificação (formato, funil e rede) em chips que abrem o editor.
+  const eyebrow = (t) => {
+    const f = FORMATOS[t.formato] || FORMATOS.feed;
+    const cli = store.obter('cliente', t.clienteId);
+    const chip = (cls, txt) => `<button type="button" class="chip ${cls} ft-chipb" data-t="classe" title="Alterar a classificação" aria-expanded="${classeAberta}">${txt}</button>`;
+    const semExtras = !FUNIL[t.funil] && !REDES[t.rede];
+    return `<div class="ft-eyebrow"><span class="ft-cli">${esc(cli?.nome || 'Escolha o cliente')}</span><span class="ft-pontos">${chip(`fm-${FORMATOS[t.formato] ? t.formato : 'feed'}`, `${ic(f.icone)}${esc(f.nome)}`)}${FUNIL[t.funil] ? chip('mute', esc(FUNIL[t.funil])) : ''}${REDES[t.rede] ? chip('mute', esc(REDES[t.rede].nome)) : ''}${semExtras ? '<button type="button" class="chip ft-add-c" data-t="classe">+ Funil e rede</button>' : ''}<button type="button" class="ft-lapis" data-t="classe" aria-label="Alterar a classificação" title="Alterar a classificação">${ic('edit')}</button></span></div>`;
+  };
+
+  // Seletores de formato, funil e rede: ficam escondidos e só abrem quando a pessoa clica nos chips.
+  const editor = (t) => {
+    if (!classeAberta) return '';
     const pill = (nome, v, texto) => `<button type="button" class="ft-pill${String(v) === String(t[nome] || '') ? ' on' : ''}" data-t="set" data-n="${nome}" data-v="${esc(v)}" aria-pressed="${String(v) === String(t[nome] || '')}">${esc(texto)}</button>`;
-    return `<div class="ft-classe"><button type="button" class="ft-resumo" data-t="classe" aria-expanded="${classeAberta}"><span class="ft-resumo-c">${chips}</span><span class="ft-resumo-e">${classeAberta ? 'Fechar' : 'Alterar'}</span></button>
-      ${classeAberta ? `<div class="ft-ed">
-        <div><span class="ft-rot">Formato</span><div class="ft-fmts">${Object.entries(FORMATOS).map(([v, f]) => `<button type="button" class="ft-fmt fm-${v}${(t.formato || 'feed') === v ? ' on' : ''}" data-t="set" data-n="formato" data-v="${v}" aria-pressed="${(t.formato || 'feed') === v}">${ic(f.icone)}${esc(f.nome)}</button>`).join('')}</div></div>
-        <div><span class="ft-rot">Etapa do funil</span><div class="ft-pills">${Object.entries(FUNIL).map(([v, n]) => pill('funil', v, n.replace(' de funil', ''))).join('')}</div></div>
-        <div><span class="ft-rot">Rede</span><div class="ft-pills">${Object.entries(REDES).map(([v, r]) => pill('rede', v, r.nome)).join('')}</div></div>
-      </div>` : ''}</div>`;
+    return `<div class="ft-ed">
+      <div><span class="ft-rot">Formato</span><div class="ft-pills">${Object.entries(FORMATOS).map(([v, f]) => `<button type="button" class="ft-pill${(t.formato || 'feed') === v ? ' on' : ''}" data-t="set" data-n="formato" data-v="${v}" aria-pressed="${(t.formato || 'feed') === v}">${ic(f.icone)}${esc(f.nome)}</button>`).join('')}</div></div>
+      <div><span class="ft-rot">Etapa do funil</span><div class="ft-pills">${Object.entries(FUNIL).map(([v, n]) => pill('funil', v, n.replace(' de funil', ''))).join('')}</div></div>
+      <div><span class="ft-rot">Rede</span><div class="ft-pills">${Object.entries(REDES).map(([v, r]) => pill('rede', v, r.nome)).join('')}</div></div>
+    </div>`;
   };
 
   const detalhes = (t) => {
@@ -140,7 +145,7 @@ export function abrirTarefa(p = null, padrao = {}) {
       <div><dt>Responsável</dt><dd class="ft-pills">${RESPONSAVEIS.map((r) => `<button type="button" class="ft-pill${t.responsavel === r ? ' on' : ''}" data-t="set" data-n="responsavel" data-v="${r}" aria-pressed="${t.responsavel === r}"><i class="ft-av">${inicial(r)}</i>${esc(r)}</button>`).join('')}</dd></div>
       <div><dt>Publicar em</dt><dd><input type="date" data-campo="publicar" value="${esc(t.publicar || '')}" aria-label="Data de publicação">${dica}</dd></div>
       <div><dt>Cliente</dt><dd><select data-campo="clienteId" aria-label="Cliente"><option value="">Escolha o cliente</option>${clientes().map((c) => `<option value="${esc(c.id)}"${c.id === t.clienteId ? ' selected' : ''}>${esc(c.nome || '(sem nome)')}</option>`).join('')}</select></dd></div>
-    </dl>${classe(t)}`;
+    </dl>`;
   };
 
   const esquerda = (t) => {
@@ -178,7 +183,7 @@ export function abrirTarefa(p = null, padrao = {}) {
 
   const montar = () => {
     const t = atual();
-    return `${topo(t)}${jornada(t)}
+    return `${topo(t)}<div class="ft-ed-w" data-ed>${editor(t)}</div>${jornada(t)}
       <div class="ft-cols">
         <div class="ft-esq" data-esq>${esquerda(t)}</div>
         <aside class="ft-dir">
@@ -220,7 +225,8 @@ export function abrirTarefa(p = null, padrao = {}) {
   const q = (s) => g.el.querySelector(s);
   const pintarTopo = () => {
     const t = atual();
-    q('.ft-eyebrow').outerHTML = topo(t).match(/<div class="ft-eyebrow">[\s\S]*?<\/div>/)[0];
+    q('.ft-eyebrow').outerHTML = eyebrow(t);
+    q('[data-ed]').innerHTML = editor(t);
     q('.ft-jor').outerHTML = jornada(t);
   };
   const pintarLado = () => { q('[data-previa]').innerHTML = previa(atual()); q('[data-detalhes]').innerHTML = detalhes(atual()); pintarTopo(); };
@@ -331,7 +337,7 @@ export function abrirTarefa(p = null, padrao = {}) {
     if (a === 'fechar') return g.fechar();
     if (a === 'criar') return criar();
     if (a === 'viz') return irParaVizinha(Number(b.dataset.v));
-    if (a === 'classe') { classeAberta = !classeAberta; q('[data-detalhes]').innerHTML = detalhes(atual()); return; }
+    if (a === 'classe') { classeAberta = !classeAberta; pintarTopo(); return; }
     if (a === 'concluir') {
       const feita = !atual().concluida;
       await mudar({ concluida: feita, concluidaEm: feita ? new Date().toISOString() : '' }, feita ? 'marcou como concluída' : 'voltou a tarefa para em aberto');
