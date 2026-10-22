@@ -1027,3 +1027,11 @@ a.chip{text-decoration:none}
 .ft-ativ summary::before{content:'';width:7px;height:7px;border-right:2px solid var(--ink-3);border-bottom:2px solid var(--ink-3);transform:rotate(-45deg);transition:transform .15s}
 .ft-ativ[open] summary::before{transform:rotate(45deg)}
 .ft-ativ .ft-conv{margin-top:10px}
+
+/* Nota fixa da equipe */
+.ft-nota{background:rgba(232,185,74,.18);box-shadow:inset 0 0 0 1px rgba(232,185,74,.55);border-radius:16px;padding:12px 14px}
+.ft-nota-h{display:flex;align-items:center;gap:8px;margin-bottom:8px;font:700 13.5px var(--ui);color:var(--ink)}
+.ft-nota-h svg{width:15px;height:15px}
+.ft-nota-h small{margin-left:auto;color:var(--ink-2);font:600 11.5px var(--ui)}
+.ft-nota textarea{width:100%;background:rgba(255,255,255,.75);border:1px solid rgba(41,43,45,.10);border-radius:12px;padding:9px 12px;font:400 14.5px/1.5 var(--body);min-height:44px;max-height:240px;resize:none;overflow:auto}
+.ft-nota textarea:focus{background:#fff;border-color:var(--verde);outline:0}

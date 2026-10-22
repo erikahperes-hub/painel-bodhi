@@ -1,9 +1,9 @@
-import { store } from './store.js?v=120';
-import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=120';
-import { ic } from './icons.js?v=120';
-import { confirmar, abrirGaveta } from './ui.js?v=120';
-import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=120';
-import { idDrive, urlAbrir, urlImagem } from './drive.js?v=120';
+import { store } from './store.js?v=121';
+import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=121';
+import { ic } from './icons.js?v=121';
+import { confirmar, abrirGaveta } from './ui.js?v=121';
+import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=121';
+import { idDrive, urlAbrir, urlImagem } from './drive.js?v=121';
 
 // Ficha da tarefa de conteúdo. Pensada para o dia a dia de quem cria posts:
 //  - em cima, o caminho da tarefa (planejamento até publicado) com o próximo passo em destaque;
@@ -164,9 +164,11 @@ export function abrirTarefa(p = null, padrao = {}) {
       ${ajustes ? `<section class="ft-s ft-alerta"><h3>${ic('alert')}O cliente pediu ajuste</h3><textarea data-campo="ajuste" rows="2" placeholder="O que o cliente pediu para mudar">${esc(t.ajuste || '')}</textarea></section>` : ''}
       ${ajustesPlano ? `<section class="ft-s ft-alerta"><h3>${ic('alert')}Alteração pedida no planejamento</h3><textarea data-campo="ajustePlano" rows="2" placeholder="O que o cliente pediu para mudar na ideia ou no roteiro">${esc(t.ajustePlano || '')}</textarea></section>` : ''}
       <section class="ft-s"><h3>Ideia e roteiro</h3><textarea data-campo="roteiro" rows="4" placeholder="Qual é a ideia? Como é o vídeo, cena a cena? Quando o planejamento é enviado para aprovação, o cliente lê este texto: escreva sem comentário interno.">${esc(t.roteiro || '')}</textarea></section>
-      <section class="ft-s"><div class="ft-h"><h3>Legenda</h3><span class="ft-h-d"><small class="ft-cont" data-cont>${contar(t.legenda)}</small><button type="button" class="btn ghost sm" data-t="copiar">${ic('link')}Copiar</button></span></div><textarea data-campo="legenda" rows="4" placeholder="Texto que o cliente vê junto com a arte na hora de aprovar.">${esc(t.legenda || '')}</textarea></section>
-      <section class="ft-s"><h3>Observações internas</h3><textarea data-campo="briefing" rows="2" placeholder="Anotações só da equipe. O cliente nunca vê.">${esc(t.briefing || '')}</textarea></section>`;
+      <section class="ft-s"><div class="ft-h"><h3>Legenda</h3><span class="ft-h-d"><small class="ft-cont" data-cont>${contar(t.legenda)}</small><button type="button" class="btn ghost sm" data-t="copiar">${ic('link')}Copiar</button></span></div><textarea data-campo="legenda" rows="4" placeholder="Texto que o cliente vê junto com a arte na hora de aprovar.">${esc(t.legenda || '')}</textarea></section>`;
   };
+
+  // Nota fixa da equipe (era "Observações internas"): fica no alto da coluna de comentários, só a equipe vê.
+  const nota = (t) => `<section class="ft-nota"><div class="ft-nota-h">${ic('bookmark')}<b>Nota fixa da equipe</b><small>o cliente nunca vê</small></div><textarea data-campo="briefing" rows="2" placeholder="Combinados, lembretes e links úteis desta tarefa.">${esc(t.briefing || '')}</textarea></section>`;
 
   // Comentários em destaque. O que mudou na tarefa (etapa, responsável, data...) fica recolhido, para não poluir.
   const conversa = (t) => {
@@ -192,6 +194,7 @@ export function abrirTarefa(p = null, padrao = {}) {
           <div class="ft-dir-c">
             <div data-detalhes>${detalhes(t)}</div>
             ${arte(t)}
+            ${nota(t)}
             <section class="ft-conv-w" data-conversa>${id ? conversa(t) : ''}</section>
           </div>
           ${id ? rodapeConversa() : '<div class="ft-novo cria"><button type="button" class="btn sec" data-t="fechar">Cancelar</button><button type="button" class="btn pri" data-t="criar">Criar tarefa</button></div>'}
