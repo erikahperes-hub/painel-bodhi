@@ -1,5 +1,5 @@
-import { config } from './config.js?v=128';
-import { uid } from './util.js?v=128';
+import { config } from './config.js?v=131';
+import { uid } from './util.js?v=131';
 
 const KINDS = ['cliente', 'proposta', 'contrato', 'pendencia', 'lancamento', 'processo', 'conteudo', 'insights', 'config'];
 const LS_KEY = 'bodhi.painel.v1';
@@ -184,15 +184,43 @@ export const store = {
       return erroAmigavel(error, 'gerar o link de aprovação');
     };
     if (renovar) {
-      const { error } = await sb.from('aprovacao_links').update({ ativo: false }).eq('cliente_id', clienteId);
+      const { error } = await sb.from('aprovacao_links').update({ ativo: false }).eq('cliente_id', clienteId).is('peca_id', null);
       if (error) throw falha(error);
     } else {
-      const { data, error } = await sb.from('aprovacao_links').select('token').eq('cliente_id', clienteId).eq('ativo', true).limit(1);
+      const { data, error } = await sb.from('aprovacao_links').select('token').eq('cliente_id', clienteId).eq('ativo', true).is('peca_id', null).limit(1);
       if (error) throw falha(error);
       if (data?.length) return data[0].token;
     }
     const token = [...crypto.getRandomValues(new Uint8Array(24))].map((b) => b.toString(16).padStart(2, '0')).join('');
     const { error } = await sb.from('aprovacao_links').insert({ token, cliente_id: clienteId });
+    if (error) throw falha(error);
+    return token;
+  },
+
+  // Link de UMA tarefa: o cliente abre só ela para aprovar. Com verTudo ligado, ao fechar a tarefa ele também vê o feed e as outras
+  // tarefas dele (nunca de outro cliente). O link para de funcionar sozinho quando a tarefa é publicada (regra no banco).
+  async linkTarefa(clienteId, pecaId, { verTudo = true, renovar = false } = {}) {
+    if (!sb) throw new Error('O link de aprovação funciona só no painel publicado, conectado ao Supabase.');
+    const falha = (error) => {
+      if (/peca_id|ver_tudo|aprovacao_links|42703|42P01|PGRST/i.test(`${error.code} ${error.message}`)) return new Error('Falta atualizar a aprovação no Supabase: rode de novo o arquivo supabase/aprovacao.sql no SQL Editor.');
+      return erroAmigavel(error, 'gerar o link de aprovação');
+    };
+    if (renovar) {
+      const { error } = await sb.from('aprovacao_links').update({ ativo: false }).eq('peca_id', pecaId);
+      if (error) throw falha(error);
+    } else {
+      const { data, error } = await sb.from('aprovacao_links').select('token, ver_tudo').eq('peca_id', pecaId).eq('ativo', true).limit(1);
+      if (error) throw falha(error);
+      if (data?.length) {
+        if (data[0].ver_tudo !== verTudo) {
+          const { error: e2 } = await sb.from('aprovacao_links').update({ ver_tudo: verTudo }).eq('token', data[0].token);
+          if (e2) throw falha(e2);
+        }
+        return data[0].token;
+      }
+    }
+    const token = [...crypto.getRandomValues(new Uint8Array(24))].map((b) => b.toString(16).padStart(2, '0')).join('');
+    const { error } = await sb.from('aprovacao_links').insert({ token, cliente_id: clienteId, peca_id: pecaId, ver_tudo: verTudo });
     if (error) throw falha(error);
     return token;
   },

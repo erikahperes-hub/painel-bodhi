@@ -1,7 +1,7 @@
-import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=128';
-import { ic } from './icons.js?v=128';
-import { urlImagem, urlPlayer } from './drive.js?v=128';
-import { config } from './config.js?v=128';
+import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=131';
+import { ic } from './icons.js?v=131';
+import { urlImagem, urlPlayer } from './drive.js?v=131';
+import { config } from './config.js?v=131';
 
 // Visual de Instagram usado na prévia do painel e na página de aprovação do cliente.
 // Recebe os dados prontos, então funciona com ou sem login.
@@ -55,7 +55,7 @@ const texto = (s) => esc(s).replace(/\n/g, '<br>');
 const rotuloMes = (ym) => { const [a, m] = ym.split('-').map(Number); const n = mesNome(m - 1); return `${n[0].toUpperCase()}${n.slice(1)} ${a}`; };
 const porDataAsc = (l) => [...l].sort((a, b) => String(a.publicar || '9').localeCompare(String(b.publicar || '9')));
 
-export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = false }) {
+export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = false, foco = '' }) {
   const todas = pecas.map((p) => ({ ...p }));
   // Feed, stories e calendário mostram só o que já foi enviado para aprovação do conteúdo.
   // A aba Planejamento mostra as ideias que a Bôdhi enviou para aprovar antes da produção.
@@ -477,6 +477,11 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
   fecharAberto?.();
   fecharAberto = () => { fechar(); fecharPlano(); };
   desenhar();
+  // Link de uma tarefa só: já abre a tarefa para o cliente aprovar. Ao fechar, ele vê o feed (ou só ela, se o link não libera o resto).
+  if (foco) {
+    if (lista.some((x) => x.id === foco)) abrir(foco);
+    else if (plano.some((x) => x.id === foco)) abrirPlano(foco);
+  }
 }
 
 // Um único ouvinte de Esc para qualquer feed montado (o painel remonta a tela a cada alteração).

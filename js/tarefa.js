@@ -1,9 +1,9 @@
-import { store } from './store.js?v=128';
-import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=128';
-import { ic } from './icons.js?v=128';
-import { confirmar, abrirGaveta } from './ui.js?v=128';
-import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=128';
-import { idDrive, urlAbrir, urlImagem } from './drive.js?v=128';
+import { store } from './store.js?v=131';
+import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=131';
+import { ic } from './icons.js?v=131';
+import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=131';
+import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=131';
+import { idDrive, urlAbrir, urlImagem } from './drive.js?v=131';
 
 // Ficha da tarefa de conteúdo. Pensada para o dia a dia de quem cria posts:
 //  - em cima, o caminho da tarefa (planejamento até publicado) com o próximo passo em destaque;
@@ -88,7 +88,7 @@ export function abrirTarefa(p = null, padrao = {}) {
         ${eyebrow(t)}
         <div class="ft-linha">${marca(t)}<input class="ft-titulo" data-campo="titulo" value="${esc(t.titulo || '')}" placeholder="Título da tarefa" aria-label="Título da tarefa" maxlength="200"></div>
       </div>
-      <div class="ft-topo-d"><span class="ft-salvo" data-salvo aria-live="polite"></span>${nav}${id ? `<button type="button" class="iconbtn ft-ib" data-t="excluir" aria-label="Excluir tarefa" title="Excluir tarefa">${ic('trash')}</button>` : ''}<button type="button" class="iconbtn ft-ib" data-t="fechar" aria-label="Fechar" title="Fechar (Esc)">${ic('x')}</button></div>
+      <div class="ft-topo-d"><span class="ft-salvo" data-salvo aria-live="polite"></span>${id ? `<button type="button" class="btn pri sm ft-env" data-t="enviar" title="Gera o link para o cliente aprovar só esta tarefa">${ic('send')}<span>Enviar ao cliente</span></button>` : ''}${nav}${id ? `<button type="button" class="iconbtn ft-ib" data-t="excluir" aria-label="Excluir tarefa" title="Excluir tarefa">${ic('trash')}</button>` : ''}<button type="button" class="iconbtn ft-ib" data-t="fechar" aria-label="Fechar" title="Fechar (Esc)">${ic('x')}</button></div>
     </header>`;
   };
 
@@ -347,6 +347,61 @@ export function abrirTarefa(p = null, padrao = {}) {
     const w = q('.ft-dir-c'); if (w) w.scrollTop = w.scrollHeight;
   };
 
+  // Link para o cliente aprovar só esta tarefa, com mensagem pronta para colar no WhatsApp.
+  const enviarAoCliente = async () => {
+    let t = atual();
+    if (!id) return;
+    descarregar();
+    await fila;
+    if (t.etapa === 'publicado') { toast('Esta tarefa já foi publicada: o link dela não funcionaria mais.', true); return; }
+    const emAprovacao = ['aprovacao', 'ajustes', 'aprovado'].includes(t.etapa);
+    const ideia = !emAprovacao && ['aprovacao', 'ajustes', 'aprovado'].includes(t.planejamento || '');
+    if (!emAprovacao && !ideia) {
+      if (!(await confirmar(`Esta tarefa está em “${nomeEtapa(t.etapa)}”. Para o cliente poder aprovar, ela vai para “Aguardando aprovação”. Continuar?`, 'Continuar'))) return;
+      await trocarEtapa('aprovacao');
+      t = atual();
+    }
+    let verTudo = true;
+    let token;
+    try { token = await store.linkTarefa(t.clienteId, id, { verTudo }); } catch (e) { toast(e.message || 'Não consegui gerar o link agora.', true); return; }
+    const montarUrl = (tk) => `${location.origin}${location.pathname.replace(/[^/]*$/, '')}aprovar.html#${tk}`;
+    let url = montarUrl(token);
+    const eIdeia = !emAprovacao && ideia;
+    const oQue = eIdeia ? 'a ideia' : ({ reels: 'o reels', carrossel: 'o carrossel', story: 'o story', feed: 'o post' }[t.formato] || 'o post');
+    const mensagem = () => `Oi! Tudo bem? Separei ${oQue} “${t.titulo || 'novo conteúdo'}” para você aprovar.
+
+É só abrir o link, ${eIdeia ? 'ler a ideia e o roteiro' : 'conferir a arte e a legenda'} e tocar em Aprovar ou Pedir alteração:
+${url}
+
+Qualquer dúvida, é só chamar!`;
+    const m = abrirModal({
+      titulo: 'Enviar ao cliente para aprovar',
+      subtitulo: `${store.obter('cliente', t.clienteId)?.nome || ''}: ${t.titulo || ''}`,
+      corpo: `<div class="field"><label for="ln-url">Link só desta tarefa</label><input id="ln-url" readonly value="${esc(url)}"></div>
+        <label class="ln-check"><input type="checkbox" data-vertudo checked><span>Deixar o cliente ver também o feed e as outras tarefas dele<small>Ele abre esta tarefa primeiro. Se fechar, vê o feed completo para conferir como fica. Desligue para mostrar só esta.</small></span></label>
+        <div class="field" style="margin-top:12px"><label for="ln-msg">Mensagem pronta (WhatsApp)</label><textarea id="ln-msg" readonly rows="6"></textarea></div>
+        <p class="lbl" style="margin-top:8px">O link para de funcionar sozinho quando a tarefa for publicada. “Novo link” desativa este e cria outro.</p>
+        <div class="modal-f"><button type="button" class="btn ghost danger" data-novo>Novo link</button><div class="actions"><button type="button" class="btn sec" data-copiar-link>${ic('link')}Copiar link</button>${navigator.share ? `<button type="button" class="btn sec" data-compartilhar>${ic('send')}Compartilhar</button>` : ''}<button type="button" class="btn pri" data-copiar-msg>${ic('comment')}Copiar mensagem</button></div></div>`,
+    });
+    const msg = m.el.querySelector('#ln-msg');
+    const urlEl = m.el.querySelector('#ln-url');
+    msg.value = mensagem();
+    const copiar = async (texto, ok) => { try { await navigator.clipboard.writeText(texto); toast(ok); } catch { toast('Não consegui copiar. Selecione o texto e use Ctrl+C.', true); } };
+    urlEl.addEventListener('focus', () => urlEl.select());
+    m.el.querySelector('[data-copiar-link]').onclick = () => copiar(url, 'Link copiado');
+    m.el.querySelector('[data-copiar-msg]').onclick = () => copiar(msg.value, 'Mensagem copiada');
+    const comp = m.el.querySelector('[data-compartilhar]');
+    if (comp) comp.onclick = async () => { try { await navigator.share({ title: t.titulo || 'Aprovação', text: msg.value }); } catch { /* fechou a janela */ } };
+    m.el.querySelector('[data-vertudo]').addEventListener('change', async (e) => {
+      verTudo = e.target.checked;
+      try { await store.linkTarefa(t.clienteId, id, { verTudo }); toast(verTudo ? 'O cliente poderá ver o feed completo' : 'O cliente verá só esta tarefa'); } catch (err) { toast(err.message || 'Não consegui mudar agora.', true); e.target.checked = !verTudo; verTudo = !verTudo; }
+    });
+    m.el.querySelector('[data-novo]').onclick = async () => {
+      if (!(await confirmar('Gerar um novo link? O link atual deixa de funcionar e você precisa enviar o novo ao cliente.', 'Gerar novo link', true))) return;
+      try { token = await store.linkTarefa(t.clienteId, id, { verTudo, renovar: true }); url = montarUrl(token); urlEl.value = url; msg.value = mensagem(); toast('Novo link gerado'); } catch (err) { toast(err.message || 'Não consegui gerar agora.', true); }
+    };
+  };
+
   const irParaVizinha = async (passo) => {
     const lista = vizinhas();
     const outra = lista[lista.findIndex((x) => x.id === id) + passo];
@@ -365,6 +420,7 @@ export function abrirTarefa(p = null, padrao = {}) {
     if (a === 'fechar') return g.fechar();
     if (a === 'criar') return criar();
     if (a === 'viz') return irParaVizinha(Number(b.dataset.v));
+    if (a === 'enviar') return enviarAoCliente();
     if (a === 'classe') { classeAberta = !classeAberta; pintarTopo(); return; }
     if (a === 'concluir') {
       const feita = !atual().concluida;

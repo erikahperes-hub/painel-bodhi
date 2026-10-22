@@ -1,16 +1,16 @@
-import { store } from '../store.js?v=128';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=128';
-import { ic, flor } from '../icons.js?v=128';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=128';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=128';
-import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=128';
-import { feedPerfil } from '../feed-perfil.js?v=128';
-import { igApi } from '../instagram-api.js?v=128';
-import { lerPasta } from '../drive-pasta.js?v=128';
-import { lerTabela } from '../planejamento.js?v=128';
-import { config } from '../config.js?v=128';
-import { histCartao, histMontar, importarHistorico } from '../historico.js?v=128';
-import { abrirTarefa } from '../tarefa.js?v=128';
+import { store } from '../store.js?v=131';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=131';
+import { ic, flor } from '../icons.js?v=131';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=131';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=131';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=131';
+import { feedPerfil } from '../feed-perfil.js?v=131';
+import { igApi } from '../instagram-api.js?v=131';
+import { lerPasta } from '../drive-pasta.js?v=131';
+import { lerTabela } from '../planejamento.js?v=131';
+import { config } from '../config.js?v=131';
+import { histCartao, histMontar, importarHistorico } from '../historico.js?v=131';
+import { abrirTarefa } from '../tarefa.js?v=131';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
@@ -25,6 +25,14 @@ let filtroFunil = '';
 let filtroTipo = ''; // '', 'reels', 'carrossel', 'feed' (estático) ou 'story'
 const casaFunil = (p) => !filtroFunil || (filtroFunil === 'sem' ? !FUNIL_COR[p.funil] : p.funil === filtroFunil);
 const casaTipo = (p) => !filtroTipo || (FORMATOS[p.formato] ? p.formato : 'feed') === filtroTipo;
+let filtroPessoa = ''; // '', o nome de quem é responsável (Érika, Milena) ou 'sem'. Vale no Status, Calendário e Feed até recarregar a página.
+const casaPessoa = (p) => !filtroPessoa || (filtroPessoa === 'sem' ? !p.responsavel : p.responsavel === filtroPessoa);
+// Quem está usando o painel, para o botão "Minhas": o nome da conta ou o começo do e-mail (se for uma das responsáveis).
+const meuNome = () => {
+  const n = store.nomeUsuario() || (store.emailUsuario() || '').split('@')[0];
+  const achado = ['Érika', 'Milena'].find((r) => norm(r) === norm(n) || norm(n).startsWith(norm(r)));
+  return achado || '';
+};
 let filtroRede = ''; // '', um código de REDES ou 'sem'
 const casaRede = (p) => !filtroRede || (filtroRede === 'sem' ? !REDES[p.rede] : p.rede === filtroRede);
 const nFiltros = () => [filtroTipo, filtroFunil, filtroRede].filter(Boolean).length;
@@ -492,7 +500,8 @@ export default {
       const corpoIn = filtro ? histCartao(store.obter('cliente', filtro), recarregarTela) : `<div class="card empty">${flor()}<h2>Escolha um cliente inativo</h2><p>Aqui ficam os clientes que já saíram, com todo o histórico de tarefas que vinha do Asana. Toque no nome do cliente acima.</p></div>`;
       return `${seg}<div class="cbtns" style="margin-bottom:16px">${chipsIn}</div>${corpoIn}`;
     }
-    const todas = pecas();
+    const todasBase = pecas();
+    const todas = todasBase.filter(casaPessoa);
     const lista = filtro ? todas.filter((p) => p.clienteId === filtro) : todas;
     // Mês escolhido (vale no Status e no Calendário). Status e números mostram esse mês, mais as tarefas sem data (para não sumirem).
     const ym = mesCal || hojeISO().slice(0, 7);
@@ -517,7 +526,16 @@ export default {
         <div class="card stat tone-coral"><div><div class="lbl">Pedidos de ajuste</div><div class="big num">${em('ajustes').length}</div><div class="hint">Para refazer</div></div><span class="stat-ic">${ic('edit')}</span></div>
         <div class="card stat tone-coral"><div><div class="lbl">Atrasadas</div><div class="big num">${lista.filter(atrasada).length}</div><div class="hint">Passaram da data, em todos os meses</div></div><span class="stat-ic">${ic('calendar')}</span></div>
       </div>`;
-    const cabeca = `${seg}<div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>${numeros}${abas}`;
+    // Filtro por responsável: "Minhas" (quem está logada), a outra pessoa e "Sem responsável", com o número do mês mostrado.
+    const baseMes = (filtro ? todasBase.filter((p) => p.clienteId === filtro) : todasBase).filter((p) => !!p.publicar && p.publicar.slice(0, 7) === ymChips);
+    const eu = meuNome();
+    const botaoPessoa = (v, texto, n) => `<button class="cbtn ${filtroPessoa === v ? 'on' : ''}" data-act="filtro-pessoa" data-v="${esc(v)}" aria-pressed="${filtroPessoa === v}">${esc(texto)} · ${n}</button>`;
+    const pessoas = ['Érika', 'Milena'].sort((x, y) => (y === eu) - (x === eu));
+    const chipsPessoa = `<div class="cbtns cbtns-p" style="margin:-6px 0 16px" role="group" aria-label="Filtrar por responsável"><span class="lbl" style="align-self:center;margin-right:2px">Responsável</span>
+      <button class="cbtn ${filtroPessoa ? '' : 'on'}" data-act="filtro-pessoa" data-v="" aria-pressed="${!filtroPessoa}">Todas</button>
+      ${pessoas.map((r) => botaoPessoa(r, r === eu ? 'Minhas' : r, baseMes.filter((p) => p.responsavel === r).length)).join('')}
+      ${botaoPessoa('sem', 'Sem responsável', baseMes.filter((p) => !p.responsavel).length)}</div>`;
+    const cabeca = `${seg}<div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>${chipsPessoa}${numeros}${abas}`;
     if (aba === 'calendario') return cabeca + calendario({ filtro, lista });
     if (aba === 'feed') {
       if (!filtro) return `${cabeca}<div class="card empty">${flor()}<h2>Escolha um cliente</h2><p>O feed mostra o perfil de um cliente por vez, como ele fica no Instagram. Toque no nome do cliente acima.</p></div>`;
@@ -686,6 +704,7 @@ export default {
       }
       recarregarTela();
     },
+    'filtro-pessoa': (el) => { filtroPessoa = el.dataset.v === filtroPessoa ? '' : el.dataset.v; recarregarTela(); },
     'nova-peca': (el) => abrirPeca(null, { ...(el.dataset.cliente ? { clienteId: el.dataset.cliente } : {}), ...(el.dataset.data ? { publicar: el.dataset.data } : {}) }),
     'editar-peca': (el) => abrirPeca(store.obter('conteudo', el.dataset.id)),
     'mover-peca': async (el) => {

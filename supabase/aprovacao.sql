@@ -1,11 +1,14 @@
 -- Página de aprovação do cliente (aprovar.html). Cole no "SQL Editor" do Supabase e clique em Run.
--- Pode rodar de novo sem problema (versão 3: o cliente vê as peças do mês passado em diante, mais as que aguardam resposta dele).
+-- Pode rodar de novo sem problema (versão 4: link de UMA tarefa, além do link geral do cliente).
 --
 -- Como funciona e por que é seguro:
 -- * A tabela "records" continua fechada: só as sócias leem e escrevem nela.
 -- * O cliente entra por um link com um código longo (tabela aprovacao_links). Sem esse código, nada abre.
+-- * Link geral: peca_id vazio, mostra as peças do cliente. Link de uma tarefa: peca_id preenchido; abre a tarefa escolhida e,
+--   se ver_tudo estiver ligado, o cliente também pode ver o feed e as outras tarefas dele (nunca de outro cliente).
+-- * O link de uma tarefa deixa de funcionar sozinho quando a tarefa é publicada.
 -- * O cliente usa só duas funções: ver as peças DELE e responder (aprovar ou pedir alteração) nelas.
---   As funções entregam apenas os campos que o cliente precisa (nada de briefing, valores ou dados de outros clientes).
+--   As funções entregam apenas os campos que o cliente precisa (nada de briefing, comentários, valores ou dados de outros clientes).
 -- * O roteiro e a etapa do funil (campos internos) só são entregues ao cliente nas peças que a Bôdhi enviou para aprovação do planejamento.
 
 create table if not exists public.aprovacao_links (
@@ -14,30 +17,39 @@ create table if not exists public.aprovacao_links (
   ativo       boolean not null default true,
   criado_em   timestamptz not null default now()
 );
+alter table public.aprovacao_links add column if not exists peca_id text;
+alter table public.aprovacao_links add column if not exists ver_tudo boolean not null default true;
 create index if not exists aprovacao_links_cliente on public.aprovacao_links (cliente_id);
+create index if not exists aprovacao_links_peca on public.aprovacao_links (peca_id);
 
 alter table public.aprovacao_links enable row level security;
 drop policy if exists "socias gerenciam links" on public.aprovacao_links;
 create policy "socias gerenciam links" on public.aprovacao_links for all to authenticated
   using (public.eh_socia()) with check (public.eh_socia());
 
--- Devolve o cliente e as peças visíveis para ele: as que já foram enviadas para aprovação do conteúdo
--- e as que foram enviadas para aprovação do planejamento. Código inválido ou desativado: null.
 create or replace function public.aprovacao_ver(p_token text) returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 declare
   v_cliente text;
+  v_peca text;
+  v_vertudo boolean;
+  v_etapa text;
   v_cli jsonb;
   v_pecas jsonb;
   v_hoje text := to_char(now() at time zone 'America/Sao_Paulo', 'YYYY-MM-DD');
-  -- o cliente vê o mês passado inteiro (para o calendário e o feed) e daí em diante
   v_inicio text := to_char(date_trunc('month', now() at time zone 'America/Sao_Paulo') - interval '1 month', 'YYYY-MM-DD');
 begin
-  select cliente_id into v_cliente from aprovacao_links where token = p_token and ativo;
+  select cliente_id, peca_id, ver_tudo into v_cliente, v_peca, v_vertudo from aprovacao_links where token = p_token and ativo;
   if v_cliente is null then return null; end if;
 
   select data into v_cli from records where kind = 'cliente' and id = v_cliente;
   if v_cli is null then return null; end if;
+
+  if v_peca is not null then
+    select data->>'etapa' into v_etapa from records where kind = 'conteudo' and id = v_peca and data->>'clienteId' = v_cliente;
+    if not found then return null; end if;
+    if v_etapa = 'publicado' then return jsonb_build_object('expirado', true); end if;
+  end if;
 
   select coalesce(jsonb_agg(jsonb_build_object(
       'id', r.id,
@@ -59,21 +71,25 @@ begin
   where r.kind = 'conteudo'
     and r.data->>'clienteId' = v_cliente
     and (
-      -- o que ainda precisa da resposta do cliente aparece sempre, mesmo que a data já tenha passado
-      r.data->>'etapa' in ('aprovacao', 'ajustes')
-      or r.data->>'planejamento' in ('aprovacao', 'ajustes')
-      -- o que já foi aprovado ou publicado aparece do começo do mês passado em diante; mais antigo que isso não aparece
-      -- (não polui nem pesa a página). Do passado, só entra a peça que tem arte: sem arquivo não há o que mostrar no feed.
-      or ((r.data->>'etapa' in ('aprovado', 'publicado') or r.data->>'planejamento' = 'aprovado')
-          and (coalesce(r.data->>'publicar', '') >= v_hoje
-               or (coalesce(r.data->>'publicar', '') >= v_inicio
-                   and (jsonb_array_length(coalesce(r.data->'midias', '[]'::jsonb)) > 0 or coalesce(r.data->>'capa', '') <> ''))
-               or (r.data->>'etapa' = 'aprovado' and coalesce(r.data->>'publicar', '') = '')))
+      r.id = v_peca
+      or (
+        (v_peca is null or v_vertudo)
+        and (
+          r.data->>'etapa' in ('aprovacao', 'ajustes')
+          or r.data->>'planejamento' in ('aprovacao', 'ajustes')
+          or ((r.data->>'etapa' in ('aprovado', 'publicado') or r.data->>'planejamento' = 'aprovado')
+              and (coalesce(r.data->>'publicar', '') >= v_hoje
+                   or (coalesce(r.data->>'publicar', '') >= v_inicio
+                       and (jsonb_array_length(coalesce(r.data->'midias', '[]'::jsonb)) > 0 or coalesce(r.data->>'capa', '') <> ''))
+                   or (r.data->>'etapa' = 'aprovado' and coalesce(r.data->>'publicar', '') = '')))
+        )
+      )
     );
 
   return jsonb_build_object(
     'cliente', jsonb_build_object('nome', v_cli->>'nome', 'imagem', v_cli->>'imagem', 'instagram', v_cli->>'instagram'),
-    'pecas', v_pecas
+    'pecas', v_pecas,
+    'foco', v_peca
   );
 end $$;
 
@@ -84,6 +100,9 @@ create or replace function public.aprovacao_responder(p_token text, p_peca text,
 language plpgsql security definer set search_path = public as $$
 declare
   v_cliente text;
+  v_peca text;
+  v_vertudo boolean;
+  v_etapa text;
   v_dados jsonb;
   v_agora text := to_char(now() at time zone 'utc', 'YYYY-MM-DD"T"HH24:MI:SS"Z"');
   v_coment text := left(btrim(coalesce(p_comentario, '')), 1500);
@@ -92,8 +111,14 @@ begin
   if p_acao not in ('aprovar', 'ajustar', 'plano_aprovar', 'plano_ajustar') then return false; end if;
   if p_acao in ('ajustar', 'plano_ajustar') and v_coment = '' then return false; end if;
 
-  select cliente_id into v_cliente from aprovacao_links where token = p_token and ativo;
+  select cliente_id, peca_id, ver_tudo into v_cliente, v_peca, v_vertudo from aprovacao_links where token = p_token and ativo;
   if v_cliente is null then return false; end if;
+
+  if v_peca is not null then
+    if p_peca <> v_peca and not v_vertudo then return false; end if;
+    select data->>'etapa' into v_etapa from records where kind = 'conteudo' and id = v_peca and data->>'clienteId' = v_cliente;
+    if not found or v_etapa = 'publicado' then return false; end if;
+  end if;
 
   select data into v_dados from records
    where kind = 'conteudo' and id = p_peca and data->>'clienteId' = v_cliente

@@ -1,8 +1,8 @@
-import { config } from './config.js?v=128';
-import { logo } from './logo.js?v=128';
-import { esc } from './util.js?v=128';
-import { flor } from './icons.js?v=128';
-import { montarFeed } from './instagram.js?v=128';
+import { config } from './config.js?v=131';
+import { logo } from './logo.js?v=131';
+import { esc } from './util.js?v=131';
+import { flor } from './icons.js?v=131';
+import { montarFeed } from './instagram.js?v=131';
 
 // Página pública de aprovação. Não tem login: o código do link (depois do #) identifica o cliente.
 // O banco só entrega as peças desse cliente e só aceita aprovar ou pedir alteração nelas.
@@ -34,6 +34,7 @@ async function iniciar() {
       if (erro || !ok) throw new Error('Não foi possível enviar agora. Atualize a página e tente de novo.');
     };
   }
+  if (dados?.expirado) return aviso('Esta tarefa já foi publicada', 'Não há mais nada para aprovar neste link. Se precisar de alguma coisa, é só chamar a Bôdhi Marketing.');
   if (!dados) return aviso('Este link não está mais ativo', 'Peça um novo link de aprovação para a Bôdhi Marketing.');
 
   document.title = `Aprovação de conteúdo · ${dados.cliente.nome}`;
@@ -41,7 +42,7 @@ async function iniciar() {
     <header class="pub-h"><a href="https://bodhi.marketing" aria-label="Bôdhi Marketing" rel="noopener">${logo('verde', '#FFFCF6')}</a><p>Aprovação de conteúdo</p></header>
     <div class="card"><div id="feed"></div></div>
     <p class="pub-f">Bôdhi Marketing · Se tiver qualquer dúvida, é só nos chamar.</p></div>`;
-  montarFeed(document.getElementById('feed'), { cliente: dados.cliente, pecas: dados.pecas, aoResponder: responder });
+  montarFeed(document.getElementById('feed'), { cliente: dados.cliente, pecas: dados.pecas, aoResponder: responder, foco: dados.foco || '' });
 }
 
 iniciar().catch((err) => {
