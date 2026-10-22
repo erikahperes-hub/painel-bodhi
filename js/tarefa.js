@@ -1,9 +1,9 @@
-import { store } from './store.js?v=122';
-import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=122';
-import { ic } from './icons.js?v=122';
-import { confirmar, abrirGaveta } from './ui.js?v=122';
-import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=122';
-import { idDrive, urlAbrir, urlImagem } from './drive.js?v=122';
+import { store } from './store.js?v=123';
+import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=123';
+import { ic } from './icons.js?v=123';
+import { confirmar, abrirGaveta } from './ui.js?v=123';
+import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=123';
+import { idDrive, urlAbrir, urlImagem } from './drive.js?v=123';
 
 // Ficha da tarefa de conteúdo. Pensada para o dia a dia de quem cria posts:
 //  - em cima, o caminho da tarefa (planejamento até publicado) com o próximo passo em destaque;
@@ -123,8 +123,8 @@ export function abrirTarefa(p = null, padrao = {}) {
     const f = FORMATOS[t.formato] || FORMATOS.feed;
     const cli = store.obter('cliente', t.clienteId);
     const chip = (cls, txt) => `<button type="button" class="chip ${cls} ft-chipb" data-t="classe" title="Alterar a classificação" aria-expanded="${classeAberta}">${txt}</button>`;
-    const semExtras = !FUNIL[t.funil] && !REDES[t.rede];
-    return `<div class="ft-eyebrow"><span class="ft-cli">${esc(cli?.nome || 'Escolha o cliente')}</span><span class="ft-pontos">${chip(`fm-${FORMATOS[t.formato] ? t.formato : 'feed'}`, `${ic(f.icone)}${esc(f.nome)}`)}${FUNIL[t.funil] ? chip('mute', esc(FUNIL[t.funil])) : ''}${REDES[t.rede] ? chip('mute', esc(REDES[t.rede].nome)) : ''}${semExtras ? '<button type="button" class="chip ft-add-c" data-t="classe">+ Funil e rede</button>' : ''}<button type="button" class="ft-lapis" data-t="classe" aria-label="Alterar a classificação" title="Alterar a classificação">${ic('edit')}</button></span></div>`;
+    const falta = (nome) => `<button type="button" class="chip ft-add-c" data-t="classe" title="Adicionar ${nome.toLowerCase()}">+ ${nome}</button>`;
+    return `<div class="ft-eyebrow"><span class="ft-cli">${esc(cli?.nome || 'Escolha o cliente')}</span><span class="ft-pontos">${chip(`fm-${FORMATOS[t.formato] ? t.formato : 'feed'}`, `${ic(f.icone)}${esc(f.nome)}`)}${FUNIL[t.funil] ? chip('mute', esc(FUNIL[t.funil])) : falta('Funil')}${REDES[t.rede] ? chip('mute', esc(REDES[t.rede].nome)) : falta('Rede')}<button type="button" class="ft-lapis" data-t="classe" aria-label="Alterar a classificação" title="Alterar a classificação">${ic('edit')}</button></span></div>`;
   };
 
   // Seletores de formato, funil e rede: ficam escondidos e só abrem quando a pessoa clica nos chips.

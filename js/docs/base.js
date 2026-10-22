@@ -1,6 +1,6 @@
-import { abrirModal } from '../ui.js?v=122';
-import { esc } from '../util.js?v=122';
-import { ic } from '../icons.js?v=122';
+import { abrirModal } from '../ui.js?v=123';
+import { esc } from '../util.js?v=123';
+import { ic } from '../icons.js?v=123';
 
 export const CSS_BASE = `
 @font-face{font-family:'Roca Two';src:url(assets/fonts/RocaTwo-Bold.ttf) format('truetype');font-weight:700}
