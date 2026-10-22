@@ -1047,3 +1047,9 @@ a.chip{text-decoration:none}
 .ft-m:hover .ft-m-p,.ft-m-p:focus-visible,.ft-m-p.on{opacity:1}
 .ft-m-p.on{color:#B07A00}
 .ft-m-p:hover{color:var(--ink)}
+
+/* Envio da ideia para o cliente aprovar */
+.ft-plano{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
+.ft-plano .chip{padding:7px 12px}
+.ft-plano .chip svg{width:13px;height:13px}
+.ft-ajuda-l{font-size:12.5px;color:var(--ink-3);flex:1 1 220px}

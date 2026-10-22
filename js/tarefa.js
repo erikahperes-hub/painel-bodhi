@@ -1,9 +1,9 @@
-import { store } from './store.js?v=123';
-import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=123';
-import { ic } from './icons.js?v=123';
-import { confirmar, abrirGaveta } from './ui.js?v=123';
-import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=123';
-import { idDrive, urlAbrir, urlImagem } from './drive.js?v=123';
+import { store } from './store.js?v=124';
+import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=124';
+import { ic } from './icons.js?v=124';
+import { confirmar, abrirGaveta } from './ui.js?v=124';
+import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=124';
+import { idDrive, urlAbrir, urlImagem } from './drive.js?v=124';
 
 // Ficha da tarefa de conteúdo. Pensada para o dia a dia de quem cria posts:
 //  - em cima, o caminho da tarefa (planejamento até publicado) com o próximo passo em destaque;
@@ -154,8 +154,18 @@ export function abrirTarefa(p = null, padrao = {}) {
     <details class="ft-mais"><summary>Mais opções</summary>
       <label class="ft-lbl" for="ft_capa">Capa (imagem)</label><input id="ft_capa" data-campo="capa" value="${esc(t.capa ? urlAbrir(t.capa) : '')}" placeholder="Link da imagem de capa no Drive">
       <label class="ft-lbl" for="ft_link">Arquivo editável (só a equipe vê)</label><input id="ft_link" data-campo="link" value="${esc(t.link || '')}" placeholder="Canva, Drive ou onde estiver">
-      <label class="ft-lbl" for="ft_plano">Planejamento no link do cliente</label><select id="ft_plano" data-campo="planejamento">${Object.entries(PLANO).map(([v, n]) => `<option value="${v}"${v === (t.planejamento || '') ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select>
     </details></section>`;
+
+  // Aprovação da ideia e do roteiro pelo cliente (antes de produzir). A equipe só envia ou cancela o envio;
+  // "alteração pedida" e "aprovado" vêm da resposta do cliente no link dele.
+  const planoLinha = (t) => {
+    const v = t.planejamento || '';
+    const botao = (para, texto, cls = 'sec') => `<button type="button" class="btn ${cls} sm" data-t="plano" data-v="${para}">${esc(texto)}</button>`;
+    if (v === 'aprovacao') return `<span class="chip info">${ic('send')}Ideia enviada, aguardando o cliente</span>${botao('', 'Cancelar envio', 'ghost')}`;
+    if (v === 'ajustes') return `<span class="chip warn">${ic('alert')}O cliente pediu alteração</span>${botao('aprovacao', 'Reenviar ao cliente')}`;
+    if (v === 'aprovado') return `<span class="chip ok">${ic('check')}Ideia aprovada pelo cliente</span>${botao('', 'Desfazer', 'ghost')}`;
+    return `${botao('aprovacao', 'Enviar ideia para o cliente aprovar')}<span class="ft-ajuda-l">O cliente lê a ideia e o roteiro no link dele. Só envie depois de revisar o texto.</span>`;
+  };
 
   const esquerda = (t) => {
     const ajustes = t.etapa === 'ajustes' || t.ajuste;
@@ -163,7 +173,7 @@ export function abrirTarefa(p = null, padrao = {}) {
     return `
       ${ajustes ? `<section class="ft-s ft-alerta"><h3>${ic('alert')}O cliente pediu ajuste</h3><textarea data-campo="ajuste" rows="2" placeholder="O que o cliente pediu para mudar">${esc(t.ajuste || '')}</textarea></section>` : ''}
       ${ajustesPlano ? `<section class="ft-s ft-alerta"><h3>${ic('alert')}Alteração pedida no planejamento</h3><textarea data-campo="ajustePlano" rows="2" placeholder="O que o cliente pediu para mudar na ideia ou no roteiro">${esc(t.ajustePlano || '')}</textarea></section>` : ''}
-      <section class="ft-s"><h3>Ideia e roteiro</h3><textarea data-campo="roteiro" rows="4" placeholder="Qual é a ideia? Como é o vídeo, cena a cena? Quando o planejamento é enviado para aprovação, o cliente lê este texto: escreva sem comentário interno.">${esc(t.roteiro || '')}</textarea></section>
+      <section class="ft-s"><h3>Ideia e roteiro</h3><textarea data-campo="roteiro" rows="4" placeholder="Qual é a ideia? Como é o vídeo, cena a cena? Quando o planejamento é enviado para aprovação, o cliente lê este texto: escreva sem comentário interno.">${esc(t.roteiro || '')}</textarea><div class="ft-plano" data-plano>${planoLinha(t)}</div></section>
       <section class="ft-s"><div class="ft-h"><h3>Legenda</h3><span class="ft-h-d"><small class="ft-cont" data-cont>${contar(t.legenda)}</small><button type="button" class="btn ghost sm" data-t="copiar">${ic('link')}Copiar</button></span></div><textarea data-campo="legenda" rows="4" placeholder="Texto que o cliente vê junto com a arte na hora de aprovar.">${esc(t.legenda || '')}</textarea></section>`;
   };
 
@@ -274,7 +284,7 @@ export function abrirTarefa(p = null, padrao = {}) {
     if (capa && !idDrive(capa)) { toast('A capa precisa ser um link de arquivo do Google Drive.', true); return; }
     const novo = {
       ...t, titulo, link: urlSegura(link), capa: idDrive(capa),
-      roteiro: campo('roteiro'), legenda: campo('legenda'), planejamento: campo('planejamento') || '',
+      roteiro: campo('roteiro'), legenda: campo('legenda'),
       criadoEm: new Date().toISOString(), concluida: false,
     };
     try {
@@ -369,6 +379,13 @@ export function abrirTarefa(p = null, padrao = {}) {
       const i = Number(b.dataset.i);
       await mudar({ midias: (atual().midias || []).filter((_, k) => k !== i) });
       pintarArquivos();
+      return;
+    }
+    if (a === 'plano') {
+      const para = b.dataset.v;
+      await mudar({ planejamento: para, ...(para === 'aprovacao' ? { ajustePlano: '' } : {}) }, para === 'aprovacao' ? 'enviou a ideia para o cliente aprovar' : para === '' ? 'cancelou o envio da ideia ao cliente' : '');
+      const alvo = q('[data-plano]'); if (alvo) alvo.innerHTML = planoLinha(atual());
+      pintarConversa();
       return;
     }
     if (a === 'fixar') {
