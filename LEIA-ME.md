@@ -187,7 +187,9 @@ Rodar de novo não duplica.
 
 **Testar sem o banco:** `?local` lê os mesmos arquivos de `seed/` (se existirem).
 
-## Relatório do cliente e Instagram
+## Métricas, relatório do cliente e Instagram
+
+No menu lateral esta área se chama **Métricas** (por dentro a rota continua `relatorio`). Tem três abas: **Métricas** (conta conectada, indicadores do mês com a variação em relação ao mês anterior e a evolução dos últimos 6 meses), **Relatório mensal** (o relatório completo, com a leitura do mês, metas e PDF) e **Contas** (conectar o Instagram do cliente, atualizar os números, ler stories e importar dados). O botão **Enviar relatório mensal**, na aba Métricas e na aba Relatório mensal, abre uma janela com a mensagem pronta (editável), o link que o cliente abre sem senha, **Copiar link**, **Copiar mensagem**, **Abrir no WhatsApp** e **Salvar em PDF**. Só aparece no painel publicado (o link precisa do Supabase). Hoje só o Instagram é lido.
 
 Na aba **Relatório** cada cliente com Instagram tem um relatório mensal (no estilo do Reportei, com insights a mais), e o cliente pode abrir o dele por um link.
 

@@ -1,4 +1,5 @@
-import { esc, mesNome, dataBR, urlSegura, iniciais } from './util.js?v=143';
+import { esc, mesNome, dataBR, urlSegura, iniciais } from './util.js?v=145';
+import { ic } from './icons.js?v=145';
 
 // O visual do relatório do cliente (baseado no relatório do Reportei, com insights a mais).
 // Só monta o HTML a partir dos dados; é usado pelo painel (js/views/relatorio.js) e pela página que o cliente abre pelo link (relatorio.html).
@@ -190,7 +191,7 @@ function linhaPost(p) {
 }
 
 // Gráfico de barras da evolução (últimos 6 meses, terminando no mês mostrado).
-function evolucao(serie, ym, campo, titulo) {
+export function evolucao(serie, ym, campo, titulo) {
   const meses = [5, 4, 3, 2, 1, 0].map((i) => ymMais(ym, -i));
   const vals = meses.map((m) => serie[m]?.[campo]);
   if (vals.filter(tem).length < 2) return '';
@@ -369,4 +370,29 @@ export function ligarIndice() {
     document.addEventListener('keydown', (e) => { if (['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End', ' '].includes(e.key)) soltar(); });
   }
   descobrir();
+}
+
+// Visão de Métricas (painel da equipe): a conta conectada, os indicadores do mês com a variação em relação ao anterior e a evolução.
+// Usa só números que já existem no registro do mês (insights); o que faltar simplesmente não aparece.
+export function painelMetricas({ cliente, ym, atual, anterior, serie = {} }) {
+  const nome = cliente.nome || '';
+  const mesAntTxt = mesNome(Number(ymAnterior(ym).slice(5, 7)) - 1);
+  const tile = (cor, icone, rotulo, dica, valor, antes) => (!tem(valor) ? '' : `<div class="mt-kpi mt-${cor}" data-dica="${esc(dica)}" tabindex="0">
+      <span class="mt-ic">${ic(icone)}</span><div class="mt-n">${esc(rotulo)}</div><div class="mt-v">${num(valor)}</div>
+      <div class="mt-d">${variacao(valor, antes) || '<span class="rl-var igual">sem comparação</span>'}${tem(antes) ? `<span class="mt-vs">vs ${esc(mesAntTxt)}</span>` : ''}</div></div>`);
+  const tiles = [
+    tile('verde', 'users', 'Seguidores', 'Total de seguidores no fim do mês', atual.seguidores, anterior?.seguidores),
+    tile('verde', 'trend', 'Novos seguidores', 'Seguidores ganhos no mês', atual.seguidoresGanhos, anterior?.seguidoresGanhos),
+    tile('pet', 'bars', 'Alcance', 'Contas diferentes que viram o perfil ou as publicações', atual.alcance, anterior?.alcance),
+    tile('pet', 'play', 'Visualizações', 'Quantas vezes o conteúdo foi visto', atual.visualizacoes, anterior?.visualizacoes),
+    tile('coral', 'heart', 'Interações', 'Curtidas, comentários, salvamentos e compartilhamentos', atual.interacoes, anterior?.interacoes),
+    tile('coral', 'target', 'Contas engajadas', 'Contas diferentes que interagiram com o conteúdo', atual.contasEngajadas, anterior?.contasEngajadas),
+    tile('pet', 'search', 'Visitas ao perfil', 'Pessoas que abriram o perfil', atual.visitasPerfil, anterior?.visitasPerfil),
+  ].join('');
+  const conta = `<div class="mt-conta"><div class="rl-av">${cliente.imagem ? `<img src="${esc(cliente.imagem)}" alt="">` : esc(iniciais(nome))}</div>
+      <div class="mt-conta-t"><b>Instagram</b><small>${esc(cliente.instagram || nome)}</small></div>
+      <div class="mt-conta-n"><b>${num(atual.seguidores)}</b><small>seguidores</small></div></div>`;
+  const evol = [evolucao(serie, ym, 'alcance', 'Alcance mês a mês'), evolucao(serie, ym, 'seguidores', 'Seguidores mês a mês')].join('');
+  return `<div class="mt-topo">${conta}<p class="mt-nota">Hoje o painel lê só o Instagram. Comparação com ${esc(mesAntTxt)}.</p></div>
+    <div class="mt-kpis">${tiles}</div>${evol ? `<div class="mt-evol">${evol}</div>` : ''}`;
 }

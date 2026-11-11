@@ -1,29 +1,29 @@
-import { store } from './store.js?v=143';
-import { logo } from './logo.js?v=143';
-import { ic, flor } from './icons.js?v=143';
-import { esc, toast, debounce } from './util.js?v=143';
-import { alertas } from './calc.js?v=143';
-import { igApi } from './instagram-api.js?v=143';
-import { ligarDicas } from './dicas.js?v=143';
-import { buscar, htmlResultados } from './search.js?v=143';
-import { temModal, fecharTopo, formulario } from './ui.js?v=143';
+import { store } from './store.js?v=145';
+import { logo } from './logo.js?v=145';
+import { ic, flor } from './icons.js?v=145';
+import { esc, toast, debounce } from './util.js?v=145';
+import { alertas } from './calc.js?v=145';
+import { igApi } from './instagram-api.js?v=145';
+import { ligarDicas } from './dicas.js?v=145';
+import { buscar, htmlResultados } from './search.js?v=145';
+import { temModal, fecharTopo, formulario } from './ui.js?v=145';
 
-import inicio from './views/inicio.js?v=143';
-import comercial from './views/comercial.js?v=143';
-import clientes from './views/clientes.js?v=143';
-import conteudo from './views/conteudo.js?v=143';
-import previa from './views/previa.js?v=143';
-import relatorio from './views/relatorio.js?v=143';
-import propostas from './views/propostas.js?v=143';
-import contratos from './views/contratos.js?v=143';
-import financeiro from './views/financeiro.js?v=143';
-import processo from './views/processo.js?v=143';
-import prospeccao from './views/prospeccao.js?v=143';
-import configuracoes from './views/configuracoes.js?v=143';
+import inicio from './views/inicio.js?v=145';
+import comercial from './views/comercial.js?v=145';
+import clientes from './views/clientes.js?v=145';
+import conteudo from './views/conteudo.js?v=145';
+import previa from './views/previa.js?v=145';
+import relatorio from './views/relatorio.js?v=145';
+import propostas from './views/propostas.js?v=145';
+import contratos from './views/contratos.js?v=145';
+import financeiro from './views/financeiro.js?v=145';
+import processo from './views/processo.js?v=145';
+import prospeccao from './views/prospeccao.js?v=145';
+import configuracoes from './views/configuracoes.js?v=145';
 
 const VIEWS = { inicio, comercial, clientes, conteudo, previa, relatorio, propostas, contratos, financeiro, processo, prospeccao, configuracoes };
 const NAV = [
-  ['inicio', 'Início', 'home'], ['comercial', 'Comercial', 'bars'], ['clientes', 'Clientes', 'users'], ['conteudo', 'Conteúdo', 'grid'], ['relatorio', 'Relatório', 'trend'],
+  ['inicio', 'Início', 'home'], ['comercial', 'Comercial', 'bars'], ['clientes', 'Clientes', 'users'], ['conteudo', 'Conteúdo', 'grid'], ['relatorio', 'Métricas', 'trend'],
   ['propostas', 'Propostas', 'send'], ['contratos', 'Contratos', 'doc'], ['financeiro', 'Financeiro', 'wallet'], ['processo', 'Processo', 'flow'], ['prospeccao', 'Prospecção', 'target'],
 ];
 const ACOES = Object.assign({}, ...Object.values(VIEWS).map((v) => v.acoes || {}));

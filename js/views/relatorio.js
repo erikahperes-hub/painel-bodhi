@@ -1,17 +1,19 @@
-import { store } from '../store.js?v=143';
-import { esc, toast, norm, hojeISO } from '../util.js?v=143';
-import { ic, flor } from '../icons.js?v=143';
-import { formulario, confirmar } from '../ui.js?v=143';
-import { FORMATOS, pecas } from '../conteudo.js?v=143';
-import { igApi } from '../instagram-api.js?v=143';
-import { corpoRelatorio, frasesResumo, ligarIndice, ymAnterior, ymMais, nomeMes } from '../relatorio-html.js?v=143';
+import { store } from '../store.js?v=145';
+import { esc, toast, norm, hojeISO } from '../util.js?v=145';
+import { ic, flor } from '../icons.js?v=145';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=145';
+import { FORMATOS, pecas } from '../conteudo.js?v=145';
+import { igApi } from '../instagram-api.js?v=145';
+import { corpoRelatorio, painelMetricas, frasesResumo, ligarIndice, ymAnterior, ymMais, nomeMes } from '../relatorio-html.js?v=145';
 
-// Relatório mensal do cliente nas redes sociais. Começa pelo Instagram.
+// Métricas do cliente nas redes sociais (no menu: Métricas) e o relatório mensal. Começa pelo Instagram.
+// Três abas: Métricas (indicadores do mês), Relatório mensal (o relatório completo, para enviar ao cliente) e Contas (conectar e atualizar o Instagram).
 // Cada mês de cada cliente é um registro `insights` (id "clienteId_AAAA-MM"). Os números chegam direto do Instagram
 // (botão "Atualizar do Instagram") ou por importação (arquivo ou texto em JSON, que o Claude Code monta).
 // O visual do relatório fica em js/relatorio-html.js (o mesmo será usado na página do link do cliente).
 const recarregarTela = () => window.dispatchEvent(new Event('atualizar-tela'));
 let mes = null; // AAAA-MM mostrado; vazio = mês anterior ao atual (o último mês fechado)
+let aba = 'metricas'; // 'metricas', 'relatorio' ou 'contas'
 
 const mesPadrao = () => ymAnterior(hojeISO().slice(0, 7));
 const idInsight = (clienteId, ym) => `${clienteId}_${ym}`;
@@ -83,7 +85,24 @@ function funilPorEtapa(clienteId, serie, ym) {
   return Object.entries(grupos).map(([f, v]) => ({ nome: NOME_FUNIL[f], n: v.length, media: Math.round(v.reduce((a, b) => a + b, 0) / v.length) })).sort((a, b) => b.media - a.media);
 }
 
+// Aba Contas: a conexão com o Instagram do cliente, a atualização dos números e a importação.
+function abaContas(c, ym) {
+  const ig = igApi.conexao(c.id);
+  const atual = store.obter('insights', idInsight(c.id, ym));
+  const hora = (iso) => new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  const estado = !igApi.disponivel() ? 'Modo local: a conexão com o Instagram só existe no painel publicado.'
+    : ig ? `Conectado${ig.username ? ` como @${ig.username}` : ''}${ig.ultimaLeitura ? ` · última leitura em ${hora(ig.ultimaLeitura)}` : ''}`
+      : 'Ainda não conectado. O dono do Instagram autoriza uma vez e os números passam a vir sozinhos.';
+  const fonte = atual?.fonte === 'instagram' ? 'números direto do Instagram' : atual ? 'dados importados' : 'sem números neste mês';
+  return `<div class="card mt-redes"><div class="card-h"><div><h2>Contas de ${esc(c.nome)}</h2><p class="sub">Hoje o painel lê só o Instagram. Outras redes entram aqui no futuro.</p></div></div>
+      <div class="mt-rede"><span class="mt-rede-ic">${ic('image')}</span>
+        <div class="mt-rede-t"><b>Instagram ${c.instagram ? `<small>${esc(c.instagram)}</small>` : ''}</b><span>${esc(estado)}</span><span class="lbl">${esc(nomeMes(ym))}: ${esc(fonte)}</span></div>
+        <div class="actions">${botoesInstagram(c, ym)}<button class="btn sec sm" data-act="rel-importar" data-cliente="${esc(c.id)}">${ic('upload')}Importar dados</button></div></div></div>
+    ${avisoLeitura(c)}`;
+}
+
 function blocoCliente(c, ym) {
+  if (aba === 'contas') return abaContas(c, ym);
   const atual = store.obter('insights', idInsight(c.id, ym));
   const anterior = store.obter('insights', idInsight(c.id, ymAnterior(ym)));
   const prod = producaoDoMes(c.id, ym);
@@ -91,22 +110,55 @@ function blocoCliente(c, ym) {
   const todasStories = online ? igApi.storiesGuardadas(c.id) : [];
   if (online && !storiesPedidos.has(c.id)) { storiesPedidos.add(c.id); igApi.stories(c.id).then(recarregarTela); }
   const doMes = (m) => todasStories.filter((s) => String(s.dados?.data || '').slice(0, 7) === m);
-  const barra = `<div class="card rl-barra no-print"><div><b>${esc(c.nome)}</b><span class="lbl"> · ${atual?.fonte === 'instagram' ? 'números direto do Instagram' : atual ? 'dados importados' : 'sem números neste mês'}</span></div>
-      <div class="actions">${botoesInstagram(c, ym)}<button class="btn sec sm" data-act="rel-importar" data-cliente="${esc(c.id)}">${ic('upload')}Importar dados</button></div></div>
-    ${avisoLeitura(c)}`;
   if (!atual) {
-    return `${barra}<div class="card empty" style="padding:26px 10px">${flor()}<h2>Sem números deste mês</h2>
-      <p>Use “Atualizar do Instagram” (se o Instagram deste cliente estiver conectado) ou “Importar dados”. Enquanto isso, o painel já mostra o que foi produzido.</p>
-      ${prod.total ? `<p class="lbl">Produzido no mês: ${prod.total} ${prod.total === 1 ? 'tarefa' : 'tarefas'} (${prod.porFormato.map(([n, q]) => `${q} ${n}`).join(', ')}).</p>` : ''}</div>`;
+    return `${avisoLeitura(c)}<div class="card empty" style="padding:26px 10px">${flor()}<h2>Sem números deste mês</h2>
+      <p>Na aba Contas, use “Atualizar do Instagram” (se o Instagram deste cliente estiver conectado) ou “Importar dados”. Enquanto isso, o painel já mostra o que foi produzido.</p>
+      ${prod.total ? `<p class="lbl">Produzido no mês: ${prod.total} ${prod.total === 1 ? 'tarefa' : 'tarefas'} (${prod.porFormato.map(([n, q]) => `${q} ${n}`).join(', ')}).</p>` : ''}
+      <button class="btn pri" data-act="mt-aba" data-aba="contas">Ir para Contas</button></div>`;
   }
   const serie = Object.fromEntries(store.todos('insights').filter((i) => i.clienteId === c.id).map((i) => [i.mes, i]));
+  if (aba === 'metricas') {
+    return `${avisoLeitura(c)}<div class="mt">${painelMetricas({ cliente: c, ym, atual, anterior, serie })}</div>
+      <div class="card mt-enviar no-print"><div><b>Relatório de ${esc(nomeMes(ym))}</b><span class="lbl"> · o relatório completo, com a nossa leitura do mês, para o cliente abrir sem senha</span></div>
+        <div class="actions"><button class="btn sec sm" data-act="mt-aba" data-aba="relatorio">${ic('doc')}Ver o relatório</button>${online ? `<button class="btn pri sm" data-act="rel-enviar" data-cliente="${esc(c.id)}" data-mes="${ym}">${ic('send')}Enviar relatório mensal</button>` : ''}</div></div>`;
+  }
   const acoes2 = `<div class="rl-acoes no-print">
+      ${online ? `<button class="btn pri sm" data-act="rel-enviar" data-cliente="${esc(c.id)}" data-mes="${ym}">${ic('send')}Enviar relatório mensal</button>` : ''}
       <button class="btn sec sm" data-act="rel-leitura" data-cliente="${esc(c.id)}" data-mes="${ym}">${ic('edit')}Escrever a leitura do mês</button>
       <button class="btn sec sm" data-act="rel-metas" data-cliente="${esc(c.id)}">${ic('target')}Metas do cliente</button>
       <button class="btn sec sm" data-act="rel-imprimir">${ic('printer')}Imprimir ou salvar PDF</button>
-      ${online ? `<button class="btn pri sm" data-act="rel-link-relatorio" data-cliente="${esc(c.id)}" title="Copia o link que o cliente abre para ver só este relatório">${ic('link')}Copiar link do cliente</button>
+      ${online ? `<button class="btn sec sm" data-act="rel-link-relatorio" data-cliente="${esc(c.id)}" title="Copia o link que o cliente abre para ver só este relatório">${ic('link')}Copiar link do cliente</button>
       <button class="btn ghost sm" data-act="rel-link-novo" data-cliente="${esc(c.id)}" title="Cria um link novo e desativa o anterior">Novo link</button>` : ''}</div>`;
-  return `${barra}${acoes2}<div class="rl">${corpoRelatorio({ cliente: c, ym, atual, anterior, serie, producao: prod, stories: doMes(ym), storiesAnt: doMes(ymAnterior(ym)), painel: true, funil: funilPorEtapa(c.id, serie, ym) })}</div>`;
+  return `${avisoLeitura(c)}${acoes2}<div class="rl">${corpoRelatorio({ cliente: c, ym, atual, anterior, serie, producao: prod, stories: doMes(ym), storiesAnt: doMes(ymAnterior(ym)), painel: true, funil: funilPorEtapa(c.id, serie, ym) })}</div>`;
+}
+
+// Janela "Enviar relatório mensal": mensagem pronta (editável), link, WhatsApp e PDF.
+async function enviarRelatorio(clienteId, ym) {
+  const c = store.obter('cliente', clienteId);
+  if (!c) return;
+  let url;
+  try { url = await igApi.linkRelatorio(clienteId); } catch (err) { toast(err.message, true); return; }
+  const mensagem = `Olá! Segue o relatório de ${nomeMes(ym)} do Instagram da ${c.nome}, com os números do mês e a nossa leitura. Você abre direto pelo link, sem senha:\n${url}\n\nQualquer dúvida, é só chamar. Bôdhi Marketing`;
+  const m = abrirModal({
+    titulo: `Enviar o relatório de ${nomeMes(ym)}`,
+    subtitulo: `${c.nome}. O cliente abre o relatório pelo link, sem senha. Revise o texto, copie e mande pelo WhatsApp ou por e-mail.`,
+    largo: true,
+    corpo: `<div class="field"><label for="rel-msg">Mensagem</label><textarea id="rel-msg" rows="7">${esc(mensagem)}</textarea></div>
+      <div class="field"><label for="rel-url">Link do relatório</label><input id="rel-url" readonly value="${esc(url)}"></div>
+      <p class="lbl" style="margin-top:8px">O link mostra o relatório mais recente do cliente e deixa navegar pelos meses. Se ele cair em mãos erradas, use “Novo link” na aba Relatório mensal: o antigo deixa de funcionar.</p>
+      <div class="modal-f"><button class="btn ghost" data-fechar-env>Fechar</button><div class="actions">
+        <button class="btn sec" data-env-pdf>${ic('printer')}Salvar em PDF</button>
+        <button class="btn sec" data-env-link>${ic('link')}Copiar link</button>
+        <button class="btn sec" data-env-msg>Copiar mensagem</button>
+        <button class="btn pri" data-env-wa>${ic('send')}Abrir no WhatsApp</button></div></div>`,
+  });
+  const msg = m.el.querySelector('#rel-msg');
+  const copiar = async (texto, ok) => { try { await navigator.clipboard.writeText(texto); toast(ok); } catch { toast('Não consegui copiar sozinho: selecione o texto e use Ctrl+C.', true); } };
+  m.el.querySelector('[data-fechar-env]').onclick = () => m.fechar();
+  m.el.querySelector('[data-env-link]').onclick = () => copiar(url, 'Link copiado');
+  m.el.querySelector('[data-env-msg]').onclick = () => copiar(msg.value, 'Mensagem copiada');
+  m.el.querySelector('[data-env-wa]').onclick = () => { window.open(`https://wa.me/?text=${encodeURIComponent(msg.value)}`, '_blank', 'noopener'); };
+  m.el.querySelector('[data-env-pdf]').onclick = () => { m.fechar(); aba = 'relatorio'; recarregarTela(); setTimeout(() => document.querySelector('[data-act="rel-imprimir"]')?.click(), 600); };
 }
 
 // Aceita um objeto, uma lista ou `{insights:[...]}`. Cada item: clienteNome (ou clienteId), mes e os números.
@@ -143,8 +195,8 @@ async function importar(clienteId) {
 }
 
 export default {
-  titulo: () => 'Relatório',
-  sub: () => 'Resultados do cliente nas redes sociais, mês a mês.',
+  titulo: () => 'Métricas',
+  sub: () => 'Resultados do cliente nas redes sociais, o relatório mensal e as contas conectadas.',
 
   render({ ref }) {
     const ym = mes || mesPadrao();
@@ -154,12 +206,18 @@ export default {
     const chips = clientes.map((x) => `<button class="cbtn ${x.id === c.id ? 'on' : ''} no-print" data-act="ir" data-rota="relatorio" data-ref="${esc(x.id)}"><i></i>${esc(x.nome)}</button>`).join('');
     // Descobre quem já está conectado (uma vez) e redesenha a tela.
     if (igApi.disponivel() && !igApi.carregado()) igApi.status().then(recarregarTela);
-    return `<div class="cbtns no-print" style="margin-bottom:16px">${chips}</div><div class="no-print">${seletorMes(ym)}</div><div id="rel-corpo" data-cliente="${esc(c.id)}">${blocoCliente(c, ym)}</div>`;
+    const abas = `<div class="tabs no-print" role="tablist" aria-label="Seções de Métricas">
+      <button class="tab ${aba === 'metricas' ? 'on' : ''}" role="tab" aria-selected="${aba === 'metricas'}" data-act="mt-aba" data-aba="metricas">${ic('trend')}Métricas</button>
+      <button class="tab ${aba === 'relatorio' ? 'on' : ''}" role="tab" aria-selected="${aba === 'relatorio'}" data-act="mt-aba" data-aba="relatorio">${ic('doc')}Relatório mensal</button>
+      <button class="tab ${aba === 'contas' ? 'on' : ''}" role="tab" aria-selected="${aba === 'contas'}" data-act="mt-aba" data-aba="contas">${ic('plug')}Contas</button></div>`;
+    return `<div class="cbtns no-print" style="margin-bottom:16px">${chips}</div>${abas}${aba === 'contas' ? '' : `<div class="no-print">${seletorMes(ym)}</div>`}<div id="rel-corpo" data-cliente="${esc(c.id)}">${blocoCliente(c, ym)}</div>`;
   },
 
   montar() { ligarIndice(); },
 
   acoes: {
+    'mt-aba': (el) => { aba = ['relatorio', 'contas'].includes(el.dataset.aba) ? el.dataset.aba : 'metricas'; recarregarTela(); },
+    'rel-enviar': (el) => enviarRelatorio(el.dataset.cliente, el.dataset.mes),
     'rel-mes': (el) => {
       const passo = Number(el.dataset.passo);
       mes = passo ? ymMais(mes || mesPadrao(), passo) : null;
