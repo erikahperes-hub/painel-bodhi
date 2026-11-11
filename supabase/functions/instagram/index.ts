@@ -114,6 +114,83 @@ async function publico(c: any, token: string) {
   return out;
 }
 
+/* ---------- publicações de um intervalo (da mais nova para a mais antiga), com os números de cada uma ---------- */
+async function lerPublicacoes(c: any, q: (p: Record<string, string>) => string, ini: Date, fim: Date) {
+  const posts: any[] = [];
+  let url: string | null = `${GRAPH}/${c.ig_user_id}/media?${q({ fields: 'id,caption,media_type,media_product_type,timestamp,permalink,like_count,comments_count', limit: '50' })}`;
+  let paginas = 0;
+  while (url && paginas++ < 6) {
+    const r = await pegar(url);
+    let passou = false;
+    for (const x of r.data ?? []) {
+      const t = new Date(x.timestamp).getTime();
+      if (t < ini.getTime()) { passou = true; continue; }
+      if (t < fim.getTime()) posts.push(x);
+    }
+    url = passou ? null : r.paging?.next ?? null;
+  }
+  const detalhes: any[] = [];
+  for (const x of posts.slice(0, 40)) {
+    const ins: Record<string, number> = {};
+    for (const lista of ['reach,views,saved,shares,total_interactions', 'reach,total_interactions', 'reach']) {
+      try {
+        const r = await pegar(`${GRAPH}/${x.id}/insights?${q({ metric: lista })}`);
+        for (const d of r.data ?? []) ins[d.name] = valor(d) ?? 0;
+        break;
+      } catch { /* tenta com menos métricas */ }
+    }
+    const { data, hora } = partesBR(x.timestamp);
+    detalhes.push({
+      data, hora, tipo: tipoDe(x), legenda: x.caption ?? '', link: x.permalink ?? '',
+      alcance: ins.reach ?? null, visualizacoes: ins.views ?? null, interacoes: ins.total_interactions ?? null,
+      salvamentos: ins.saved ?? null, compartilhamentos: ins.shares ?? null, curtidas: x.like_count ?? null, comentarios: x.comments_count ?? null,
+    });
+  }
+  return detalhes;
+}
+
+/* ---------- período livre (até 30 dias): lê na hora e devolve ao painel, sem gravar nada ---------- */
+const diaBR = (s: string) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) throw new Error('Data inválida.');
+  const [a, m, d] = s.split('-').map(Number);
+  return Date.UTC(a, m - 1, d, 3); // meia-noite de Brasília
+};
+async function periodo(clienteId: string, de: string, ate: string, semPublicacoes = false) {
+  const ini = new Date(diaBR(de));
+  const fim = new Date(diaBR(ate) + 864e5); // o dia final entra inteiro
+  const dias = Math.round((fim.getTime() - ini.getTime()) / 864e5);
+  if (dias < 1) throw new Error('A data final precisa ser igual ou depois da inicial.');
+  if (dias > 30) throw new Error('O Instagram entrega no máximo 30 dias por consulta. Escolha um período de até 30 dias.');
+  const agora = Date.now();
+  if (ini.getTime() > agora) throw new Error('O período começa no futuro.');
+  const { c, token } = await conexao(clienteId);
+  const q = consulta(token);
+  const perfil = await pegar(`${GRAPH}/me?${q({ fields: 'followers_count' })}`);
+  const fimConsulta = new Date(Math.min(fim.getTime(), agora));
+
+  const total: Record<string, number> = {};
+  try {
+    const r = await pegar(`${GRAPH}/${c.ig_user_id}/insights?${q({ metric: 'reach,views,profile_views,accounts_engaged,total_interactions', metric_type: 'total_value', period: 'day', since: String(unix(ini)), until: String(unix(fimConsulta)) })}`);
+    for (const x of r.data ?? []) total[x.name] = x.total_value?.value ?? 0;
+  } catch (e) { console.log('insights do período indisponíveis', (e as Error).message); }
+
+  // Seguidores ganhos no período (o Instagram só guarda os últimos 30 dias deste número).
+  let ganhos: number | undefined;
+  if (fim.getTime() > agora - 30 * 864e5) {
+    try {
+      const r = await pegar(`${GRAPH}/${c.ig_user_id}/insights?${q({ metric: 'follower_count', period: 'day', since: String(unix(new Date(Math.max(ini.getTime(), agora - 29 * 864e5)))), until: String(unix(fimConsulta)) })}`);
+      ganhos = (r.data?.[0]?.values ?? []).reduce((t: number, v: any) => t + (v.value ?? 0), 0);
+    } catch { /* sem o número */ }
+  }
+
+  const posts = semPublicacoes ? [] : await lerPublicacoes(c, q, ini, fim);
+  return {
+    de, ate, dias, seguidores: perfil.followers_count ?? null, ...(ganhos !== undefined ? { seguidoresGanhos: ganhos } : {}),
+    alcance: total.reach ?? null, visualizacoes: total.views ?? null, interacoes: total.total_interactions ?? null,
+    visitasPerfil: total.profile_views ?? null, contasEngajadas: total.accounts_engaged ?? null, posts,
+  };
+}
+
 /* ---------- números do mês (feed, perfil e público) ---------- */
 async function sincronizar(clienteId: string, mes: string) {
   if (!/^\d{4}-\d{2}$/.test(mes)) throw new Error('Mês inválido.');
@@ -149,36 +226,7 @@ async function sincronizar(clienteId: string, mes: string) {
   }
 
   // Publicações do mês, da mais nova para a mais antiga.
-  const posts: any[] = [];
-  let url: string | null = `${GRAPH}/${c.ig_user_id}/media?${q({ fields: 'id,caption,media_type,media_product_type,timestamp,permalink,like_count,comments_count', limit: '50' })}`;
-  let paginas = 0;
-  while (url && paginas++ < 6) {
-    const r = await pegar(url);
-    let passou = false;
-    for (const x of r.data ?? []) {
-      const t = new Date(x.timestamp).getTime();
-      if (t < ini.getTime()) { passou = true; continue; }
-      if (t < fimMes.getTime()) posts.push(x);
-    }
-    url = passou ? null : r.paging?.next ?? null;
-  }
-  const detalhes: any[] = [];
-  for (const x of posts.slice(0, 40)) {
-    const ins: Record<string, number> = {};
-    for (const lista of ['reach,views,saved,shares,total_interactions', 'reach,total_interactions', 'reach']) {
-      try {
-        const r = await pegar(`${GRAPH}/${x.id}/insights?${q({ metric: lista })}`);
-        for (const d of r.data ?? []) ins[d.name] = valor(d) ?? 0;
-        break;
-      } catch { /* tenta com menos métricas */ }
-    }
-    const { data, hora } = partesBR(x.timestamp);
-    detalhes.push({
-      data, hora, tipo: tipoDe(x), legenda: x.caption ?? '', link: x.permalink ?? '',
-      alcance: ins.reach ?? null, visualizacoes: ins.views ?? null, interacoes: ins.total_interactions ?? null,
-      salvamentos: ins.saved ?? null, compartilhamentos: ins.shares ?? null, curtidas: x.like_count ?? null, comentarios: x.comments_count ?? null,
-    });
-  }
+  const detalhes = await lerPublicacoes(c, q, ini, fimMes);
 
   // Perfil do público: retrato de hoje (o Instagram não guarda o histórico), então só é gravado em leituras do mês atual ou do último mês fechado.
   const recente = fimMes.getTime() > agora - 45 * 864e5;
@@ -326,6 +374,7 @@ Deno.serve(async (req) => {
       return json({ configurado: true, url: link });
     }
     if (acao === 'sincronizar') return json({ configurado: true, ...(await sincronizar(String(d.clienteId), String(d.mes))) });
+    if (acao === 'periodo') return json({ configurado: true, periodo: await periodo(String(d.clienteId), String(d.de), String(d.ate), !!d.semPublicacoes) });
     if (acao === 'stories') return json({ configurado: true, ...(await lerStories(String(d.clienteId))) });
     if (acao === 'perfil') return json({ configurado: true, perfil: await perfilAtual(String(d.clienteId)) });
     return json({ erro: 'Ação desconhecida' }, 400);

@@ -1,5 +1,5 @@
-import { store } from './store.js?v=145';
-import { config } from './config.js?v=145';
+import { store } from './store.js?v=147';
+import { config } from './config.js?v=147';
 
 // Conversa com a função "instagram" do Supabase. Os tokens dos clientes ficam só no servidor (tabela ig_conexoes);
 // aqui o painel nunca vê token nenhum, só pede o link de autorização, manda sincronizar e lê quem está conectado.
@@ -38,6 +38,10 @@ export const igApi = {
     const r = await chamar('sincronizar', { clienteId, mes });
     await store.recarregar(true);
     return r;
+  },
+  // Números de um período livre (até 30 dias), lidos na hora no Instagram e sem gravar nada. de e ate: AAAA-MM-DD.
+  async periodo(clienteId, de, ate, semPublicacoes = false) {
+    return (await chamar('periodo', { clienteId, de, ate, semPublicacoes })).periodo;
   },
   // Lê agora os stories ativos do cliente (a leitura automática faz isso de hora em hora).
   async lerStories(clienteId) {

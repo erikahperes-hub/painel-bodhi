@@ -1,10 +1,10 @@
-import { store } from '../store.js?v=145';
-import { esc, toast, norm, hojeISO } from '../util.js?v=145';
-import { ic, flor } from '../icons.js?v=145';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=145';
-import { FORMATOS, pecas } from '../conteudo.js?v=145';
-import { igApi } from '../instagram-api.js?v=145';
-import { corpoRelatorio, painelMetricas, frasesResumo, ligarIndice, ymAnterior, ymMais, nomeMes } from '../relatorio-html.js?v=145';
+import { store } from '../store.js?v=147';
+import { esc, toast, norm, hojeISO } from '../util.js?v=147';
+import { ic, flor } from '../icons.js?v=147';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=147';
+import { FORMATOS, pecas } from '../conteudo.js?v=147';
+import { igApi } from '../instagram-api.js?v=147';
+import { corpoRelatorio, painelMetricas, frasesResumo, ligarIndice, ymAnterior, ymMais, nomeMes } from '../relatorio-html.js?v=147';
 
 // Métricas do cliente nas redes sociais (no menu: Métricas) e o relatório mensal. Começa pelo Instagram.
 // Três abas: Métricas (indicadores do mês), Relatório mensal (o relatório completo, para enviar ao cliente) e Contas (conectar e atualizar o Instagram).
@@ -14,6 +14,7 @@ import { corpoRelatorio, painelMetricas, frasesResumo, ligarIndice, ymAnterior, 
 const recarregarTela = () => window.dispatchEvent(new Event('atualizar-tela'));
 let mes = null; // AAAA-MM mostrado; vazio = mês anterior ao atual (o último mês fechado)
 let aba = 'metricas'; // 'metricas', 'relatorio' ou 'contas'
+let periodo = null; // período livre mostrado na aba Métricas: { clienteId, de, ate, dias, atual, anterior, carregando, erro }; vazio = mostra o mês
 
 const mesPadrao = () => ymAnterior(hojeISO().slice(0, 7));
 const idInsight = (clienteId, ym) => `${clienteId}_${ym}`;
@@ -33,13 +34,75 @@ function producaoDoMes(clienteId, ym) {
   return { total: lista.length, porFormato };
 }
 
-function seletorMes(ym) {
+function seletorMes(ym, extra = '') {
   const padrao = mesPadrao();
   return `<div class="toolbar" style="margin-bottom:12px"><div class="mes">
       <button class="iconbtn" data-act="rel-mes" data-passo="-1" aria-label="Mês anterior"><span style="display:grid;transform:scaleX(-1)">${ic('chev')}</span></button>
       <b>${nomeMes(ym)}</b>
       <button class="iconbtn" data-act="rel-mes" data-passo="1" aria-label="Próximo mês">${ic('chev')}</button>
-      ${ym !== padrao ? '<button class="btn ghost sm" data-act="rel-mes" data-passo="0">Último mês fechado</button>' : ''}</div></div>`;
+      ${ym !== padrao ? '<button class="btn ghost sm" data-act="rel-mes" data-passo="0">Último mês fechado</button>' : ''}</div>${extra}</div>`;
+}
+
+// Período livre (até 30 dias), lido na hora no Instagram. Só existe na aba Métricas, para clientes com o Instagram conectado.
+const ddmm = (iso) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+const somaDias = (iso, n) => { const d = new Date(`${iso}T12:00:00`); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+const rotuloPeriodo = (de, ate) => (de === ate ? ddmm(de) : `${ddmm(de)} a ${ddmm(ate)}`);
+
+function seletorPeriodo(c, ym) {
+  if (!igApi.disponivel() || !igApi.conexao(c.id)) return seletorMes(ym);
+  const ativo = periodo && periodo.clienteId === c.id;
+  const marca = (dias) => (ativo && periodo.dias === dias && periodo.ate === hojeISO() ? ' ativo' : '');
+  const botoes = `<div class="actions"><span class="lbl">Período</span>
+      <button class="btn sec sm${marca(7)}" data-act="mt-periodo" data-dias="7" data-cliente="${esc(c.id)}">Últimos 7 dias</button>
+      <button class="btn sec sm${marca(30)}" data-act="mt-periodo" data-dias="30" data-cliente="${esc(c.id)}">Últimos 30 dias</button>
+      <button class="btn sec sm" data-act="mt-periodo-datas" data-cliente="${esc(c.id)}">${ic('calendar')}Escolher datas</button></div>`;
+  if (!ativo) return seletorMes(ym, botoes);
+  return `<div class="toolbar" style="margin-bottom:12px"><div class="mes"><b>${esc(rotuloPeriodo(periodo.de, periodo.ate))}</b><span class="lbl">${periodo.dias} ${periodo.dias === 1 ? 'dia' : 'dias'}</span>
+      <button class="btn ghost sm" data-act="mt-periodo-sair">Voltar ao mês</button></div>${botoes}</div>`;
+}
+
+const diasDoPeriodo = (de, ate) => Math.round((new Date(`${ate}T12:00:00`) - new Date(`${de}T12:00:00`)) / 864e5) + 1;
+// Devolve o aviso se o período não vale; vazio se estiver certo.
+function avisoPeriodo(de, ate) {
+  if (!de || !ate) return 'Escolha as duas datas.';
+  if (ate > hojeISO()) return 'A data final não pode ser no futuro.';
+  const dias = diasDoPeriodo(de, ate);
+  if (!(dias >= 1)) return 'A data final precisa ser igual ou depois da inicial.';
+  if (dias > 30) return 'O Instagram entrega no máximo 30 dias por consulta. Escolha um período de até 30 dias.';
+  return '';
+}
+
+async function lerPeriodo(clienteId, de, ate) {
+  const dias = diasDoPeriodo(de, ate);
+  const eu = (periodo = { clienteId, de, ate, dias, anteriorDe: somaDias(de, -dias), anteriorAte: somaDias(de, -1), carregando: true });
+  recarregarTela();
+  try {
+    const [atual, anterior] = await Promise.all([
+      igApi.periodo(clienteId, de, ate),
+      igApi.periodo(clienteId, eu.anteriorDe, eu.anteriorAte, true).catch(() => null),
+    ]);
+    if (periodo !== eu) return;
+    Object.assign(eu, { atual, anterior, carregando: false });
+  } catch (err) {
+    if (periodo !== eu) return;
+    Object.assign(eu, { erro: err.message, carregando: false });
+  }
+  recarregarTela();
+}
+
+function blocoPeriodo(c) {
+  const p = periodo;
+  if (p.carregando) return `<div class="card empty" style="padding:26px 10px">${flor()}<h2>Buscando no Instagram...</h2><p>Lendo ${esc(rotuloPeriodo(p.de, p.ate))}. Pode levar alguns segundos.</p></div>`;
+  if (p.erro) return `<div class="card empty" style="padding:26px 10px">${flor()}<h2>Não consegui ler este período</h2><p>${esc(p.erro)}</p><button class="btn pri" data-act="mt-periodo-sair">Voltar ao mês</button></div>`;
+  const n = (v) => (Number.isFinite(Number(v)) && v !== null ? Number(v).toLocaleString('pt-BR') : '-');
+  const posts = [...(p.atual.posts || [])].sort((a, b) => (Number(b.alcance) || 0) - (Number(a.alcance) || 0));
+  const linha = (x) => `<tr><td>${x.link ? `<a href="${esc(x.link)}" target="_blank" rel="noopener">${esc(String(x.legenda || 'Sem legenda').slice(0, 60))}</a>` : esc(String(x.legenda || 'Sem legenda').slice(0, 60))}</td><td>${esc(x.tipo || '')}</td><td>${esc(x.data ? ddmm(x.data) : '')}</td><td>${n(x.alcance)}</td><td>${n(x.interacoes)}</td></tr>`;
+  const tabela = posts.length
+    ? `<section class="card rl-sec"><h3>Publicações do período</h3><p class="rl-sub">${posts.length} ${posts.length === 1 ? 'publicação' : 'publicações'} no feed de ${esc(rotuloPeriodo(p.de, p.ate))}, da que mais alcançou para a que menos.</p>
+      <div class="rl-tabela"><table><thead><tr><th>Publicação</th><th>Tipo</th><th>Data</th><th>Alcance</th><th>Interações</th></tr></thead><tbody>${posts.map(linha).join('')}</tbody></table></div></section>`
+    : `<section class="card rl-sec"><h3>Publicações do período</h3><p class="rl-sub">Nenhuma publicação no feed de ${esc(rotuloPeriodo(p.de, p.ate))}. Os números acima incluem conteúdos antigos que continuaram sendo vistos.</p></section>`;
+  return `${avisoLeitura(c)}<div class="mt">${painelMetricas({ cliente: c, ym: '', atual: p.atual, anterior: p.anterior, periodo: { anteriorRotulo: rotuloPeriodo(p.anteriorDe, p.anteriorAte) } })}</div>${tabela}
+    <p class="lbl no-print" style="margin-top:10px">Os stories não entram na leitura por período: o Instagram só entrega os das últimas 24 horas. Este período não é guardado: ao sair, a leitura se perde (o mês fechado continua guardado).</p>`;
 }
 
 const storiesPedidos = new Set(); // clientes cujos stories já foram pedidos ao banco nesta visita
@@ -103,6 +166,7 @@ function abaContas(c, ym) {
 
 function blocoCliente(c, ym) {
   if (aba === 'contas') return abaContas(c, ym);
+  if (aba === 'metricas' && periodo && periodo.clienteId === c.id) return blocoPeriodo(c);
   const atual = store.obter('insights', idInsight(c.id, ym));
   const anterior = store.obter('insights', idInsight(c.id, ymAnterior(ym)));
   const prod = producaoDoMes(c.id, ym);
@@ -210,7 +274,7 @@ export default {
       <button class="tab ${aba === 'metricas' ? 'on' : ''}" role="tab" aria-selected="${aba === 'metricas'}" data-act="mt-aba" data-aba="metricas">${ic('trend')}Métricas</button>
       <button class="tab ${aba === 'relatorio' ? 'on' : ''}" role="tab" aria-selected="${aba === 'relatorio'}" data-act="mt-aba" data-aba="relatorio">${ic('doc')}Relatório mensal</button>
       <button class="tab ${aba === 'contas' ? 'on' : ''}" role="tab" aria-selected="${aba === 'contas'}" data-act="mt-aba" data-aba="contas">${ic('plug')}Contas</button></div>`;
-    return `<div class="cbtns no-print" style="margin-bottom:16px">${chips}</div>${abas}${aba === 'contas' ? '' : `<div class="no-print">${seletorMes(ym)}</div>`}<div id="rel-corpo" data-cliente="${esc(c.id)}">${blocoCliente(c, ym)}</div>`;
+    return `<div class="cbtns no-print" style="margin-bottom:16px">${chips}</div>${abas}${aba === 'contas' ? '' : `<div class="no-print">${aba === 'metricas' ? seletorPeriodo(c, ym) : seletorMes(ym)}</div>`}<div id="rel-corpo" data-cliente="${esc(c.id)}">${blocoCliente(c, ym)}</div>`;
   },
 
   montar() { ligarIndice(); },
@@ -218,6 +282,24 @@ export default {
   acoes: {
     'mt-aba': (el) => { aba = ['relatorio', 'contas'].includes(el.dataset.aba) ? el.dataset.aba : 'metricas'; recarregarTela(); },
     'rel-enviar': (el) => enviarRelatorio(el.dataset.cliente, el.dataset.mes),
+    'mt-periodo': (el) => { const hoje = hojeISO(); const dias = Number(el.dataset.dias); lerPeriodo(el.dataset.cliente, somaDias(hoje, -(dias - 1)), hoje); },
+    'mt-periodo-sair': () => { periodo = null; recarregarTela(); },
+    'mt-periodo-datas': (el) => {
+      const clienteId = el.dataset.cliente;
+      const hoje = hojeISO();
+      formulario({
+        titulo: 'Escolher o período',
+        subtitulo: 'O Instagram entrega no máximo 30 dias por consulta. O período é lido na hora e não fica guardado.',
+        salvarTexto: 'Ver números',
+        valores: { de: periodo?.de || somaDias(hoje, -6), ate: periodo?.ate || hoje },
+        campos: [{ nome: 'de', rotulo: 'De', tipo: 'data', obrigatorio: true }, { nome: 'ate', rotulo: 'Até', tipo: 'data', obrigatorio: true }],
+        aoSalvar: (v) => {
+          const aviso = avisoPeriodo(v.de, v.ate);
+          if (aviso) { toast(aviso, true); return false; }
+          lerPeriodo(clienteId, v.de, v.ate);
+        },
+      });
+    },
     'rel-mes': (el) => {
       const passo = Number(el.dataset.passo);
       mes = passo ? ymMais(mes || mesPadrao(), passo) : null;

@@ -1164,3 +1164,7 @@ a.chip{text-decoration:none}
 .mt-rede-t b small{font:400 13px var(--ui);color:var(--ink-2);margin-left:6px}
 .mt-rede-t span{font-size:14px;color:var(--ink-2)}
 @media (max-width:700px){.mt-conta{border-radius:28px;width:100%}.mt-conta-n{margin-left:auto}.mt-evol{grid-template-columns:minmax(0,1fr)}.mt-kpis{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}.mt-v{font-size:28px}}
+
+/* Período livre em Métricas: botão do período escolhido */
+.toolbar .btn.sec.sm.ativo,.toolbar .btn.sec.sm.ativo:hover{background:var(--petroleo)!important;color:#fff!important;border-color:var(--petroleo)!important}
+.toolbar .actions{align-items:center;gap:8px;flex-wrap:wrap}
