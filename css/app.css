@@ -5,8 +5,8 @@
 @font-face{font-family:'Argent CF';src:url(../assets/fonts/ArgentCF-DemiBold.otf) format('opentype');font-weight:600;font-display:swap}
 
 :root{
-  --creme:#FFFCF6;--grafite:#292B2D;--petroleo:#073F56;--verde:#23BB84;--coral:#E96A6A;
-  --canvas:#F3EEE2;--card:#FFFFFF;
+  --creme:#FFFFFF;--grafite:#292B2D;--petroleo:#073F56;--verde:#23BB84;--coral:#E96A6A;
+  --canvas:#EDF1F5;--card:#FFFFFF;
   --ink:#292B2D;--ink-2:#63676A;--ink-3:#9A9DA0;
   --line:rgba(41,43,45,.10);
   --verde-s:rgba(35,187,132,.15);--coral-s:rgba(233,106,106,.16);--pet-s:rgba(7,63,86,.09);--graf-s:rgba(41,43,45,.07);
