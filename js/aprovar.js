@@ -1,8 +1,8 @@
-import { config } from './config.js?v=168';
-import { logo } from './logo.js?v=168';
-import { esc } from './util.js?v=168';
-import { flor } from './icons.js?v=168';
-import { montarFeed } from './instagram.js?v=168';
+import { config } from './config.js?v=169';
+import { logo } from './logo.js?v=169';
+import { esc } from './util.js?v=169';
+import { flor } from './icons.js?v=169';
+import { montarFeed } from './instagram.js?v=169';
 
 // Página pública de aprovação. Não tem login: o código do link (depois do #) identifica o cliente.
 // O banco só entrega as peças desse cliente e só aceita aprovar ou pedir alteração nelas.
@@ -41,7 +41,7 @@ async function iniciar() {
   app.innerHTML = `<div class="pub">
     <header class="pub-h"><a href="https://bodhi.marketing" aria-label="Bôdhi Marketing" rel="noopener">${logo('verde', '#FFFCF6')}</a><p>Aprovação de conteúdo</p></header>
     <div class="card"><div id="feed"></div></div>
-    <p class="pub-f">Bôdhi Marketing · Se tiver qualquer dúvida, é só nos chamar.</p></div>`;
+    <p class="pub-f">Bôdhi Marketing</p></div>`;
   montarFeed(document.getElementById('feed'), { cliente: dados.cliente, pecas: dados.pecas, aoResponder: responder, foco: dados.foco || '' });
 }
 

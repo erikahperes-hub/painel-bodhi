@@ -1,9 +1,9 @@
-import { config } from './config.js?v=168';
-import { logo } from './logo.js?v=168';
-import { ligarDicas } from './dicas.js?v=168';
-import { esc, hojeISO } from './util.js?v=168';
-import { ic, flor } from './icons.js?v=168';
-import { corpoRelatorio, ligarIndice, ymAnterior, ymMais, nomeMes } from './relatorio-html.js?v=168';
+import { config } from './config.js?v=169';
+import { logo } from './logo.js?v=169';
+import { ligarDicas } from './dicas.js?v=169';
+import { esc, hojeISO } from './util.js?v=169';
+import { ic, flor } from './icons.js?v=169';
+import { corpoRelatorio, ligarIndice, ymAnterior, ymMais, nomeMes } from './relatorio-html.js?v=169';
 
 // Página pública do relatório do cliente. Não tem login: o código do link (depois do #) identifica o cliente.
 // O banco só entrega os números DELE (função relatorio_ver): resultados do Instagram, stories, entregas do mês e metas.
@@ -54,7 +54,7 @@ async function iniciar() {
     app.innerHTML = `<div class="pub">
       <header class="pub-h"><a href="https://bodhi.marketing" aria-label="Bôdhi Marketing" rel="noopener">${logo('verde', '#F8F4EA')}</a><p>Relatório de desempenho</p></header>
       ${nav}${corpo}
-      <p class="pub-f">Bôdhi Marketing · Se tiver qualquer dúvida, é só nos chamar.</p></div>`;
+      <p class="pub-f">Bôdhi Marketing</p></div>`;
     app.querySelectorAll('[data-passo]').forEach((b) => b.addEventListener('click', () => { ym = ymMais(ym, Number(b.dataset.passo)); desenhar(); window.scrollTo(0, 0); }));
     app.querySelector('[data-imprimir]')?.addEventListener('click', () => window.print());
     ligarIndice();
