@@ -96,7 +96,7 @@ begin
 
   return jsonb_build_object(
     'cliente', jsonb_build_object('nome', v_cli->>'nome', 'imagem', v_cli->>'imagem', 'instagram', v_cli->>'instagram',
-      'ver', jsonb_build_object('feed', coalesce(v_cli->'verNoLink'->>'feed', 'true') <> 'false', 'stories', coalesce(v_cli->'verNoLink'->>'stories', 'true') <> 'false', 'calendario', coalesce(v_cli->'verNoLink'->>'calendario', 'true') <> 'false', 'feedContinuo', coalesce(v_cli->'verNoLink'->>'feedContinuo', 'false') = 'true')),
+      'ver', jsonb_build_object('plano', coalesce(v_cli->'verNoLink'->>'plano', 'true') <> 'false', 'feed', coalesce(v_cli->'verNoLink'->>'feed', 'true') <> 'false', 'stories', coalesce(v_cli->'verNoLink'->>'stories', 'true') <> 'false', 'calendario', coalesce(v_cli->'verNoLink'->>'calendario', 'true') <> 'false', 'feedContinuo', coalesce(v_cli->'verNoLink'->>'feedContinuo', 'false') = 'true')),
     'pecas', v_pecas,
     'foco', v_peca
   );

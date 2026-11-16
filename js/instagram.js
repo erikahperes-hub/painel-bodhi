@@ -1,7 +1,7 @@
-import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=153';
-import { ic } from './icons.js?v=153';
-import { urlImagem, urlPlayer } from './drive.js?v=153';
-import { config } from './config.js?v=153';
+import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=154';
+import { ic } from './icons.js?v=154';
+import { urlImagem, urlPlayer } from './drive.js?v=154';
+import { config } from './config.js?v=154';
 
 // Visual de Instagram usado na prévia do painel e na página de aprovação do cliente.
 // Recebe os dados prontos, então funciona com ou sem login.
@@ -77,7 +77,7 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
   // O que a Bôdhi liberou para este cliente ver: Feed, Stories e Calendário (tudo ligado se nada foi escolhido).
   // Na página do cliente vem em cliente.ver; na prévia do painel, em cliente.verNoLink.
   const ver = { feed: true, stories: true, calendario: true, ...(cliente.ver || cliente.verNoLink || {}) };
-  const abaLiberada = (a) => (a === 'plano' ? plano.length > 0 : a === 'calendario' ? ver.calendario !== false : ver[a] !== false);
+  const abaLiberada = (a) => (a === 'plano' ? plano.length > 0 && ver.plano !== false : a === 'calendario' ? ver.calendario !== false : ver[a] !== false);
   const primeiraAba = () => ['plano', 'feed', 'stories', 'calendario'].find(abaLiberada) || '';
   const estado = { aba: planoPendente && !lista.some((p) => p.etapa === 'aprovacao') ? 'plano' : (plano.length && !lista.length ? 'plano' : 'feed'), mes: mesInicial(), aberta: null, filtroPlano: '' };
   if (!abaLiberada(estado.aba)) estado.aba = primeiraAba();
@@ -325,7 +325,7 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
     const corpo = !estado.aba ? '<div class="ig-nada"><p>Não há nada para mostrar por aqui no momento.</p></div>' : estado.aba === 'plano' ? planoHTML() : estado.aba === 'feed' ? grade(feed) : estado.aba === 'stories' ? grade(stories, true) : calendario(noCal);
     const ideiasPendTotal = plano.filter((p) => p.planejamento === 'aprovacao').length;
     raiz.innerHTML = `<div class="ig">${cabecalho()}
-      <div class="tabs" role="tablist" style="margin:16px 0 14px">${plano.length ? aba('plano', 'doc', 'Planejamento', ideiasPendTotal || undefined) : ''}${ver.feed !== false ? aba('feed', 'grid', 'Feed', feed.length) : ''}${ver.stories !== false ? aba('stories', 'circle', 'Stories', stories.length) : ''}${ver.calendario !== false ? aba('calendario', 'calendar', 'Calendário') : ''}</div>
+      <div class="tabs" role="tablist" style="margin:16px 0 14px">${plano.length && ver.plano !== false ? aba('plano', 'doc', 'Planejamento', ideiasPendTotal || undefined) : ''}${ver.feed !== false ? aba('feed', 'grid', 'Feed', feed.length) : ''}${ver.stories !== false ? aba('stories', 'circle', 'Stories', stories.length) : ''}${ver.calendario !== false ? aba('calendario', 'calendar', 'Calendário') : ''}</div>
       ${corpo}
       ${semData.length && (estado.aba === 'feed' || estado.aba === 'stories') ? `<h4 class="ig-sub">Sem data definida</h4><div class="ig-grade">${semData.map((p) => tile(p)).join('')}</div>` : ''}</div>`;
   }

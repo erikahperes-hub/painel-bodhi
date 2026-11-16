@@ -1,16 +1,16 @@
-import { store } from '../store.js?v=153';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=153';
-import { ic, flor } from '../icons.js?v=153';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=153';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=153';
-import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=153';
-import { feedPerfil } from '../feed-perfil.js?v=153';
-import { igApi } from '../instagram-api.js?v=153';
-import { lerPasta } from '../drive-pasta.js?v=153';
-import { lerTabela } from '../planejamento.js?v=153';
-import { config } from '../config.js?v=153';
-import { histCartao, histMontar, importarHistorico } from '../historico.js?v=153';
-import { abrirTarefa } from '../tarefa.js?v=153';
+import { store } from '../store.js?v=154';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=154';
+import { ic, flor } from '../icons.js?v=154';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=154';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=154';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=154';
+import { feedPerfil } from '../feed-perfil.js?v=154';
+import { igApi } from '../instagram-api.js?v=154';
+import { lerPasta } from '../drive-pasta.js?v=154';
+import { lerTabela } from '../planejamento.js?v=154';
+import { config } from '../config.js?v=154';
+import { histCartao, histMontar, importarHistorico } from '../historico.js?v=154';
+import { abrirTarefa } from '../tarefa.js?v=154';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
@@ -163,7 +163,7 @@ function escolherAdicionar(clienteId = '') {
 // Botões do topo do cartão, iguais nas abas Status e Calendário.
 // O que o cliente vê no link dele: chaves Feed, Stories e Calendário e o modo seleção (só as tarefas marcadas aparecem).
 // Fica no registro do cliente (verNoLink) e em cada tarefa (clienteVe). A regra vale no banco (função aprovacao_ver, versão 5 de supabase/aprovacao.sql).
-const verDoCliente = (c) => ({ feed: true, stories: true, calendario: true, selecao: false, feedContinuo: false, ...(c?.verNoLink || {}) });
+const verDoCliente = (c) => ({ feed: true, stories: true, calendario: true, selecao: false, feedContinuo: false, plano: true, ...(c?.verNoLink || {}) });
 async function salvarVerNoLink(clienteId, mudar) {
   const c = store.obter('cliente', clienteId);
   const verNoLink = { ...verDoCliente(c), ...mudar };
@@ -783,6 +783,7 @@ export default {
         corpo: `<div class="field"><label for="link-ap">Link do cliente</label><input id="link-ap" readonly value="${esc(url)}"></div>
           <p class="lbl" style="margin-top:10px">Quem tem este link consegue ver e aprovar as tarefas de ${esc(c.nome)}. Se ele for parar em mãos erradas, gere um novo: o antigo deixa de funcionar.</p>
           <div class="field" style="margin-top:14px"><span class="lbl">O que o cliente vê neste link</span>
+            <label class="ln-check"><input type="checkbox" data-ver="plano"><span>Planejamento<small>As ideias que você enviar em Enviar planejamento, para ele aprovar. A aba só aparece quando há ideias enviadas.</small></span></label>
             <label class="ln-check"><input type="checkbox" data-ver="feed"><span>Feed<small>A grade de publicações, como no Instagram.</small></span></label>
             <label class="ln-check"><input type="checkbox" data-ver="feedContinuo"><span>Feed igual ao do Instagram<small>Mostra todas as publicações juntas, as fixadas primeiro e depois as mais novas, em vez de dividir por mês.</small></span></label>
             <label class="ln-check"><input type="checkbox" data-ver="stories"><span>Stories</span></label>
@@ -803,7 +804,7 @@ export default {
       m.el.querySelectorAll('[data-ver]').forEach((x) => x.addEventListener('change', async () => {
         const chave = x.dataset.ver;
         const v = verDoCliente(store.obter('cliente', c.id));
-        if (chave !== 'selecao' && chave !== 'feedContinuo' && !x.checked && ['feed', 'stories', 'calendario'].filter((k) => k !== chave).every((k) => v[k] === false)) { x.checked = true; toast('Deixe pelo menos uma das três ligada: Feed, Stories ou Calendário.', true); return; }
+        if (chave !== 'selecao' && chave !== 'feedContinuo' && chave !== 'plano' && !x.checked && ['feed', 'stories', 'calendario'].filter((k) => k !== chave).every((k) => v[k] === false)) { x.checked = true; toast('Deixe pelo menos uma das três ligada: Feed, Stories ou Calendário.', true); return; }
         try { await salvarVerNoLink(c.id, { [chave]: x.checked }); } catch (err) { toast(err.message || 'Não consegui salvar.', true); marcarVer(); return; }
         marcarVer();
         if (chave === 'selecao' && x.checked && !candidatasDoLink(c.id).some((p) => p.clienteVe)) { toast('Modo seleção ligado. Nenhuma tarefa marcada ainda: o cliente verá a página vazia até você escolher.'); escolherTarefasDoLink(c.id, marcarVer); }
