@@ -1,7 +1,7 @@
-import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=178';
-import { ic } from './icons.js?v=178';
-import { urlImagem, urlPlayer } from './drive.js?v=178';
-import { config } from './config.js?v=178';
+import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=179';
+import { ic } from './icons.js?v=179';
+import { urlImagem, urlPlayer } from './drive.js?v=179';
+import { config } from './config.js?v=179';
 
 // Visual de Instagram usado na prévia do painel e na página de aprovação do cliente.
 // Recebe os dados prontos, então funciona com ou sem login.
@@ -462,7 +462,10 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
     overlay.addEventListener('mousedown', (e) => { if (e.target === overlay) fechar(); });
     overlay.addEventListener('click', clicarPost);
     overlay.querySelector('.ig-aj')?.addEventListener('submit', enviarAjuste);
-    overlay.querySelector('[data-ig-fechar]')?.focus();
+    // preventScroll: sem isso o Safari rola o cartão para o lado ao focar o X e desloca o vídeo.
+    overlay.querySelector('[data-ig-fechar]')?.focus({ preventScroll: true });
+    const cartao = overlay.querySelector('.ig-post');
+    cartao?.addEventListener('scroll', () => { if (cartao.scrollLeft) cartao.scrollLeft = 0; });
   }
 
   function fechar(liberar = true) {

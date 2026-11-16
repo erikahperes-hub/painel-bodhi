@@ -1267,3 +1267,11 @@ a.chip{text-decoration:none}
 .ig-post .ig-car:has(.ig-slide:only-child) .ig-slide{position:absolute;top:0;left:0;right:0;bottom:0;width:auto;height:auto;display:block}
 .ig-post .ig-slide video,.ig-post .ig-slide iframe,.ig-post .ig-slide>img,.ig-post .ig-slide .ig-play{position:absolute;top:0;left:0;width:100%;height:100%;margin:0;padding:0;border:0}
 .ig-post .ig-slide .ig-play img{width:100%;height:100%;object-fit:contain;display:block}
+
+/* Cabeçalho da publicação aberta cabe sempre no cartão, e o cartão nunca rola para o lado (Safari do iPhone) */
+.ig-post{overflow:hidden;overflow:clip}
+.ig-post .ig-ph{min-width:0;max-width:100%;box-sizing:border-box;flex-wrap:nowrap;gap:8px;padding-right:10px}
+.ig-post .ig-ph>div{min-width:0;flex:1 1 auto}
+.ig-post .ig-ph>div b,.ig-post .ig-ph>div small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ig-post .ig-ph .ig-nav-h,.ig-post .ig-ph .iconbtn,.ig-post .ig-ph .ig-av{flex:none}
+.ig-post .ig-ph .iconbtn{margin-left:0!important}
