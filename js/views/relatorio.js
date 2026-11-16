@@ -1,10 +1,10 @@
-import { store } from '../store.js?v=176';
-import { esc, toast, norm, hojeISO } from '../util.js?v=176';
-import { ic, flor } from '../icons.js?v=176';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=176';
-import { FORMATOS, pecas } from '../conteudo.js?v=176';
-import { igApi } from '../instagram-api.js?v=176';
-import { corpoRelatorio, painelMetricas, frasesResumo, ligarIndice, ymAnterior, ymMais, nomeMes } from '../relatorio-html.js?v=176';
+import { store } from '../store.js?v=177';
+import { esc, toast, norm, hojeISO } from '../util.js?v=177';
+import { ic, flor } from '../icons.js?v=177';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=177';
+import { FORMATOS, pecas } from '../conteudo.js?v=177';
+import { igApi } from '../instagram-api.js?v=177';
+import { corpoRelatorio, painelMetricas, frasesResumo, ligarIndice, ymAnterior, ymMais, nomeMes } from '../relatorio-html.js?v=177';
 
 // Métricas do cliente nas redes sociais (no menu: Métricas) e o relatório mensal. Começa pelo Instagram.
 // Três abas: Métricas (indicadores do mês), Relatório mensal (o relatório completo, para enviar ao cliente) e Contas (conectar e atualizar o Instagram).

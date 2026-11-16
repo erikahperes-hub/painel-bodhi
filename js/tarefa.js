@@ -1,9 +1,9 @@
-import { store } from './store.js?v=176';
-import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=176';
-import { ic } from './icons.js?v=176';
-import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=176';
-import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=176';
-import { idDrive, avisoLinkDrive, urlAbrir, urlImagem } from './drive.js?v=176';
+import { store } from './store.js?v=177';
+import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=177';
+import { ic } from './icons.js?v=177';
+import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=177';
+import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=177';
+import { idDrive, avisoLinkDrive, urlAbrir, urlImagem } from './drive.js?v=177';
 
 // Ficha da tarefa de conteúdo. Pensada para o dia a dia de quem cria posts:
 //  - em cima, o caminho da tarefa (planejamento até publicado) com o próximo passo em destaque;

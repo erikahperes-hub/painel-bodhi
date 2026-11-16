@@ -1252,3 +1252,9 @@ a.chip{text-decoration:none}
 .ig-post .ig-media,.ig-post .ig-media.v,.ig-post .ig-media.h{width:100%!important;max-width:none!important;margin:0!important}
 .ig-post .ig-car,.ig-post .ig-slide{width:100%}
 .ig-post .ig-slide video,.ig-post .ig-slide iframe,.ig-post .ig-slide>img{width:100%;height:100%;object-fit:contain;background:#000}
+
+/* Publicação com uma mídia só: sem rolagem lateral (evita o vídeo deslocado ou cortado no iPhone) */
+.ig-post .ig-media{overflow:hidden}
+.ig-post .ig-car:has(.ig-slide:only-child){overflow:hidden;scroll-snap-type:none;display:block}
+.ig-post .ig-car:has(.ig-slide:only-child) .ig-slide{width:100%;height:100%;transform:none}
+.ig-post .ig-slide video{display:block;position:relative;left:0;margin:0;padding:0;max-width:100%}
