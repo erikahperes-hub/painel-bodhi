@@ -1,5 +1,5 @@
-import { esc, mesNome, dataBR, urlSegura, iniciais } from './util.js?v=166';
-import { ic } from './icons.js?v=166';
+import { esc, mesNome, dataBR, urlSegura, iniciais } from './util.js?v=168';
+import { ic } from './icons.js?v=168';
 
 // O visual do relatório do cliente (baseado no relatório do Reportei, com insights a mais).
 // Só monta o HTML a partir dos dados; é usado pelo painel (js/views/relatorio.js) e pela página que o cliente abre pelo link (relatorio.html).

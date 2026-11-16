@@ -1,7 +1,7 @@
-import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=166';
-import { ic } from './icons.js?v=166';
-import { urlImagem, urlPlayer } from './drive.js?v=166';
-import { config } from './config.js?v=166';
+import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=168';
+import { ic } from './icons.js?v=168';
+import { urlImagem, urlPlayer } from './drive.js?v=168';
+import { config } from './config.js?v=168';
 
 // Visual de Instagram usado na prévia do painel e na página de aprovação do cliente.
 // Recebe os dados prontos, então funciona com ou sem login.
@@ -117,12 +117,12 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
     const ideias = porDataAsc(plano.filter((p) => p.planejamento === 'aprovacao'));
     if (!conteudos.length && !ideias.length) return `<div class="ig-hero ok"><b>${estado.concluiu ? 'Tudo certo. Obrigado!' : 'Tudo em dia'}</b><span>${estado.concluiu ? 'Você respondeu tudo o que estava pendente.' : 'Não há nada aguardando a sua aprovação agora.'}</span></div>`;
     const quando = (p) => (p.publicar ? dataBR(p.publicar) : 'Sem data');
-    const linhaC = (p) => `<button class="ig-li" data-ig-abrir="${esc(p.id)}">${tile(p, { pequeno: true, passivo: true })}<span class="ig-li-t"><b>${esc(p.titulo || 'Peça')}</b><small>${esc(quando(p))} · ${esc(fmt(p).nome)}</small></span><span class="chip cor-info">Ver e aprovar</span></button>`;
-    const linhaI = (p) => `<button class="ig-li" data-ig-pl-abrir="${esc(p.id)}">${tile(p, { pequeno: true, passivo: true })}<span class="ig-li-t"><b>${esc(p.titulo || 'Ideia')}</b><small>${esc(quando(p))} · ${esc(fmt(p).nome)}</small></span><span class="chip cor-info">Ver a ideia</span></button>`;
+    const linhaC = (p) => `<button class="ig-li ig-ap-li" data-ig-abrir="${esc(p.id)}">${tile(p, { pequeno: true, passivo: true })}<span class="ig-li-t"><b>${esc(p.titulo || 'Peça')}</b><small>${esc(quando(p))} · ${esc(fmt(p).nome)}</small></span><span class="ig-ap-go">Ver e aprovar${ic('chev')}</span></button>`;
+    const linhaI = (p) => `<button class="ig-li ig-ap-li" data-ig-pl-abrir="${esc(p.id)}">${tile(p, { pequeno: true, passivo: true })}<span class="ig-li-t"><b>${esc(p.titulo || 'Ideia')}</b><small>${esc(quando(p))} · ${esc(fmt(p).nome)}</small></span><span class="ig-ap-go">Ver a ideia${ic('chev')}</span></button>`;
     const n = conteudos.length + ideias.length;
     const hero = n ? `<div class="ig-hero"><div class="ig-hero-t"><b>Você tem ${n} ${n === 1 ? 'item' : 'itens'} para aprovar</b><span>Veja um de cada vez e toque em Aprovar ou em Pedir alteração.</span></div><button type="button" class="btn verde" data-ig-comecar>${ic('check')}Começar a aprovar</button></div>` : '';
-    return `${hero}${n ? '<h4 class="ig-sub" style="margin-top:4px">Ou escolha um item</h4>' : ''}${conteudos.length ? `<h4 class="ig-sub">Conteúdos prontos para aprovar <span class="lbl">${conteudos.length}</span></h4><div class="ig-lista">${conteudos.map(linhaC).join('')}</div>` : ''}
-      ${ideias.length ? `<h4 class="ig-sub">Ideias do planejamento para aprovar <span class="lbl">${ideias.length}</span></h4><div class="ig-lista">${ideias.map(linhaI).join('')}</div>` : ''}`;
+    return `<div class="ig-aprovar">${hero}${conteudos.length ? `<h4 class="ig-sub">Conteúdos prontos para aprovar <span class="lbl">${conteudos.length}</span></h4><div class="ig-lista">${conteudos.map(linhaC).join('')}</div>` : ''}
+      ${ideias.length ? `<h4 class="ig-sub">Ideias do planejamento para aprovar <span class="lbl">${ideias.length}</span></h4><div class="ig-lista">${ideias.map(linhaI).join('')}</div>` : ''}</div>`;
   }
 
   /* ---------- Fluxo "Começar a aprovar": um item de cada vez, com o andamento ---------- */
