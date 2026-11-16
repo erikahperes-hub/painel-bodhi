@@ -1,7 +1,7 @@
-import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=175';
-import { ic } from './icons.js?v=175';
-import { urlImagem, urlPlayer } from './drive.js?v=175';
-import { config } from './config.js?v=175';
+import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=176';
+import { ic } from './icons.js?v=176';
+import { urlImagem, urlPlayer } from './drive.js?v=176';
+import { config } from './config.js?v=176';
 
 // Visual de Instagram usado na prévia do painel e na página de aprovação do cliente.
 // Recebe os dados prontos, então funciona com ou sem login.
@@ -419,7 +419,8 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
 
   // Setas do post aberto: passam para a publicação anterior ou seguinte do mesmo mês, na ordem das datas.
   function vizinhas(p) {
-    const grupo = p.publicar ? lista.filter((x) => x.publicar && doMes(x, p.publicar.slice(0, 7))) : lista.filter((x) => !x.publicar);
+    // As setas passam só entre publicações que abrem (as capas do Instagram, que não abrem, ficam de fora).
+    const grupo = (p.publicar ? lista.filter((x) => x.publicar && doMes(x, p.publicar.slice(0, 7))) : lista.filter((x) => !x.publicar)).filter((x) => !x.somenteCapa);
     return porDataAsc(grupo);
   }
   function posicao(p) {
