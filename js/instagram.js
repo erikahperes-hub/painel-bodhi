@@ -1,7 +1,7 @@
-import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=149';
-import { ic } from './icons.js?v=149';
-import { urlImagem, urlPlayer } from './drive.js?v=149';
-import { config } from './config.js?v=149';
+import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=151';
+import { ic } from './icons.js?v=151';
+import { urlImagem, urlPlayer } from './drive.js?v=151';
+import { config } from './config.js?v=151';
 
 // Visual de Instagram usado na prévia do painel e na página de aprovação do cliente.
 // Recebe os dados prontos, então funciona com ou sem login.
@@ -83,12 +83,15 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
   if (!abaLiberada(estado.aba)) estado.aba = primeiraAba();
 
   function tile(p, { pequeno = false, num = '', passivo = false } = {}) {
-    const tag = passivo ? 'span' : 'button';
-    const attrs = passivo ? '' : ` data-ig-abrir="${esc(p.id)}" aria-label="${esc(p.titulo || 'Peça')}"`;
+    // somenteCapa: publicação que já está no Instagram e só aparece como capa na grade; não abre (não há o conteúdo para abrir).
+    const sem = passivo || p.somenteCapa;
+    const tag = sem ? 'span' : 'button';
+    const attrs = sem ? '' : ` data-ig-abrir="${esc(p.id)}" aria-label="${esc(p.titulo || 'Peça')}"`;
     const f = fmt(p);
     const capa = capaId(p);
     const st = STATUS[p.etapa] || STATUS.aprovacao;
-    return `<${tag} class="ig-tile${pequeno ? ' mini' : ''}${ehStory(p) ? ' story' : ''}"${attrs}>
+    const fixo = p.fixado && !pequeno ? '<span class="ig-fix" title="Fixada no perfil"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M16 3l5 5-2 1-3.2 3.2.6 4.3-1.4 1.4-3.5-3.5L7 18l-1-1 3.6-4.5L6.1 9l1.4-1.4 4.3.6L15 5z"/></svg></span>' : '';
+    return `<${tag} class="ig-tile${pequeno ? ' mini' : ''}${ehStory(p) ? ' story' : ''}${p.somenteCapa && !passivo ? ' sem-abrir' : ''}"${attrs}>${fixo}
       ${capa ? imgDrive(capa, 480, ' loading="lazy"') : `<span class="ig-vazio">${ic(f.icone || 'image')}</span>`}
       ${num && !pequeno ? `<span class="ig-num">${num}</span>` : ''}
       ${f.icone && !pequeno ? `<span class="ig-fmt">${ic(f.icone)}</span>` : ''}
@@ -101,16 +104,19 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
     const ideiasPend = plano.filter((p) => doMes(p, estado.mes) && p.planejamento === 'aprovacao').length;
     return `<div class="ig-perfil">${avatar(true)}<div>
         <h2>${esc(cliente.nome)}</h2>${cliente.instagram ? `<p class="ig-h">@${esc(handle)}</p>` : ''}
-        <p class="lbl">${doMesLista.length} ${doMesLista.length === 1 ? 'publicação' : 'publicações'} em ${esc(rotuloMes(estado.mes).split(' ')[0].toLowerCase())}${aguardando ? ` · <b>${aguardando} aguardando sua aprovação</b>` : ''}${ideiasPend ? ` · <b>${ideiasPend} ${ideiasPend === 1 ? 'ideia aguardando' : 'ideias aguardando'} sua aprovação</b>` : ''}</p></div></div>
-      <div class="ig-mes"><button class="iconbtn" data-ig-mes="-1" aria-label="Mês anterior"><span style="display:grid;transform:scaleX(-1)">${ic('chev')}</span></button>
+        <p class="lbl">${estado.aba === 'feed' && ver.feedContinuo ? `${lista.filter((p) => p.publicar && !ehStory(p)).length} publicações` : `${doMesLista.length} ${doMesLista.length === 1 ? 'publicação' : 'publicações'} em ${esc(rotuloMes(estado.mes).split(' ')[0].toLowerCase())}`}${aguardando ? ` · <b>${aguardando} aguardando sua aprovação</b>` : ''}${ideiasPend ? ` · <b>${ideiasPend} ${ideiasPend === 1 ? 'ideia aguardando' : 'ideias aguardando'} sua aprovação</b>` : ''}</p></div></div>
+      ${estado.aba === 'feed' && ver.feedContinuo ? '' : `<div class="ig-mes"><button class="iconbtn" data-ig-mes="-1" aria-label="Mês anterior"><span style="display:grid;transform:scaleX(-1)">${ic('chev')}</span></button>
         <h3>${esc(rotuloMes(estado.mes))}</h3>
-        <button class="iconbtn" data-ig-mes="1" aria-label="Próximo mês">${ic('chev')}</button></div>
+        <button class="iconbtn" data-ig-mes="1" aria-label="Próximo mês">${ic('chev')}</button></div>`}
       <p class="ig-dica">${estado.aba === 'plano' ? 'Veja no calendário o dia de cada ideia e, na lista, o que já foi aprovado e o que ainda não. Toque em uma ideia para ler o roteiro e aprovar ou pedir alteração.' : 'Toque em qualquer post para ver o conteúdo completo. Carrosséis deslizam e reels tocam o vídeo. Tudo como vai ao ar.'}</p>`;
   }
 
   function grade(itens, stories = false) {
     if (!itens.length) return `<div class="ig-nada"><p>${stories ? 'Nenhum story neste mês.' : 'Nenhuma publicação neste mês.'} Use as setas para ver outros meses.</p></div>`;
-    return `<div class="ig-grade${stories ? ' story' : ''}">${porDataAsc(itens).map((p, i) => tile(p, { num: String(i + 1).padStart(2, '0') })).join('')}</div>`;
+    // Feed "como no Instagram" (chave feedContinuo): todas as publicações, as fixadas primeiro e depois as mais novas, sem numeração e sem dividir por mês.
+    const continuo = !stories && ver.feedContinuo;
+    const ordem = continuo ? [...itens].sort((a, b) => (b.fixado ? 1 : 0) - (a.fixado ? 1 : 0) || String(b.publicar || '').localeCompare(String(a.publicar || ''))) : porDataAsc(itens);
+    return `<div class="ig-grade${stories ? ' story' : ''}">${ordem.map((p, i) => tile(p, { num: continuo ? '' : String(i + 1).padStart(2, '0') })).join('')}</div>`;
   }
 
   // No calendário do cliente cada publicação aparece pelo NOME, na cor do tipo e com a bolinha da etapa (igual ao calendário do painel).
@@ -309,12 +315,14 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
 
   function desenhar() {
     const itensMes = lista.filter((p) => doMes(p, estado.mes));
-    const feed = itensMes.filter((p) => !ehStory(p));
+    // O calendário não mostra o que o cliente não precisa ver no dia a dia (noCalendario) nem as capas que só aparecem no feed (somenteCapa).
+    const noCal = itensMes.filter((p) => !p.noCalendario && !p.somenteCapa);
+    const feed = (ver.feedContinuo ? lista.filter((p) => p.publicar) : itensMes).filter((p) => !ehStory(p));
     const stories = itensMes.filter(ehStory);
     const semData = lista.filter((p) => !p.publicar);
     const aba = (id, icone, nome, n) => `<button class="tab ${estado.aba === id ? 'on' : ''}" role="tab" aria-selected="${estado.aba === id}" data-ig-aba="${id}">${ic(icone)}${nome}${n === undefined ? '' : ` <small>${n}</small>`}</button>`;
     if (!abaLiberada(estado.aba)) estado.aba = primeiraAba();
-    const corpo = !estado.aba ? '<div class="ig-nada"><p>Não há nada para mostrar por aqui no momento.</p></div>' : estado.aba === 'plano' ? planoHTML() : estado.aba === 'feed' ? grade(feed) : estado.aba === 'stories' ? grade(stories, true) : calendario(itensMes);
+    const corpo = !estado.aba ? '<div class="ig-nada"><p>Não há nada para mostrar por aqui no momento.</p></div>' : estado.aba === 'plano' ? planoHTML() : estado.aba === 'feed' ? grade(feed) : estado.aba === 'stories' ? grade(stories, true) : calendario(noCal);
     const ideiasPendTotal = plano.filter((p) => p.planejamento === 'aprovacao').length;
     raiz.innerHTML = `<div class="ig">${cabecalho()}
       <div class="tabs" role="tablist" style="margin:16px 0 14px">${plano.length ? aba('plano', 'doc', 'Planejamento', ideiasPendTotal || undefined) : ''}${ver.feed !== false ? aba('feed', 'grid', 'Feed', feed.length) : ''}${ver.stories !== false ? aba('stories', 'circle', 'Stories', stories.length) : ''}${ver.calendario !== false ? aba('calendario', 'calendar', 'Calendário') : ''}</div>

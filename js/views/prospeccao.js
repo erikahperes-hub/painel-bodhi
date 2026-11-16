@@ -1,4 +1,4 @@
-import { flor } from '../icons.js?v=149';
+import { flor } from '../icons.js?v=151';
 
 export default {
   titulo: () => 'Prospecção',

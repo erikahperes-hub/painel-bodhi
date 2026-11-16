@@ -1,5 +1,5 @@
 -- Página de aprovação do cliente (aprovar.html). Cole no "SQL Editor" do Supabase e clique em Run.
--- Pode rodar de novo sem problema (versão 5: modo seleção, o cliente vê só as tarefas marcadas "clienteVe", e as chaves Feed, Stories e Calendário).
+-- Pode rodar de novo sem problema (versão 6: modo seleção, o cliente vê só as tarefas marcadas "clienteVe"; chaves Feed, Stories e Calendário; feed igual ao Instagram; capas que não abrem e escolha de quem aparece no calendário).
 --
 -- Como funciona e por que é seguro:
 -- * A tabela "records" continua fechada: só as sócias leem e escrevem nela.
@@ -65,6 +65,9 @@ begin
       'midias', coalesce(r.data->'midias', '[]'::jsonb),
       'capa', r.data->>'capa',
       'ajuste', r.data->>'ajuste',
+      'somenteCapa', coalesce(r.data->>'somenteCapa', '') = 'true',
+      'fixado', coalesce(r.data->>'fixado', '') = 'true',
+      'noCalendario', coalesce(r.data->>'noCalendario', '') = 'true',
       'planejamento', case when r.data->>'planejamento' in ('aprovacao', 'ajustes', 'aprovado') then r.data->>'planejamento' else null end,
       'ajustePlano', case when r.data->>'planejamento' in ('aprovacao', 'ajustes', 'aprovado') then r.data->>'ajustePlano' else null end,
       'roteiro', case when r.data->>'planejamento' in ('aprovacao', 'ajustes', 'aprovado') then r.data->>'roteiro' else null end,
@@ -83,7 +86,7 @@ begin
           r.data->>'etapa' in ('aprovacao', 'ajustes')
           or r.data->>'planejamento' in ('aprovacao', 'ajustes')
           or ((r.data->>'etapa' in ('aprovado', 'publicado') or r.data->>'planejamento' = 'aprovado')
-              and (coalesce(r.data->>'publicar', '') >= v_hoje
+              and (v_sel or coalesce(r.data->>'publicar', '') >= v_hoje
                    or (coalesce(r.data->>'publicar', '') >= v_inicio
                        and (jsonb_array_length(coalesce(r.data->'midias', '[]'::jsonb)) > 0 or coalesce(r.data->>'capa', '') <> ''))
                    or (r.data->>'etapa' = 'aprovado' and coalesce(r.data->>'publicar', '') = '')))
@@ -93,7 +96,7 @@ begin
 
   return jsonb_build_object(
     'cliente', jsonb_build_object('nome', v_cli->>'nome', 'imagem', v_cli->>'imagem', 'instagram', v_cli->>'instagram',
-      'ver', jsonb_build_object('feed', coalesce(v_cli->'verNoLink'->>'feed', 'true') <> 'false', 'stories', coalesce(v_cli->'verNoLink'->>'stories', 'true') <> 'false', 'calendario', coalesce(v_cli->'verNoLink'->>'calendario', 'true') <> 'false')),
+      'ver', jsonb_build_object('feed', coalesce(v_cli->'verNoLink'->>'feed', 'true') <> 'false', 'stories', coalesce(v_cli->'verNoLink'->>'stories', 'true') <> 'false', 'calendario', coalesce(v_cli->'verNoLink'->>'calendario', 'true') <> 'false', 'feedContinuo', coalesce(v_cli->'verNoLink'->>'feedContinuo', 'false') = 'true')),
     'pecas', v_pecas,
     'foco', v_peca
   );

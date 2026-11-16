@@ -1,7 +1,7 @@
-import { store } from '../store.js?v=149';
-import { esc, hojeISO } from '../util.js?v=149';
-import { ic, flor } from '../icons.js?v=149';
-import { montarFeed, ETAPAS_CLIENTE } from '../instagram.js?v=149';
+import { store } from '../store.js?v=151';
+import { esc, hojeISO } from '../util.js?v=151';
+import { ic, flor } from '../icons.js?v=151';
+import { montarFeed, ETAPAS_CLIENTE } from '../instagram.js?v=151';
 
 export default {
   titulo: () => 'Prévia do cliente',
@@ -37,6 +37,7 @@ export default {
       if (['aprovacao', 'ajustes'].includes(p.etapa) || ['aprovacao', 'ajustes'].includes(p.planejamento)) return true;
       if (!(['aprovado', 'publicado'].includes(p.etapa) || p.planejamento === 'aprovado')) return false;
       const d = p.publicar || '';
+      if (c.verNoLink?.selecao) return true; // no modo seleção vale o que você marcou, de qualquer data
       return d >= hoje || (d >= inicioISO && temArte(p)) || (p.etapa === 'aprovado' && !d);
     };
     // Modo seleção: com ele ligado, o cliente só vê as tarefas marcadas (função aprovacao_ver, versão 5).

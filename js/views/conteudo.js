@@ -1,16 +1,16 @@
-import { store } from '../store.js?v=149';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=149';
-import { ic, flor } from '../icons.js?v=149';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=149';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=149';
-import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=149';
-import { feedPerfil } from '../feed-perfil.js?v=149';
-import { igApi } from '../instagram-api.js?v=149';
-import { lerPasta } from '../drive-pasta.js?v=149';
-import { lerTabela } from '../planejamento.js?v=149';
-import { config } from '../config.js?v=149';
-import { histCartao, histMontar, importarHistorico } from '../historico.js?v=149';
-import { abrirTarefa } from '../tarefa.js?v=149';
+import { store } from '../store.js?v=151';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=151';
+import { ic, flor } from '../icons.js?v=151';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=151';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=151';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=151';
+import { feedPerfil } from '../feed-perfil.js?v=151';
+import { igApi } from '../instagram-api.js?v=151';
+import { lerPasta } from '../drive-pasta.js?v=151';
+import { lerTabela } from '../planejamento.js?v=151';
+import { config } from '../config.js?v=151';
+import { histCartao, histMontar, importarHistorico } from '../historico.js?v=151';
+import { abrirTarefa } from '../tarefa.js?v=151';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
@@ -163,7 +163,7 @@ function escolherAdicionar(clienteId = '') {
 // Botões do topo do cartão, iguais nas abas Status e Calendário.
 // O que o cliente vê no link dele: chaves Feed, Stories e Calendário e o modo seleção (só as tarefas marcadas aparecem).
 // Fica no registro do cliente (verNoLink) e em cada tarefa (clienteVe). A regra vale no banco (função aprovacao_ver, versão 5 de supabase/aprovacao.sql).
-const verDoCliente = (c) => ({ feed: true, stories: true, calendario: true, selecao: false, ...(c?.verNoLink || {}) });
+const verDoCliente = (c) => ({ feed: true, stories: true, calendario: true, selecao: false, feedContinuo: false, ...(c?.verNoLink || {}) });
 async function salvarVerNoLink(clienteId, mudar) {
   const c = store.obter('cliente', clienteId);
   const verNoLink = { ...verDoCliente(c), ...mudar };
@@ -182,13 +182,15 @@ function escolherTarefasDoLink(clienteId, aoFechar) {
   const lista = candidatasDoLink(clienteId);
   const marcada = new Set(lista.filter((p) => p.clienteVe).map((p) => p.id));
   const etapaNome = (p) => (ETAPAS.find((e) => e.id === p.etapa)?.nome || p.etapa);
-  const linha = (p) => `<label class="ln-check" data-linha data-busca="${esc(norm(`${p.titulo} ${etapaNome(p)}`))}"><input type="checkbox" data-tarefa="${esc(p.id)}" ${marcada.has(p.id) ? 'checked' : ''}><span>${esc(p.titulo || 'Sem título')}<small>${esc(p.publicar ? dataBR(p.publicar) : 'Sem data')} · ${esc(FORMATOS[p.formato]?.nome || 'Estático')} · ${esc(etapaNome(p))}${(p.midias || []).length || p.capa ? '' : ' · sem arte'}</small></span></label>`;
+  // Duas escolhas por tarefa: aparece no link do cliente (feed e stories) e, dentro disso, aparece no calendário dele.
+  const linha = (p) => `<div class="sel-linha" data-linha data-busca="${esc(norm(`${p.titulo} ${etapaNome(p)}`))}"><label class="ln-check"><input type="checkbox" data-tarefa="${esc(p.id)}" ${marcada.has(p.id) ? 'checked' : ''}><span>${esc(p.titulo || 'Sem título')}<small>${esc(p.publicar ? dataBR(p.publicar) : 'Sem data')} · ${esc(FORMATOS[p.formato]?.nome || 'Estático')} · ${esc(etapaNome(p))}${(p.midias || []).length || p.capa ? '' : ' · sem arte'}${p.somenteCapa ? ' · só capa' : ''}</small></span></label>
+      <label class="sel-cal" title="Mostrar esta tarefa no calendário do cliente"><input type="checkbox" data-cal="${esc(p.id)}" ${p.noCalendario || p.somenteCapa ? '' : 'checked'} ${p.somenteCapa ? 'disabled' : ''}>Calendário</label></div>`;
   const m = abrirModal({
     titulo: `O que ${c.nome} vê`,
-    subtitulo: 'Marque as tarefas que aparecem no link do cliente. As desmarcadas ficam escondidas dele (continuam no painel).',
+    subtitulo: 'Marque as tarefas que aparecem no link do cliente (feed e stories) e, na caixinha Calendário, as que também aparecem no calendário dele. As desmarcadas ficam escondidas dele (continuam no painel).',
     largo: true,
     corpo: `<div class="field"><input id="sel-busca" type="search" placeholder="Buscar por título ou etapa" aria-label="Buscar tarefa"></div>
-      <div class="actions" style="margin-bottom:8px"><button type="button" class="btn sec sm" data-sel="espera">Só as que esperam resposta</button><button type="button" class="btn sec sm" data-sel="todas">Marcar todas</button><button type="button" class="btn ghost sm" data-sel="nenhuma">Limpar</button><span class="lbl" data-sel-n></span></div>
+      <div class="actions" style="margin-bottom:8px;flex-wrap:wrap"><button type="button" class="btn sec sm" data-sel="espera">Só as que esperam resposta</button><button type="button" class="btn sec sm" data-sel="todas">Marcar todas</button><button type="button" class="btn ghost sm" data-sel="nenhuma">Limpar</button><button type="button" class="btn sec sm" data-sel="cal-espera" title="No calendário, só o que espera resposta do cliente">Calendário: só o que espera resposta</button><button type="button" class="btn ghost sm" data-sel="cal-nenhuma">Calendário: nenhuma</button><span class="lbl" data-sel-n></span></div>
       <div style="max-height:46vh;overflow:auto;display:grid;gap:4px">${lista.length ? lista.map(linha).join('') : '<p class="lbl">Nenhuma tarefa enviada para aprovação ainda.</p>'}</div>
       <div class="modal-f"><button type="button" class="btn ghost" data-sel-fechar>Cancelar</button><div class="actions"><button type="button" class="btn pri" data-sel-salvar>Salvar escolha</button></div></div>`,
   });
@@ -202,9 +204,14 @@ function escolherTarefasDoLink(clienteId, aoFechar) {
   });
   m.el.querySelectorAll('[data-sel]').forEach((b) => b.addEventListener('click', () => {
     const modo = b.dataset.sel;
+    const espera = (p) => ['aprovacao', 'ajustes'].includes(p.etapa) || ['aprovacao', 'ajustes'].includes(p.planejamento);
+    if (modo.startsWith('cal-')) {
+      m.el.querySelectorAll('[data-cal]').forEach((x) => { x.checked = modo === 'cal-espera' && espera(lista.find((y) => y.id === x.dataset.cal)); });
+      return;
+    }
     caixas().forEach((x) => {
       const p = lista.find((y) => y.id === x.dataset.tarefa);
-      x.checked = modo === 'todas' ? true : modo === 'nenhuma' ? false : ['aprovacao', 'ajustes'].includes(p.etapa) || ['aprovacao', 'ajustes'].includes(p.planejamento);
+      x.checked = modo === 'todas' ? true : modo === 'nenhuma' ? false : espera(p);
     });
     contar();
   }));
@@ -215,8 +222,12 @@ function escolherTarefasDoLink(clienteId, aoFechar) {
     try {
       for (const x of caixas()) {
         const p = lista.find((y) => y.id === x.dataset.tarefa);
-        if (!!p.clienteVe === x.checked) continue;
-        await store.salvar('conteudo', { ...p, clienteVe: x.checked, atualizadoEm: new Date().toISOString() });
+        const cal = m.el.querySelector(`[data-cal="${CSS.escape(p.id)}"]`)?.checked !== false;
+        const calAntes = !(p.noCalendario || p.somenteCapa);
+        if (!!p.clienteVe === x.checked && cal === calAntes) continue;
+        const novo = { ...p, clienteVe: x.checked, atualizadoEm: new Date().toISOString() };
+        if (p.somenteCapa) { /* capa do Instagram: nunca entra no calendário */ } else novo.noCalendario = !cal;
+        await store.salvar('conteudo', novo);
         n += 1;
       }
     } catch (err) { toast(err.message || 'Não consegui salvar a escolha.', true); e.currentTarget.disabled = false; return; }
@@ -735,6 +746,7 @@ export default {
           <p class="lbl" style="margin-top:10px">Quem tem este link consegue ver e aprovar as tarefas de ${esc(c.nome)}. Se ele for parar em mãos erradas, gere um novo: o antigo deixa de funcionar.</p>
           <div class="field" style="margin-top:14px"><span class="lbl">O que o cliente vê neste link</span>
             <label class="ln-check"><input type="checkbox" data-ver="feed"><span>Feed<small>A grade de publicações, como no Instagram.</small></span></label>
+            <label class="ln-check"><input type="checkbox" data-ver="feedContinuo"><span>Feed igual ao do Instagram<small>Mostra todas as publicações juntas, as fixadas primeiro e depois as mais novas, em vez de dividir por mês.</small></span></label>
             <label class="ln-check"><input type="checkbox" data-ver="stories"><span>Stories</span></label>
             <label class="ln-check"><input type="checkbox" data-ver="calendario"><span>Calendário<small>O mês com cada tarefa no dia de publicar.</small></span></label>
             <label class="ln-check"><input type="checkbox" data-ver="selecao"><span>Escolher exatamente quais tarefas ele vê<small>Ligado: o cliente vê só as tarefas que você marcar. Desligado: vê tudo que aguarda resposta e o aprovado ou publicado recente. <b data-ver-n></b></small></span></label>
@@ -753,11 +765,12 @@ export default {
       m.el.querySelectorAll('[data-ver]').forEach((x) => x.addEventListener('change', async () => {
         const chave = x.dataset.ver;
         const v = verDoCliente(store.obter('cliente', c.id));
-        if (chave !== 'selecao' && !x.checked && ['feed', 'stories', 'calendario'].filter((k) => k !== chave).every((k) => v[k] === false)) { x.checked = true; toast('Deixe pelo menos uma das três ligada: Feed, Stories ou Calendário.', true); return; }
+        if (chave !== 'selecao' && chave !== 'feedContinuo' && !x.checked && ['feed', 'stories', 'calendario'].filter((k) => k !== chave).every((k) => v[k] === false)) { x.checked = true; toast('Deixe pelo menos uma das três ligada: Feed, Stories ou Calendário.', true); return; }
         try { await salvarVerNoLink(c.id, { [chave]: x.checked }); } catch (err) { toast(err.message || 'Não consegui salvar.', true); marcarVer(); return; }
         marcarVer();
         if (chave === 'selecao' && x.checked && !candidatasDoLink(c.id).some((p) => p.clienteVe)) { toast('Modo seleção ligado. Nenhuma tarefa marcada ainda: o cliente verá a página vazia até você escolher.'); escolherTarefasDoLink(c.id, marcarVer); }
         else toast(chave === 'selecao' ? (x.checked ? 'Modo seleção ligado' : 'Modo seleção desligado') : 'Salvo');
+        if (chave === 'feedContinuo' && x.checked) toast('Feed igual ao Instagram ligado. Para o cliente ver as capas, elas precisam estar marcadas no modo seleção.');
       }));
       m.el.querySelector('[data-escolher]').onclick = () => escolherTarefasDoLink(c.id, marcarVer);
       const campo = m.el.querySelector('#link-ap');

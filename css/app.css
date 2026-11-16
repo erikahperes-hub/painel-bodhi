@@ -1168,3 +1168,13 @@ a.chip{text-decoration:none}
 /* Período livre em Métricas: botão do período escolhido */
 .toolbar .btn.sec.sm.ativo,.toolbar .btn.sec.sm.ativo:hover{background:var(--petroleo)!important;color:#fff!important;border-color:var(--petroleo)!important}
 .toolbar .actions{align-items:center;gap:8px;flex-wrap:wrap}
+
+/* Capa que só aparece no feed (não abre) e publicação fixada */
+.ig-tile.sem-abrir{cursor:default}
+.ig-tile.sem-abrir:hover::after{display:none}
+.ig-fix{position:absolute;top:6px;right:6px;z-index:2;display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff}
+/* Janela "O que o cliente vê": uma linha por tarefa, com a caixinha do calendário à direita */
+.sel-linha{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.sel-linha .ln-check{flex:1;min-width:0}
+.sel-cal{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);white-space:nowrap;cursor:pointer}
+.sel-cal input:disabled{opacity:.4}
