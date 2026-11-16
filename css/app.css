@@ -1255,7 +1255,7 @@ a.chip{text-decoration:none}
 }
 
 @media (max-width:640px){
-  .ig-ov .ig-media.v{width:min(100%,calc(54dvh * 9 / 16));margin:0 auto;border-radius:14px}
+  .ig-ov .ig-media.v{width:100%;margin:0;border-radius:0}
   .ig-ov .ig-post.vert{width:100%}
   .ig-ov .ig-ap{padding-bottom:calc(14px + env(safe-area-inset-bottom))}
 }
