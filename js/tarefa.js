@@ -1,9 +1,9 @@
-import { store } from './store.js?v=147';
-import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=147';
-import { ic } from './icons.js?v=147';
-import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=147';
-import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=147';
-import { idDrive, urlAbrir, urlImagem } from './drive.js?v=147';
+import { store } from './store.js?v=148';
+import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=148';
+import { ic } from './icons.js?v=148';
+import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=148';
+import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=148';
+import { idDrive, avisoLinkDrive, urlAbrir, urlImagem } from './drive.js?v=148';
 
 // Ficha da tarefa de conteúdo. Pensada para o dia a dia de quem cria posts:
 //  - em cima, o caminho da tarefa (planejamento até publicado) com o próximo passo em destaque;
@@ -279,7 +279,7 @@ export function abrirTarefa(p = null, padrao = {}) {
     let v = el.value;
     if (nome === 'titulo') v = v.trim();
     if (nome === 'link') { v = v.trim(); if (v && !urlSegura(v)) { indicar('O link precisa começar com http:// ou https://', false); return; } v = urlSegura(v); }
-    if (nome === 'capa') { v = v.trim(); if (v && !idDrive(v)) { indicar('A capa precisa ser um link do Google Drive', false); return; } v = idDrive(v); }
+    if (nome === 'capa') { v = v.trim(); if (v && !idDrive(v)) { indicar('Capa: ' + avisoLinkDrive(v), false); return; } v = idDrive(v); }
     if (nome === 'titulo' && id && !v) { indicar('Dê um título à tarefa', false); return; }
     return mudar({ [nome]: v }).then(() => { if (nome === 'capa' || nome === 'legenda') q('[data-previa]').innerHTML = previa(atual()); });
   };
@@ -293,7 +293,7 @@ export function abrirTarefa(p = null, padrao = {}) {
     const link = campo('link').trim();
     const capa = campo('capa').trim();
     if (link && !urlSegura(link)) { toast('O link precisa começar com http:// ou https://', true); return; }
-    if (capa && !idDrive(capa)) { toast('A capa precisa ser um link de arquivo do Google Drive.', true); return; }
+    if (capa && !idDrive(capa)) { toast('Capa: ' + avisoLinkDrive(capa), true); return; }
     const novo = {
       ...t, titulo, link: urlSegura(link), capa: idDrive(capa),
       roteiro: campo('roteiro'), legenda: campo('legenda'),
@@ -314,7 +314,7 @@ export function abrirTarefa(p = null, padrao = {}) {
     const texto = url.value.trim();
     if (!texto) { url.focus(); return; }
     const fid = idDrive(texto);
-    if (!fid) { toast('Esse não parece um link de arquivo do Google Drive. Use Compartilhar > Copiar link no Drive.', true); return; }
+    if (!fid) { toast(avisoLinkDrive(texto), true); return; }
     await mudar({ midias: [...(atual().midias || []), { tipo, id: fid }] });
     pintarArquivos();
     q('[data-nova=url]')?.focus();

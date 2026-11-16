@@ -1,6 +1,6 @@
-import { esc, toast, reduzirImagem, urlSegura } from './util.js?v=147';
-import { ic } from './icons.js?v=147';
-import { idDrive, urlAbrir } from './drive.js?v=147';
+import { esc, toast, reduzirImagem, urlSegura } from './util.js?v=148';
+import { ic } from './icons.js?v=148';
+import { idDrive, avisoLinkDrive, urlAbrir } from './drive.js?v=148';
 
 let pilha = [];
 
@@ -184,7 +184,8 @@ function coletar(form, campos) {
       const linhas = [...form.querySelectorAll(`[data-midias="${c.nome}"] [data-midia]`)];
       const lidas = linhas.map((l) => ({ tipo: l.querySelector('[data-m=tipo]').value, texto: l.querySelector('[data-m=url]').value.trim() })).filter((m) => m.texto);
       const lista = lidas.map((m) => ({ tipo: m.tipo, id: idDrive(m.texto) }));
-      if (lista.some((m) => !m.id)) throw new Error('Um dos arquivos não tem um link válido do Google Drive. Copie o link do arquivo no Drive (Compartilhar > Copiar link).');
+      const ruim = lidas.find((m, i) => !lista[i].id);
+      if (ruim) throw new Error(avisoLinkDrive(ruim.texto));
       set(out, c.nome, lista);
       continue;
     }

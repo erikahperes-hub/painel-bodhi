@@ -13,6 +13,15 @@ export function idDrive(entrada) {
   } catch { return ''; }
 }
 
+// Explica por que um link não serve. Link de pasta é o engano mais comum.
+export function avisoLinkDrive(entrada) {
+  let pasta = false;
+  try { const u = new URL(String(entrada || '').trim()); pasta = u.hostname === 'drive.google.com' && /^\/drive(\/|$)/.test(u.pathname); } catch { /* não é um link */ }
+  return pasta
+    ? 'Esse é o link de uma pasta. Abra a pasta, clique com o botão direito no arquivo e use Compartilhar > Copiar link.'
+    : 'Esse não parece um link de arquivo do Google Drive. Clique com o botão direito no arquivo e use Compartilhar > Copiar link.';
+}
+
 // O Google às vezes recusa imagens pedidas em rajada. Nas tentativas seguintes alternamos entre dois endereços dele.
 export const urlImagem = (id, largura = 1080, tentativa = 0) => (tentativa % 2
   ? `https://lh3.googleusercontent.com/d/${encodeURIComponent(id)}=w${largura}`
