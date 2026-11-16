@@ -1,16 +1,16 @@
-import { store } from '../store.js?v=157';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=157';
-import { ic, flor } from '../icons.js?v=157';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=157';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=157';
-import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=157';
-import { feedPerfil } from '../feed-perfil.js?v=157';
-import { igApi } from '../instagram-api.js?v=157';
-import { lerPasta } from '../drive-pasta.js?v=157';
-import { lerTabela } from '../planejamento.js?v=157';
-import { config } from '../config.js?v=157';
-import { histCartao, histMontar, importarHistorico } from '../historico.js?v=157';
-import { abrirTarefa } from '../tarefa.js?v=157';
+import { store } from '../store.js?v=159';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=159';
+import { ic, flor } from '../icons.js?v=159';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=159';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=159';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=159';
+import { feedPerfil } from '../feed-perfil.js?v=159';
+import { igApi } from '../instagram-api.js?v=159';
+import { lerPasta } from '../drive-pasta.js?v=159';
+import { lerTabela } from '../planejamento.js?v=159';
+import { config } from '../config.js?v=159';
+import { histCartao, histMontar, importarHistorico } from '../historico.js?v=159';
+import { abrirTarefa } from '../tarefa.js?v=159';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
@@ -782,12 +782,13 @@ export default {
         subtitulo: 'Envie este link ao cliente. Ele vê só as tarefas dele (as que estão em “Aguardando aprovação” ou depois) e não precisa de senha. Para ver como ele enxerga, use “Prévia do cliente”.',
         corpo: `<div class="field"><label for="link-ap">Link do cliente</label><input id="link-ap" readonly value="${esc(url)}"></div>
           <p class="lbl" style="margin-top:10px">Quem tem este link consegue ver e aprovar as tarefas de ${esc(c.nome)}. Se ele for parar em mãos erradas, gere um novo: o antigo deixa de funcionar.</p>
-          <div class="field" style="margin-top:14px"><span class="lbl">O que o cliente vê neste link</span>
+          <div class="field" style="margin-top:14px"><span class="lbl">Abas que o cliente vê neste link</span>
             <label class="ln-check"><input type="checkbox" data-ver="plano"><span>Planejamento<small>As ideias que você enviar em Enviar planejamento, para ele aprovar. A aba só aparece quando há ideias enviadas.</small></span></label>
-            <label class="ln-check"><input type="checkbox" data-ver="feed"><span>Feed<small>A grade de publicações, como no Instagram.</small></span></label>
-            <label class="ln-check"><input type="checkbox" data-ver="feedContinuo"><span>Feed igual ao do Instagram<small>Mostra todas as publicações juntas, as fixadas primeiro e depois as mais novas, em vez de dividir por mês.</small></span></label>
-            <label class="ln-check"><input type="checkbox" data-ver="stories"><span>Stories</span></label>
+            <label class="ln-check"><input type="checkbox" data-ver="feed"><span>Feed<small>A grade de publicações do cliente.</small></span></label>
+            <label class="ln-check" style="margin-left:30px" data-ver-sub><input type="checkbox" data-ver="feedContinuo"><span>No Feed, usar a ordem do Instagram<small>Ligado: todas as publicações juntas, as fixadas primeiro e depois as mais novas, como no perfil. Desligado: uma página por mês, com setas para trocar de mês.</small></span></label>
+            <label class="ln-check"><input type="checkbox" data-ver="stories"><span>Stories<small>Os stories do mês.</small></span></label>
             <label class="ln-check"><input type="checkbox" data-ver="calendario"><span>Calendário<small>O mês com cada tarefa no dia de publicar.</small></span></label>
+            <span class="lbl" style="display:block;margin-top:12px">Quais tarefas aparecem nessas abas</span>
             <label class="ln-check"><input type="checkbox" data-ver="selecao"><span>Escolher exatamente quais tarefas ele vê<small>Ligado: o cliente vê só as tarefas que você marcar. Desligado: vê tudo que aguarda resposta e o aprovado ou publicado recente. <b data-ver-n></b></small></span></label>
             <div class="actions" style="margin-top:6px"><button type="button" class="btn sec sm" data-escolher>Escolher as tarefas</button></div></div>
           <div class="modal-f"><button class="btn ghost danger" data-renovar>Gerar novo link</button><div class="actions"><button class="btn sec" data-fechar-link>Fechar</button><button class="btn sec" data-previa>${ic('image')}Prévia do cliente</button>${navigator.share ? `<button class="btn sec" data-compartilhar>${ic('send')}Compartilhar</button>` : ''}<button class="btn pri" data-copiar>${ic('link')}Copiar link</button></div></div>`,
@@ -796,6 +797,8 @@ export default {
       const marcarVer = () => {
         const v = verDoCliente(store.obter('cliente', c.id));
         m.el.querySelectorAll('[data-ver]').forEach((x) => { x.checked = !!v[x.dataset.ver]; });
+        const sub = m.el.querySelector('[data-ver="feedContinuo"]');
+        if (sub) { sub.disabled = !v.feed; sub.closest('[data-ver-sub]').style.opacity = v.feed ? '' : '.5'; }
         const n = candidatasDoLink(c.id).filter((p) => p.clienteVe).length;
         m.el.querySelector('[data-ver-n]').textContent = v.selecao ? `${n} ${n === 1 ? 'tarefa escolhida' : 'tarefas escolhidas'}.` : '';
         m.el.querySelector('[data-escolher]').style.display = v.selecao ? '' : 'none';
