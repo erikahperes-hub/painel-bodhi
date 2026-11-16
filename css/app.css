@@ -1245,3 +1245,17 @@ a.chip{text-decoration:none}
 .ig-ap-li .ig-li-t small{font-size:13px;color:var(--ink-3)}
 .ig-ap-go{display:inline-flex;align-items:center;gap:2px;font-size:13px;font-weight:700;color:var(--petroleo);white-space:nowrap}
 .ig-ap-go .ic{width:16px;height:16px}
+
+/* Celular: os botões Aprovar e Pedir alteração ficam sempre visíveis no rodapé da publicação aberta */
+@media (max-width:640px){
+  .overlay.ig-ov{padding:0}
+  .ig-ov .ig-post{overflow:visible;border-radius:0;min-height:100dvh;width:100%;margin:0}
+  .ig-ov .ig-ap{position:sticky;bottom:0;z-index:6;background:#fff;border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));margin:0;box-shadow:0 -8px 20px rgba(41,43,45,.08)}
+  .ig-ov .ig-ap .ig-msg{margin:0 0 6px}
+}
+
+@media (max-width:640px){
+  .ig-ov .ig-media.v{width:min(100%,calc(54dvh * 9 / 16));margin:0 auto;border-radius:14px}
+  .ig-ov .ig-post.vert{width:100%}
+  .ig-ov .ig-ap{padding-bottom:calc(14px + env(safe-area-inset-bottom))}
+}
