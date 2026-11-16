@@ -1,5 +1,5 @@
 -- Página de aprovação do cliente (aprovar.html). Cole no "SQL Editor" do Supabase e clique em Run.
--- Pode rodar de novo sem problema (versão 4: link de UMA tarefa, além do link geral do cliente).
+-- Pode rodar de novo sem problema (versão 5: modo seleção, o cliente vê só as tarefas marcadas "clienteVe", e as chaves Feed, Stories e Calendário).
 --
 -- Como funciona e por que é seguro:
 -- * A tabela "records" continua fechada: só as sócias leem e escrevem nela.
@@ -36,6 +36,7 @@ declare
   v_etapa text;
   v_cli jsonb;
   v_pecas jsonb;
+  v_sel boolean;
   v_hoje text := to_char(now() at time zone 'America/Sao_Paulo', 'YYYY-MM-DD');
   v_inicio text := to_char(date_trunc('month', now() at time zone 'America/Sao_Paulo') - interval '1 month', 'YYYY-MM-DD');
 begin
@@ -44,6 +45,9 @@ begin
 
   select data into v_cli from records where kind = 'cliente' and id = v_cliente;
   if v_cli is null then return null; end if;
+
+  -- Modo seleção (ligado na janela "Link de aprovação" do painel): só aparecem as tarefas marcadas com clienteVe.
+  v_sel := coalesce((v_cli->'verNoLink'->>'selecao')::boolean, false);
 
   if v_peca is not null then
     select data->>'etapa' into v_etapa from records where kind = 'conteudo' and id = v_peca and data->>'clienteId' = v_cliente;
@@ -74,6 +78,7 @@ begin
       r.id = v_peca
       or (
         (v_peca is null or v_vertudo)
+        and (not v_sel or r.data->>'clienteVe' = 'true')
         and (
           r.data->>'etapa' in ('aprovacao', 'ajustes')
           or r.data->>'planejamento' in ('aprovacao', 'ajustes')
@@ -87,7 +92,8 @@ begin
     );
 
   return jsonb_build_object(
-    'cliente', jsonb_build_object('nome', v_cli->>'nome', 'imagem', v_cli->>'imagem', 'instagram', v_cli->>'instagram'),
+    'cliente', jsonb_build_object('nome', v_cli->>'nome', 'imagem', v_cli->>'imagem', 'instagram', v_cli->>'instagram',
+      'ver', jsonb_build_object('feed', coalesce(v_cli->'verNoLink'->>'feed', 'true') <> 'false', 'stories', coalesce(v_cli->'verNoLink'->>'stories', 'true') <> 'false', 'calendario', coalesce(v_cli->'verNoLink'->>'calendario', 'true') <> 'false')),
     'pecas', v_pecas,
     'foco', v_peca
   );
