@@ -1,7 +1,7 @@
-import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=159';
-import { ic } from './icons.js?v=159';
-import { urlImagem, urlPlayer } from './drive.js?v=159';
-import { config } from './config.js?v=159';
+import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=161';
+import { ic } from './icons.js?v=161';
+import { urlImagem, urlPlayer } from './drive.js?v=161';
+import { config } from './config.js?v=161';
 
 // Visual de Instagram usado na prévia do painel e na página de aprovação do cliente.
 // Recebe os dados prontos, então funciona com ou sem login.
@@ -121,8 +121,7 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
     const linhaI = (p) => `<button class="ig-li" data-ig-pl-abrir="${esc(p.id)}">${tile(p, { pequeno: true, passivo: true })}<span class="ig-li-t"><b>${esc(p.titulo || 'Ideia')}</b><small>${esc(quando(p))} · ${esc(fmt(p).nome)}</small></span><span class="chip cor-info">Ver a ideia</span></button>`;
     const n = conteudos.length + ideias.length;
     const guia = `<div class="ig-guia"><b>Olá! ${n === 1 ? 'Há 1 item esperando' : `Há ${n} itens esperando`} a sua resposta.</b>
-      <ol><li>Toque em um item da lista abaixo.</li><li>Confira ${conteudos.length ? 'o vídeo ou a arte e a legenda' : 'o tema e o roteiro'}.</li><li>Toque em <b>Aprovar</b>. Se quiser mudar algo, toque em <b>Pedir alteração</b> e escreva o que deve mudar.</li></ol>
-      <p>Não precisa de senha. A sua resposta chega direto para a Bôdhi Marketing.</p></div>`;
+      <ol><li>Toque em um item da lista abaixo.</li><li>Confira ${conteudos.length ? 'o vídeo ou a arte e a legenda' : 'o tema e o roteiro'}.</li><li>Toque em <b>Aprovar</b>. Se quiser mudar algo, toque em <b>Pedir alteração</b> e escreva o que deve mudar.</li></ol></div>`;
     return `${guia}${conteudos.length ? `<h4 class="ig-sub">Conteúdos prontos para aprovar <span class="lbl">${conteudos.length}</span></h4><div class="ig-lista">${conteudos.map(linhaC).join('')}</div>` : ''}
       ${ideias.length ? `<h4 class="ig-sub">Ideias do planejamento para aprovar <span class="lbl">${ideias.length}</span></h4><div class="ig-lista">${ideias.map(linhaI).join('')}</div>` : ''}`;
   }

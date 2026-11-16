@@ -1,16 +1,16 @@
-import { store } from '../store.js?v=159';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=159';
-import { ic, flor } from '../icons.js?v=159';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=159';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=159';
-import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=159';
-import { feedPerfil } from '../feed-perfil.js?v=159';
-import { igApi } from '../instagram-api.js?v=159';
-import { lerPasta } from '../drive-pasta.js?v=159';
-import { lerTabela } from '../planejamento.js?v=159';
-import { config } from '../config.js?v=159';
-import { histCartao, histMontar, importarHistorico } from '../historico.js?v=159';
-import { abrirTarefa } from '../tarefa.js?v=159';
+import { store } from '../store.js?v=161';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=161';
+import { ic, flor } from '../icons.js?v=161';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=161';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=161';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=161';
+import { feedPerfil } from '../feed-perfil.js?v=161';
+import { igApi } from '../instagram-api.js?v=161';
+import { lerPasta } from '../drive-pasta.js?v=161';
+import { lerTabela } from '../planejamento.js?v=161';
+import { config } from '../config.js?v=161';
+import { histCartao, histMontar, importarHistorico } from '../historico.js?v=161';
+import { abrirTarefa } from '../tarefa.js?v=161';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
@@ -182,29 +182,104 @@ function escolherTarefasDoLink(clienteId, aoFechar) {
   const lista = candidatasDoLink(clienteId);
   const marcada = new Set(lista.filter((p) => p.clienteVe).map((p) => p.id));
   const etapaNome = (p) => (ETAPAS.find((e) => e.id === p.etapa)?.nome || p.etapa);
-  // Duas escolhas por tarefa: aparece no link do cliente (feed e stories) e, dentro disso, aparece no calendário dele.
-  const linha = (p) => `<div class="sel-linha" data-linha data-busca="${esc(norm(`${p.titulo} ${etapaNome(p)}`))}"><label class="ln-check"><input type="checkbox" data-tarefa="${esc(p.id)}" ${marcada.has(p.id) ? 'checked' : ''}><span>${esc(p.titulo || 'Sem título')}<small>${esc(p.publicar ? dataBR(p.publicar) : 'Sem data')} · ${esc(FORMATOS[p.formato]?.nome || 'Estático')} · ${esc(etapaNome(p))}${(p.midias || []).length || p.capa ? '' : ' · sem arte'}${p.somenteCapa ? ' · só capa' : ''}</small></span></label>
-      <label class="sel-cal" title="Mostrar esta tarefa no calendário do cliente"><input type="checkbox" data-cal="${esc(p.id)}" ${p.noCalendario || p.somenteCapa ? '' : 'checked'} ${p.somenteCapa ? 'disabled' : ''}>Calendário</label></div>`;
+  const espera = (p) => ['aprovacao', 'ajustes'].includes(p.etapa) || ['aprovacao', 'ajustes'].includes(p.planejamento);
+  const capaDe = (p) => idDrive(p.capa) || idDrive((p.midias || [])[0]?.id) || '';
+  const curto = (t, n) => { const s = String(t || '').replace(/\s+/g, ' ').trim(); return s.length > n ? `${s.slice(0, n)}...` : s; };
+  const estado = { vista: 'lista', filtro: 'todas', mes: hojeISO().slice(0, 7) };
+
+  // Linha da lista: caixa, capa, título com detalhes, e a caixinha do calendário. "Ver detalhes" abre a capa maior e o texto da tarefa.
+  const linha = (p) => {
+    const capa = capaDe(p);
+    const meta = `${p.publicar ? dataBR(p.publicar) : 'Sem data'} · ${FORMATOS[p.formato]?.nome || 'Estático'} · ${etapaNome(p)}${(p.midias || []).length || p.capa ? '' : ' · sem arte'}${p.somenteCapa ? ' · só capa' : ''}`;
+    const texto = curto(p.legenda, 360) || curto(p.roteiro, 360) || 'Sem legenda nem roteiro escritos.';
+    return `<div class="sel-linha" data-linha data-id="${esc(p.id)}" data-busca="${esc(norm(`${p.titulo} ${etapaNome(p)}`))}">
+      <div class="sel-topo">
+        <label class="sel-main"><input type="checkbox" data-tarefa="${esc(p.id)}" ${marcada.has(p.id) ? 'checked' : ''}>
+          <span class="sel-thumb">${capa ? `<img loading="lazy" alt="" src="${esc(urlImagem(capa, 160))}" onerror="this.remove()">` : ''}</span>
+          <span class="sel-t"><b>${esc(p.titulo || 'Sem título')}</b><small>${esc(meta)}</small></span></label>
+        <button type="button" class="btn ghost sm" data-det="${esc(p.id)}" aria-expanded="false">Ver detalhes</button>
+        <label class="sel-cal" title="Mostrar esta tarefa no calendário do cliente"><input type="checkbox" data-cal="${esc(p.id)}" ${p.noCalendario || p.somenteCapa ? '' : 'checked'} ${p.somenteCapa ? 'disabled' : ''}>Calendário</label>
+      </div>
+      <div class="sel-det" hidden>${capa ? `<img alt="" src="${esc(urlImagem(capa, 360))}" onerror="this.remove()">` : ''}<div><p>${esc(texto)}</p><p class="lbl">${esc(meta)}${p.responsavel ? ` · responsável: ${esc(p.responsavel)}` : ''}</p></div></div>
+    </div>`;
+  };
+
   const m = abrirModal({
     titulo: `O que ${c.nome} vê`,
-    subtitulo: 'Marque as tarefas que aparecem no link do cliente (feed e stories) e, na caixinha Calendário, as que também aparecem no calendário dele. As desmarcadas ficam escondidas dele (continuam no painel).',
+    subtitulo: 'Marque as tarefas que o cliente vê. Use “Ver detalhes” para reconhecer a tarefa, ou o Calendário para escolher pelo dia. Na caixinha “Calendário” de cada linha você decide se ela também aparece no calendário dele. As desmarcadas ficam escondidas (continuam no painel).',
     largo: true,
-    corpo: `<div class="field"><input id="sel-busca" type="search" placeholder="Buscar por título ou etapa" aria-label="Buscar tarefa"></div>
-      <div class="actions" style="margin-bottom:8px;flex-wrap:wrap"><button type="button" class="btn sec sm" data-sel="espera">Só as que esperam resposta</button><button type="button" class="btn sec sm" data-sel="todas">Marcar todas</button><button type="button" class="btn ghost sm" data-sel="nenhuma">Limpar</button><button type="button" class="btn sec sm" data-sel="cal-espera" title="No calendário, só o que espera resposta do cliente">Calendário: só o que espera resposta</button><button type="button" class="btn ghost sm" data-sel="cal-nenhuma">Calendário: nenhuma</button><span class="lbl" data-sel-n></span></div>
-      <div style="max-height:46vh;overflow:auto;display:grid;gap:4px">${lista.length ? lista.map(linha).join('') : '<p class="lbl">Nenhuma tarefa enviada para aprovação ainda.</p>'}</div>
+    corpo: `<div class="sel-barra">
+        <div class="tabs" role="tablist" style="margin:0"><button type="button" class="tab on" data-vista="lista">Lista</button><button type="button" class="tab" data-vista="calendario">${ic('calendar')}Calendário</button></div>
+        <input id="sel-busca" type="search" placeholder="Buscar por título ou etapa" aria-label="Buscar tarefa">
+      </div>
+      <div class="actions sel-filtros" style="margin:8px 0;flex-wrap:wrap"><span class="lbl">Mostrar</span>
+        <button type="button" class="btn sec sm ativo" data-filtro="todas">Todas</button><button type="button" class="btn sec sm" data-filtro="marcadas">Só as marcadas</button><button type="button" class="btn sec sm" data-filtro="espera">Só as que esperam resposta</button>
+        <span class="lbl" style="margin-left:auto" data-sel-n></span></div>
+      <div class="actions" style="margin-bottom:8px;flex-wrap:wrap"><span class="lbl">Marcar</span><button type="button" class="btn sec sm" data-sel="espera">As que esperam resposta</button><button type="button" class="btn sec sm" data-sel="todas">Todas</button><button type="button" class="btn ghost sm" data-sel="nenhuma">Nenhuma</button>
+        <span class="lbl" style="margin-left:10px">No calendário</span><button type="button" class="btn sec sm" data-sel="cal-espera">Só as que esperam resposta</button><button type="button" class="btn ghost sm" data-sel="cal-nenhuma">Nenhuma</button></div>
+      <div class="sel-lista" data-painel="lista">${lista.length ? lista.map(linha).join('') : '<p class="lbl">Nenhuma tarefa enviada para aprovação ainda.</p>'}</div>
+      <div class="sel-cal-vista" data-painel="calendario" hidden></div>
       <div class="modal-f"><button type="button" class="btn ghost" data-sel-fechar>Cancelar</button><div class="actions"><button type="button" class="btn pri" data-sel-salvar>Salvar escolha</button></div></div>`,
   });
+
   const caixas = () => [...m.el.querySelectorAll('[data-tarefa]')];
+  const caixaDe = (id) => m.el.querySelector(`[data-tarefa="${CSS.escape(id)}"]`);
+  const calDe = (id) => m.el.querySelector(`[data-cal="${CSS.escape(id)}"]`);
   const contar = () => { const n = caixas().filter((x) => x.checked).length; m.el.querySelector('[data-sel-n]').textContent = `${n} de ${lista.length} marcadas`; };
+
+  // Aplica busca e filtro na lista.
+  function filtrar() {
+    const q = norm(m.el.querySelector('#sel-busca').value);
+    m.el.querySelectorAll('[data-linha]').forEach((l) => {
+      const p = lista.find((y) => y.id === l.dataset.id);
+      const ok = (!q || l.dataset.busca.includes(q)) && (estado.filtro === 'todas' || (estado.filtro === 'marcadas' ? caixaDe(p.id).checked : espera(p)));
+      l.style.display = ok ? '' : 'none';
+    });
+  }
+
+  // Calendário do mês: cada tarefa é um botão; clicar marca ou desmarca (mesma caixa da lista).
+  function desenharCal() {
+    const [a, mm] = estado.mes.split('-').map(Number);
+    const primeiro = new Date(a, mm - 1, 1).getDay();
+    const dias = new Date(a, mm, 0).getDate();
+    const semanas = Math.ceil((primeiro + dias) / 7);
+    const porDia = {};
+    lista.filter((p) => p.publicar).forEach((p) => { (porDia[p.publicar.slice(0, 10)] ||= []).push(p); });
+    const chip = (p) => `<button type="button" class="sel-chip${caixaDe(p.id).checked ? ' on' : ''}" data-chip="${esc(p.id)}" title="${esc(`${p.titulo} · ${etapaNome(p)}`)}"><span>${caixaDe(p.id).checked ? '✓ ' : ''}${esc(curto(p.titulo, 26))}</span></button>`;
+    const celulas = Array.from({ length: semanas * 7 }, (_, i) => {
+      const d = new Date(a, mm - 1, 1 - primeiro + i);
+      const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      return `<div class="sel-dia${d.getMonth() !== mm - 1 ? ' fora' : ''}"><i>${d.getDate()}</i>${(porDia[iso] || []).map(chip).join('')}</div>`;
+    }).join('');
+    const semData = lista.filter((p) => !p.publicar);
+    m.el.querySelector('[data-painel="calendario"]').innerHTML = `<div class="sel-mes"><button type="button" class="iconbtn" data-mes="-1" aria-label="Mês anterior"><span style="display:grid;transform:scaleX(-1)">${ic('chev')}</span></button><b>${esc(mesNome(mm - 1))} de ${a}</b><button type="button" class="iconbtn" data-mes="1" aria-label="Próximo mês">${ic('chev')}</button></div>
+      <p class="lbl" style="margin:4px 0 8px">Clique em uma tarefa para ela aparecer (✓) ou sumir do link do cliente. Passe o mouse para ver o nome inteiro.</p>
+      <div class="sel-grade">${['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'].map((d) => `<div class="sel-dow">${d}</div>`).join('')}${celulas}</div>
+      ${semData.length ? `<h4 class="ig-sub" style="margin:10px 0 4px">Sem data</h4><div class="sel-semdata">${semData.map(chip).join('')}</div>` : ''}`;
+  }
+  const mostrarVista = (v) => {
+    estado.vista = v;
+    m.el.querySelectorAll('[data-vista]').forEach((b) => b.classList.toggle('on', b.dataset.vista === v));
+    m.el.querySelector('[data-painel="lista"]').hidden = v !== 'lista';
+    m.el.querySelector('[data-painel="calendario"]').hidden = v !== 'calendario';
+    m.el.querySelectorAll('.sel-filtros [data-filtro], #sel-busca').forEach((x) => { x.style.visibility = v === 'lista' ? '' : 'hidden'; });
+    if (v === 'calendario') desenharCal();
+  };
+
   contar();
-  m.el.addEventListener('change', (e) => { if (e.target.matches('[data-tarefa]')) contar(); });
-  m.el.querySelector('#sel-busca').addEventListener('input', (e) => {
-    const q = norm(e.target.value);
-    m.el.querySelectorAll('[data-linha]').forEach((l) => { l.style.display = !q || l.dataset.busca.includes(q) ? '' : 'none'; });
+  m.el.addEventListener('change', (e) => { if (e.target.matches('[data-tarefa]')) { contar(); if (estado.filtro === 'marcadas') filtrar(); } });
+  m.el.querySelector('#sel-busca').addEventListener('input', filtrar);
+  m.el.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-vista],[data-filtro],[data-det],[data-chip],[data-mes]');
+    if (!t) return;
+    if (t.dataset.vista) mostrarVista(t.dataset.vista);
+    else if (t.dataset.filtro) { estado.filtro = t.dataset.filtro; m.el.querySelectorAll('[data-filtro]').forEach((b) => b.classList.toggle('ativo', b === t)); filtrar(); }
+    else if (t.dataset.det) { const det = t.closest('.sel-linha').querySelector('.sel-det'); det.hidden = !det.hidden; t.setAttribute('aria-expanded', String(!det.hidden)); t.textContent = det.hidden ? 'Ver detalhes' : 'Esconder detalhes'; }
+    else if (t.dataset.chip) { const x = caixaDe(t.dataset.chip); x.checked = !x.checked; contar(); desenharCal(); }
+    else if (t.dataset.mes) { const [a, mm] = estado.mes.split('-').map(Number); const d = new Date(a, mm - 1 + Number(t.dataset.mes), 1); estado.mes = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; desenharCal(); }
   });
   m.el.querySelectorAll('[data-sel]').forEach((b) => b.addEventListener('click', () => {
     const modo = b.dataset.sel;
-    const espera = (p) => ['aprovacao', 'ajustes'].includes(p.etapa) || ['aprovacao', 'ajustes'].includes(p.planejamento);
     if (modo.startsWith('cal-')) {
       m.el.querySelectorAll('[data-cal]').forEach((x) => { x.checked = modo === 'cal-espera' && espera(lista.find((y) => y.id === x.dataset.cal)); });
       return;
@@ -214,6 +289,7 @@ function escolherTarefasDoLink(clienteId, aoFechar) {
       x.checked = modo === 'todas' ? true : modo === 'nenhuma' ? false : espera(p);
     });
     contar();
+    if (estado.vista === 'calendario') desenharCal(); else filtrar();
   }));
   m.el.querySelector('[data-sel-fechar]').onclick = () => m.fechar();
   m.el.querySelector('[data-sel-salvar]').onclick = async (e) => {
@@ -223,7 +299,7 @@ function escolherTarefasDoLink(clienteId, aoFechar) {
     try {
       for (const x of caixas()) {
         const p = lista.find((y) => y.id === x.dataset.tarefa);
-        const cal = m.el.querySelector(`[data-cal="${CSS.escape(p.id)}"]`)?.checked !== false;
+        const cal = calDe(p.id)?.checked !== false;
         const calAntes = !(p.noCalendario || p.somenteCapa);
         if (!!p.clienteVe === x.checked && cal === calAntes) continue;
         const novo = { ...p, clienteVe: x.checked, atualizadoEm: new Date().toISOString() };
