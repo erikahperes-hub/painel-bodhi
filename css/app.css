@@ -1258,3 +1258,12 @@ a.chip{text-decoration:none}
 .ig-post .ig-car:has(.ig-slide:only-child){overflow:hidden;scroll-snap-type:none;display:block}
 .ig-post .ig-car:has(.ig-slide:only-child) .ig-slide{width:100%;height:100%;transform:none}
 .ig-post .ig-slide video{display:block;position:relative;left:0;margin:0;padding:0;max-width:100%}
+
+/* Publicação aberta: a mídia é posicionada por cima da caixa, com proporção fixa por preenchimento (nada desloca o vídeo, nem no Safari do iPhone) */
+.ig-post .ig-media.v{height:0!important;padding-top:177.7778%!important;aspect-ratio:auto!important;position:relative;overflow:hidden}
+.ig-post .ig-media.h{height:0!important;padding-top:125%!important;aspect-ratio:auto!important;position:relative;overflow:hidden}
+.ig-post .ig-media>.ig-car{position:absolute!important;top:0;left:0;right:0;bottom:0;width:auto!important;height:auto!important}
+.ig-post .ig-car:has(.ig-slide:only-child){display:block;overflow:hidden;overflow:clip;scroll-snap-type:none}
+.ig-post .ig-car:has(.ig-slide:only-child) .ig-slide{position:absolute;top:0;left:0;right:0;bottom:0;width:auto;height:auto;display:block}
+.ig-post .ig-slide video,.ig-post .ig-slide iframe,.ig-post .ig-slide>img,.ig-post .ig-slide .ig-play{position:absolute;top:0;left:0;width:100%;height:100%;margin:0;padding:0;border:0}
+.ig-post .ig-slide .ig-play img{width:100%;height:100%;object-fit:contain;display:block}
