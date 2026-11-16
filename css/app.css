@@ -1275,3 +1275,13 @@ a.chip{text-decoration:none}
 .ig-post .ig-ph>div b,.ig-post .ig-ph>div small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ig-post .ig-ph .ig-nav-h,.ig-post .ig-ph .iconbtn,.ig-post .ig-ph .ig-av{flex:none}
 .ig-post .ig-ph .iconbtn{margin-left:0!important}
+
+/* Celular: cabeçalho da publicação com folga para o nome e a data */
+@media (max-width:640px){
+  .ig-post .ig-ph .ig-av{width:34px;height:34px;font-size:12px}
+  .ig-post .ig-ph .ig-nav-h{gap:4px}
+  .ig-post .ig-ph .ig-nav-b{width:30px;height:30px}
+  .ig-post .ig-ph .iconbtn[data-ig-fechar]{width:34px!important;height:34px!important}
+  .ig-post .ig-ph>div b{font-size:14px}
+  .ig-post .ig-ph>div small{white-space:normal;font-size:12px;line-height:1.25}
+}
