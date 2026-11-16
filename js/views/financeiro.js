@@ -1,9 +1,9 @@
-import { store } from '../store.js?v=173';
-import { metricas, resumoMes } from '../calc.js?v=173';
-import { brl, esc, dataBR, toast, hojeISO, mesNome } from '../util.js?v=173';
-import { ic, flor } from '../icons.js?v=173';
-import { asaas } from '../asaas.js?v=173';
-import { formulario } from '../ui.js?v=173';
+import { store } from '../store.js?v=174';
+import { metricas, resumoMes } from '../calc.js?v=174';
+import { brl, esc, dataBR, toast, hojeISO, mesNome } from '../util.js?v=174';
+import { ic, flor } from '../icons.js?v=174';
+import { asaas } from '../asaas.js?v=174';
+import { formulario } from '../ui.js?v=174';
 
 const CORES = ['#073F56', '#23BB84', '#E96A6A', '#292B2D'];
 const STATUS_PAG = { pago: ['ok', 'Pago'], pendente: ['info', 'Pendente'], atrasado: ['warn', 'Atrasado'], outro: ['mute', 'Outro'] };
