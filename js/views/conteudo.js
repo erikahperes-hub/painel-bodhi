@@ -1,16 +1,16 @@
-import { store } from '../store.js?v=151';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=151';
-import { ic, flor } from '../icons.js?v=151';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=151';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=151';
-import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=151';
-import { feedPerfil } from '../feed-perfil.js?v=151';
-import { igApi } from '../instagram-api.js?v=151';
-import { lerPasta } from '../drive-pasta.js?v=151';
-import { lerTabela } from '../planejamento.js?v=151';
-import { config } from '../config.js?v=151';
-import { histCartao, histMontar, importarHistorico } from '../historico.js?v=151';
-import { abrirTarefa } from '../tarefa.js?v=151';
+import { store } from '../store.js?v=153';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=153';
+import { ic, flor } from '../icons.js?v=153';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=153';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=153';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=153';
+import { feedPerfil } from '../feed-perfil.js?v=153';
+import { igApi } from '../instagram-api.js?v=153';
+import { lerPasta } from '../drive-pasta.js?v=153';
+import { lerTabela } from '../planejamento.js?v=153';
+import { config } from '../config.js?v=153';
+import { histCartao, histMontar, importarHistorico } from '../historico.js?v=153';
+import { abrirTarefa } from '../tarefa.js?v=153';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
@@ -217,7 +217,8 @@ function escolherTarefasDoLink(clienteId, aoFechar) {
   }));
   m.el.querySelector('[data-sel-fechar]').onclick = () => m.fechar();
   m.el.querySelector('[data-sel-salvar]').onclick = async (e) => {
-    e.currentTarget.disabled = true;
+    const botao = e.currentTarget;
+    botao.disabled = true;
     let n = 0;
     try {
       for (const x of caixas()) {
@@ -230,10 +231,58 @@ function escolherTarefasDoLink(clienteId, aoFechar) {
         await store.salvar('conteudo', novo);
         n += 1;
       }
-    } catch (err) { toast(err.message || 'Não consegui salvar a escolha.', true); e.currentTarget.disabled = false; return; }
+    } catch (err) { toast(err.message || 'Não consegui salvar a escolha.', true); botao.disabled = false; return; }
     m.fechar();
     toast(n ? 'Escolha salva' : 'Nada mudou');
     aoFechar?.();
+  };
+}
+
+// Enviar planejamento: você escolhe quais ideias o cliente vê na aba Planejamento do link dele (e pode tirar as que já foram).
+const PLANO_STATUS = { aprovacao: 'aguardando resposta', ajustes: 'pediu alteração', aprovado: 'aprovada' };
+function escolherPlanejamento(clienteId) {
+  const c = store.obter('cliente', clienteId);
+  const todas = pecas().filter((p) => p.clienteId === c.id);
+  const novas = todas.filter((p) => p.etapa === 'briefing' && !p.planejamento).sort((a, b) => String(a.publicar || '9').localeCompare(String(b.publicar || '9')));
+  const enviadas = todas.filter((p) => p.planejamento).sort((a, b) => String(a.publicar || '9').localeCompare(String(b.publicar || '9')));
+  if (!novas.length && !enviadas.length) { toast('Não há ideias no Planejamento deste cliente.', true); return; }
+  const detalhe = (p) => `${p.publicar ? dataBR(p.publicar) : 'Sem data'} · ${FORMATOS[p.formato]?.nome || 'Estático'}${String(p.roteiro || '').trim() ? '' : ' · sem roteiro'}`;
+  const linha = (p, marcada, extra = '') => `<label class="ln-check" data-linha data-busca="${esc(norm(p.titulo || ''))}"><input type="checkbox" data-ideia="${esc(p.id)}" ${marcada ? 'checked' : ''}><span>${esc(p.titulo || 'Sem título')}<small>${esc(detalhe(p))}${extra}</small></span></label>`;
+  const m = abrirModal({
+    titulo: `Planejamento de ${c.nome}`,
+    subtitulo: 'Marque as ideias que o cliente vê na aba Planejamento do link dele para aprovar. As desmarcadas das já enviadas voltam para você (somem do link).',
+    largo: true,
+    corpo: `<div class="field"><input id="plano-busca" type="search" placeholder="Buscar ideia" aria-label="Buscar ideia"></div>
+      <div style="max-height:50vh;overflow:auto;display:grid;gap:4px">
+        ${novas.length ? `<h4 class="ig-sub" style="margin:4px 0">Para enviar <span class="lbl" data-n-novas></span></h4>${novas.map((p) => linha(p, false)).join('')}` : ''}
+        ${enviadas.length ? `<h4 class="ig-sub" style="margin:10px 0 4px">Já no link do cliente</h4>${enviadas.map((p) => linha(p, true, ` · ${PLANO_STATUS[p.planejamento] || p.planejamento}`)).join('')}` : ''}
+      </div>
+      <div class="modal-f"><button type="button" class="btn ghost" data-plano-fechar>Cancelar</button><div class="actions">${novas.length ? '<button type="button" class="btn sec sm" data-plano-todas>Marcar todas as novas</button>' : ''}<button type="button" class="btn pri" data-plano-salvar>Salvar escolha</button></div></div>`,
+  });
+  const caixas = () => [...m.el.querySelectorAll('[data-ideia]')];
+  const contar = () => { const el = m.el.querySelector('[data-n-novas]'); if (el) el.textContent = `(${caixas().filter((x) => x.checked && novas.some((p) => p.id === x.dataset.ideia)).length} marcadas)`; };
+  contar();
+  m.el.addEventListener('change', (e) => { if (e.target.matches('[data-ideia]')) contar(); });
+  m.el.querySelector('#plano-busca').addEventListener('input', (e) => { const q = norm(e.target.value); m.el.querySelectorAll('[data-linha]').forEach((l) => { l.style.display = !q || l.dataset.busca.includes(q) ? '' : 'none'; }); });
+  m.el.querySelector('[data-plano-fechar]').onclick = () => m.fechar();
+  const todasBtn = m.el.querySelector('[data-plano-todas]');
+  if (todasBtn) todasBtn.onclick = () => { caixas().forEach((x) => { if (novas.some((p) => p.id === x.dataset.ideia)) x.checked = true; }); contar(); };
+  m.el.querySelector('[data-plano-salvar]').onclick = async (e) => {
+    const botao = e.currentTarget;
+    const marcadas = new Set(caixas().filter((x) => x.checked).map((x) => x.dataset.ideia));
+    const enviar = novas.filter((p) => marcadas.has(p.id));
+    const tirar = enviadas.filter((p) => !marcadas.has(p.id));
+    if (!enviar.length && !tirar.length) { m.fechar(); toast('Nada mudou'); return; }
+    if (tirar.length && !(await confirmar(`Tirar ${tirar.length} ${tirar.length === 1 ? 'ideia' : 'ideias'} do link do cliente? Elas voltam para o Planejamento e a resposta que ele deu (se houver) deixa de aparecer para ele.`, 'Tirar do link', true))) return;
+    botao.disabled = true;
+    try {
+      const agora = new Date().toISOString();
+      // clienteVe: se o modo seleção do link estiver ligado, a ideia enviada precisa estar marcada para o cliente enxergá-la.
+      for (const p of enviar) await store.salvar('conteudo', { ...p, planejamento: 'aprovacao', clienteVe: true, atualizadoEm: agora });
+      for (const p of tirar) await store.salvar('conteudo', { ...p, planejamento: '', clienteVe: false, atualizadoEm: agora });
+    } catch (err) { toast(err.message || 'Não consegui salvar.', true); botao.disabled = false; return; }
+    m.fechar();
+    toast(`${enviar.length ? `${enviar.length} ${enviar.length === 1 ? 'ideia enviada' : 'ideias enviadas'}` : ''}${enviar.length && tirar.length ? ' e ' : ''}${tirar.length ? `${tirar.length} ${tirar.length === 1 ? 'tirada' : 'tiradas'} do link` : ''}`);
   };
 }
 
@@ -711,18 +760,7 @@ export default {
   },
 
   acoes: {
-    'enviar-planejamento': async (el) => {
-      const c = store.obter('cliente', el.dataset.cliente);
-      if (!c) return;
-      const prontas = pecas().filter((p) => p.clienteId === c.id && p.etapa === 'briefing' && !p.planejamento);
-      if (!prontas.length) { toast('Não há ideias novas no Planejamento para enviar.', true); return; }
-      const sem = prontas.filter((p) => !String(p.roteiro || '').trim()).length;
-      const jaEnviadas = pecas().filter((p) => p.clienteId === c.id && p.planejamento).length;
-      const aviso = `Enviar ${prontas.length} ${prontas.length === 1 ? 'ideia nova' : 'ideias novas'} (as que estão no Planejamento e ainda não foram enviadas${jaEnviadas ? `; ${jaEnviadas} já foram enviadas antes` : ''}) para ${c.nome} aprovar? Elas aparecem na aba Planejamento do link de aprovação dele, com data, formato, título e o texto de “Ideia e roteiro”.${sem ? ` ${sem} ${sem === 1 ? 'não tem' : 'não têm'} roteiro escrito.` : ''}`;
-      if (!(await confirmar(aviso, 'Enviar'))) return;
-      for (const p of prontas) await store.salvar('conteudo', { ...p, planejamento: 'aprovacao' });
-      toast(`${prontas.length} ${prontas.length === 1 ? 'ideia enviada' : 'ideias enviadas'} para aprovação`);
-    },
+    'enviar-planejamento': (el) => { if (store.obter('cliente', el.dataset.cliente)) escolherPlanejamento(el.dataset.cliente); },
     'abrir-filtros': () => { filtrosAberto = !filtrosAberto; recarregarTela(); },
     'fechar-filtros': () => { filtrosAberto = false; recarregarTela(); },
     'limpar-tudo': () => { filtroPessoa = ''; filtroFunil = ''; filtroTipo = ''; filtroRede = ''; recarregarTela(); },
