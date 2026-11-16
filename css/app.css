@@ -1178,3 +1178,9 @@ a.chip{text-decoration:none}
 .sel-linha .ln-check{flex:1;min-width:0}
 .sel-cal{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);white-space:nowrap;cursor:pointer}
 .sel-cal input:disabled{opacity:.4}
+
+/* Guia no topo da aba Para aprovar (página do cliente) */
+.ig-guia{background:var(--poco,#F3F6F9);border-radius:18px;padding:14px 16px;margin:0 0 14px;display:grid;gap:6px;font-size:14px;line-height:1.45}
+.ig-guia b{font-size:15px}
+.ig-guia ol{margin:0;padding-left:20px;display:grid;gap:2px}
+.ig-guia p{margin:0;color:var(--ink-2);font-size:13px}

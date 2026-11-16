@@ -1,7 +1,7 @@
-import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=154';
-import { ic } from './icons.js?v=154';
-import { urlImagem, urlPlayer } from './drive.js?v=154';
-import { config } from './config.js?v=154';
+import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=157';
+import { ic } from './icons.js?v=157';
+import { urlImagem, urlPlayer } from './drive.js?v=157';
+import { config } from './config.js?v=157';
 
 // Visual de Instagram usado na prévia do painel e na página de aprovação do cliente.
 // Recebe os dados prontos, então funciona com ou sem login.
@@ -77,9 +77,9 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
   // O que a Bôdhi liberou para este cliente ver: Feed, Stories e Calendário (tudo ligado se nada foi escolhido).
   // Na página do cliente vem em cliente.ver; na prévia do painel, em cliente.verNoLink.
   const ver = { feed: true, stories: true, calendario: true, ...(cliente.ver || cliente.verNoLink || {}) };
-  const abaLiberada = (a) => (a === 'plano' ? plano.length > 0 && ver.plano !== false : a === 'calendario' ? ver.calendario !== false : ver[a] !== false);
-  const primeiraAba = () => ['plano', 'feed', 'stories', 'calendario'].find(abaLiberada) || '';
-  const estado = { aba: planoPendente && !lista.some((p) => p.etapa === 'aprovacao') ? 'plano' : (plano.length && !lista.length ? 'plano' : 'feed'), mes: mesInicial(), aberta: null, filtroPlano: '' };
+  const abaLiberada = (a) => (a === 'aprovar' ? true : a === 'plano' ? plano.length > 0 && ver.plano !== false : a === 'calendario' ? ver.calendario !== false : ver[a] !== false);
+  const primeiraAba = () => ['aprovar', 'plano', 'feed', 'stories', 'calendario'].find(abaLiberada) || '';
+  const estado = { aba: planoPendente || lista.some((p) => p.etapa === 'aprovacao') ? 'aprovar' : (plano.length && !lista.length ? 'plano' : 'feed'), mes: mesInicial(), aberta: null, filtroPlano: '' };
   if (!abaLiberada(estado.aba)) estado.aba = primeiraAba();
 
   function tile(p, { pequeno = false, num = '', passivo = false } = {}) {
@@ -105,10 +105,26 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
     return `<div class="ig-perfil">${avatar(true)}<div>
         <h2>${esc(cliente.nome)}</h2>${cliente.instagram ? `<p class="ig-h">@${esc(handle)}</p>` : ''}
         <p class="lbl">${estado.aba === 'feed' && ver.feedContinuo ? `${lista.filter((p) => p.publicar && !ehStory(p)).length} publicações` : `${doMesLista.length} ${doMesLista.length === 1 ? 'publicação' : 'publicações'} em ${esc(rotuloMes(estado.mes).split(' ')[0].toLowerCase())}`}${aguardando ? ` · <b>${aguardando} aguardando sua aprovação</b>` : ''}${ideiasPend ? ` · <b>${ideiasPend} ${ideiasPend === 1 ? 'ideia aguardando' : 'ideias aguardando'} sua aprovação</b>` : ''}</p></div></div>
-      ${estado.aba === 'feed' && ver.feedContinuo ? '' : `<div class="ig-mes"><button class="iconbtn" data-ig-mes="-1" aria-label="Mês anterior"><span style="display:grid;transform:scaleX(-1)">${ic('chev')}</span></button>
+      ${(estado.aba === 'feed' && ver.feedContinuo) || estado.aba === 'aprovar' ? '' : `<div class="ig-mes"><button class="iconbtn" data-ig-mes="-1" aria-label="Mês anterior"><span style="display:grid;transform:scaleX(-1)">${ic('chev')}</span></button>
         <h3>${esc(rotuloMes(estado.mes))}</h3>
         <button class="iconbtn" data-ig-mes="1" aria-label="Próximo mês">${ic('chev')}</button></div>`}
-      <p class="ig-dica">${estado.aba === 'plano' ? 'Veja no calendário o dia de cada ideia e, na lista, o que já foi aprovado e o que ainda não. Toque em uma ideia para ler o roteiro e aprovar ou pedir alteração.' : 'Toque em qualquer post para ver o conteúdo completo. Carrosséis deslizam e reels tocam o vídeo. Tudo como vai ao ar.'}</p>`;
+      <p class="ig-dica">${estado.aba === 'aprovar' ? 'Aqui está tudo o que espera a sua resposta. Toque em um item para ver e aprovar ou pedir alteração.' : estado.aba === 'plano' ? 'Veja no calendário o dia de cada ideia e, na lista, o que já foi aprovado e o que ainda não. Toque em uma ideia para ler o roteiro e aprovar ou pedir alteração.' : 'Toque em qualquer post para ver o conteúdo completo. Carrosséis deslizam e reels tocam o vídeo. Tudo como vai ao ar.'}</p>`;
+  }
+
+  // Aba "Para aprovar": tudo o que espera a resposta do cliente, num lugar só (conteúdos prontos e ideias do planejamento).
+  function aprovarHTML() {
+    const conteudos = porDataAsc(lista.filter((p) => p.etapa === 'aprovacao'));
+    const ideias = porDataAsc(plano.filter((p) => p.planejamento === 'aprovacao'));
+    if (!conteudos.length && !ideias.length) return `<div class="ig-nada"><p><b>Tudo em dia.</b> Não há nada aguardando a sua aprovação agora.</p></div>`;
+    const quando = (p) => (p.publicar ? dataBR(p.publicar) : 'Sem data');
+    const linhaC = (p) => `<button class="ig-li" data-ig-abrir="${esc(p.id)}">${tile(p, { pequeno: true, passivo: true })}<span class="ig-li-t"><b>${esc(p.titulo || 'Peça')}</b><small>${esc(quando(p))} · ${esc(fmt(p).nome)}</small></span><span class="chip cor-info">Ver e aprovar</span></button>`;
+    const linhaI = (p) => `<button class="ig-li" data-ig-pl-abrir="${esc(p.id)}">${tile(p, { pequeno: true, passivo: true })}<span class="ig-li-t"><b>${esc(p.titulo || 'Ideia')}</b><small>${esc(quando(p))} · ${esc(fmt(p).nome)}</small></span><span class="chip cor-info">Ver a ideia</span></button>`;
+    const n = conteudos.length + ideias.length;
+    const guia = `<div class="ig-guia"><b>Olá! ${n === 1 ? 'Há 1 item esperando' : `Há ${n} itens esperando`} a sua resposta.</b>
+      <ol><li>Toque em um item da lista abaixo.</li><li>Confira ${conteudos.length ? 'o vídeo ou a arte e a legenda' : 'o tema e o roteiro'}.</li><li>Toque em <b>Aprovar</b>. Se quiser mudar algo, toque em <b>Pedir alteração</b> e escreva o que deve mudar.</li></ol>
+      <p>Não precisa de senha. A sua resposta chega direto para a Bôdhi Marketing.</p></div>`;
+    return `${guia}${conteudos.length ? `<h4 class="ig-sub">Conteúdos prontos para aprovar <span class="lbl">${conteudos.length}</span></h4><div class="ig-lista">${conteudos.map(linhaC).join('')}</div>` : ''}
+      ${ideias.length ? `<h4 class="ig-sub">Ideias do planejamento para aprovar <span class="lbl">${ideias.length}</span></h4><div class="ig-lista">${ideias.map(linhaI).join('')}</div>` : ''}`;
   }
 
   function grade(itens, stories = false) {
@@ -322,10 +338,11 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
     const semData = lista.filter((p) => !p.publicar);
     const aba = (id, icone, nome, n) => `<button class="tab ${estado.aba === id ? 'on' : ''}" role="tab" aria-selected="${estado.aba === id}" data-ig-aba="${id}">${ic(icone)}${nome}${n === undefined ? '' : ` <small>${n}</small>`}</button>`;
     if (!abaLiberada(estado.aba)) estado.aba = primeiraAba();
-    const corpo = !estado.aba ? '<div class="ig-nada"><p>Não há nada para mostrar por aqui no momento.</p></div>' : estado.aba === 'plano' ? planoHTML() : estado.aba === 'feed' ? grade(feed) : estado.aba === 'stories' ? grade(stories, true) : calendario(noCal);
+    const corpo = !estado.aba ? '<div class="ig-nada"><p>Não há nada para mostrar por aqui no momento.</p></div>' : estado.aba === 'aprovar' ? aprovarHTML() : estado.aba === 'plano' ? planoHTML() : estado.aba === 'feed' ? grade(feed) : estado.aba === 'stories' ? grade(stories, true) : calendario(noCal);
     const ideiasPendTotal = plano.filter((p) => p.planejamento === 'aprovacao').length;
+    const pendTotal = ideiasPendTotal + lista.filter((p) => p.etapa === 'aprovacao').length;
     raiz.innerHTML = `<div class="ig">${cabecalho()}
-      <div class="tabs" role="tablist" style="margin:16px 0 14px">${plano.length && ver.plano !== false ? aba('plano', 'doc', 'Planejamento', ideiasPendTotal || undefined) : ''}${ver.feed !== false ? aba('feed', 'grid', 'Feed', feed.length) : ''}${ver.stories !== false ? aba('stories', 'circle', 'Stories', stories.length) : ''}${ver.calendario !== false ? aba('calendario', 'calendar', 'Calendário') : ''}</div>
+      <div class="tabs" role="tablist" style="margin:16px 0 14px">${aba('aprovar', 'check', 'Para aprovar', pendTotal || undefined)}${plano.length && ver.plano !== false ? aba('plano', 'doc', 'Planejamento', ideiasPendTotal || undefined) : ''}${ver.feed !== false ? aba('feed', 'grid', 'Feed', feed.length) : ''}${ver.stories !== false ? aba('stories', 'circle', 'Stories', stories.length) : ''}${ver.calendario !== false ? aba('calendario', 'calendar', 'Calendário') : ''}</div>
       ${corpo}
       ${semData.length && (estado.aba === 'feed' || estado.aba === 'stories') ? `<h4 class="ig-sub">Sem data definida</h4><div class="ig-grade">${semData.map((p) => tile(p)).join('')}</div>` : ''}</div>`;
   }

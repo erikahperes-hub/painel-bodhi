@@ -1,16 +1,16 @@
-import { store } from '../store.js?v=154';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=154';
-import { ic, flor } from '../icons.js?v=154';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=154';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=154';
-import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=154';
-import { feedPerfil } from '../feed-perfil.js?v=154';
-import { igApi } from '../instagram-api.js?v=154';
-import { lerPasta } from '../drive-pasta.js?v=154';
-import { lerTabela } from '../planejamento.js?v=154';
-import { config } from '../config.js?v=154';
-import { histCartao, histMontar, importarHistorico } from '../historico.js?v=154';
-import { abrirTarefa } from '../tarefa.js?v=154';
+import { store } from '../store.js?v=157';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=157';
+import { ic, flor } from '../icons.js?v=157';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=157';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=157';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=157';
+import { feedPerfil } from '../feed-perfil.js?v=157';
+import { igApi } from '../instagram-api.js?v=157';
+import { lerPasta } from '../drive-pasta.js?v=157';
+import { lerTabela } from '../planejamento.js?v=157';
+import { config } from '../config.js?v=157';
+import { histCartao, histMontar, importarHistorico } from '../historico.js?v=157';
+import { abrirTarefa } from '../tarefa.js?v=157';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
