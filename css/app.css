@@ -1222,3 +1222,12 @@ a.chip{text-decoration:none}
 .ig-hero.ok b{font-size:24px}
 .ig-prog{height:5px;background:var(--line);border-radius:3px;margin:0 14px 8px;overflow:hidden}
 .ig-prog i{display:block;height:100%;background:var(--verde);border-radius:3px;transition:width .3s}
+
+/* Entrada da aba Para aprovar: texto à esquerda e botão à direita, em linha */
+.ig-hero{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 24px;padding:16px 18px;font-family:var(--ui)}
+.ig-hero-t{display:grid;gap:4px;flex:1 1 260px;min-width:0}
+.ig-hero b{font-family:var(--display);font-size:22px;line-height:1.2;font-weight:700}
+.ig-hero span{font-size:14px;opacity:.9}
+.ig-hero .btn{margin:0;flex:none}
+.ig-hero.ok{display:grid;gap:4px;justify-items:start}
+.ig-hero.ok b{font-size:22px}

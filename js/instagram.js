@@ -1,7 +1,7 @@
-import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=164';
-import { ic } from './icons.js?v=164';
-import { urlImagem, urlPlayer } from './drive.js?v=164';
-import { config } from './config.js?v=164';
+import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=166';
+import { ic } from './icons.js?v=166';
+import { urlImagem, urlPlayer } from './drive.js?v=166';
+import { config } from './config.js?v=166';
 
 // Visual de Instagram usado na prévia do painel e na página de aprovação do cliente.
 // Recebe os dados prontos, então funciona com ou sem login.
@@ -104,11 +104,11 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
     const ideiasPend = plano.filter((p) => doMes(p, estado.mes) && p.planejamento === 'aprovacao').length;
     return `<div class="ig-perfil">${avatar(true)}<div>
         <h2>${esc(cliente.nome)}</h2>${cliente.instagram ? `<p class="ig-h">@${esc(handle)}</p>` : ''}
-        <p class="lbl">${estado.aba === 'feed' && ver.feedContinuo ? `${lista.filter((p) => p.publicar && !ehStory(p)).length} publicações` : `${doMesLista.length} ${doMesLista.length === 1 ? 'publicação' : 'publicações'} em ${esc(rotuloMes(estado.mes).split(' ')[0].toLowerCase())}`}${aguardando ? ` · <b>${aguardando} aguardando sua aprovação</b>` : ''}${ideiasPend ? ` · <b>${ideiasPend} ${ideiasPend === 1 ? 'ideia aguardando' : 'ideias aguardando'} sua aprovação</b>` : ''}</p></div></div>
+        ${aguardando || ideiasPend ? `<p class="lbl">${[aguardando ? `<b>${aguardando} aguardando sua aprovação</b>` : '', ideiasPend ? `<b>${ideiasPend} ${ideiasPend === 1 ? 'ideia aguardando' : 'ideias aguardando'} sua aprovação</b>` : ''].filter(Boolean).join(' · ')}</p>` : ''}</div></div>
       ${(estado.aba === 'feed' && ver.feedContinuo) || estado.aba === 'aprovar' ? '' : `<div class="ig-mes"><button class="iconbtn" data-ig-mes="-1" aria-label="Mês anterior"><span style="display:grid;transform:scaleX(-1)">${ic('chev')}</span></button>
         <h3>${esc(rotuloMes(estado.mes))}</h3>
         <button class="iconbtn" data-ig-mes="1" aria-label="Próximo mês">${ic('chev')}</button></div>`}
-      <p class="ig-dica">${estado.aba === 'aprovar' ? 'Aqui está tudo o que espera a sua resposta. Toque em um item para ver e aprovar ou pedir alteração.' : estado.aba === 'plano' ? 'Veja no calendário o dia de cada ideia e, na lista, o que já foi aprovado e o que ainda não. Toque em uma ideia para ler o roteiro e aprovar ou pedir alteração.' : 'Toque em qualquer post para ver o conteúdo completo. Carrosséis deslizam e reels tocam o vídeo. Tudo como vai ao ar.'}</p>`;
+      ${estado.aba === 'aprovar' ? '' : `<p class="ig-dica">${estado.aba === 'plano' ? 'Veja no calendário o dia de cada ideia e, na lista, o que já foi aprovado e o que ainda não. Toque em uma ideia para ler o roteiro e aprovar ou pedir alteração.' : 'Toque em qualquer post para ver o conteúdo completo. Carrosséis deslizam e reels tocam o vídeo. Tudo como vai ao ar.'}</p>`}`;
   }
 
   // Aba "Para aprovar": tudo o que espera a resposta do cliente, num lugar só (conteúdos prontos e ideias do planejamento).
@@ -120,7 +120,7 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
     const linhaC = (p) => `<button class="ig-li" data-ig-abrir="${esc(p.id)}">${tile(p, { pequeno: true, passivo: true })}<span class="ig-li-t"><b>${esc(p.titulo || 'Peça')}</b><small>${esc(quando(p))} · ${esc(fmt(p).nome)}</small></span><span class="chip cor-info">Ver e aprovar</span></button>`;
     const linhaI = (p) => `<button class="ig-li" data-ig-pl-abrir="${esc(p.id)}">${tile(p, { pequeno: true, passivo: true })}<span class="ig-li-t"><b>${esc(p.titulo || 'Ideia')}</b><small>${esc(quando(p))} · ${esc(fmt(p).nome)}</small></span><span class="chip cor-info">Ver a ideia</span></button>`;
     const n = conteudos.length + ideias.length;
-    const hero = n ? `<div class="ig-hero"><span>Olá! Há</span><b>${n} ${n === 1 ? 'item' : 'itens'}</b><span>esperando a sua resposta.</span><button type="button" class="btn verde" data-ig-comecar>${ic('check')}Começar a aprovar</button><small>Você vê um de cada vez e toca em Aprovar ou em Pedir alteração.</small></div>` : '';
+    const hero = n ? `<div class="ig-hero"><div class="ig-hero-t"><b>Você tem ${n} ${n === 1 ? 'item' : 'itens'} para aprovar</b><span>Veja um de cada vez e toque em Aprovar ou em Pedir alteração.</span></div><button type="button" class="btn verde" data-ig-comecar>${ic('check')}Começar a aprovar</button></div>` : '';
     return `${hero}${n ? '<h4 class="ig-sub" style="margin-top:4px">Ou escolha um item</h4>' : ''}${conteudos.length ? `<h4 class="ig-sub">Conteúdos prontos para aprovar <span class="lbl">${conteudos.length}</span></h4><div class="ig-lista">${conteudos.map(linhaC).join('')}</div>` : ''}
       ${ideias.length ? `<h4 class="ig-sub">Ideias do planejamento para aprovar <span class="lbl">${ideias.length}</span></h4><div class="ig-lista">${ideias.map(linhaI).join('')}</div>` : ''}`;
   }
