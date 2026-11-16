@@ -1,5 +1,5 @@
-import { store } from './store.js?v=174';
-import { config } from './config.js?v=174';
+import { store } from './store.js?v=175';
+import { config } from './config.js?v=175';
 
 // Conversa com a função "instagram" do Supabase. Os tokens dos clientes ficam só no servidor (tabela ig_conexoes);
 // aqui o painel nunca vê token nenhum, só pede o link de autorização, manda sincronizar e lê quem está conectado.

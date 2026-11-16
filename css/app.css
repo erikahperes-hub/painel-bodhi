@@ -1247,3 +1247,8 @@ a.chip{text-decoration:none}
 .ig-ap-go .ic{width:16px;height:16px}
 
 
+
+/* Publicação aberta: a arte ou o vídeo sempre ocupam a largura toda do cartão (sem faixa branca ao lado) */
+.ig-post .ig-media,.ig-post .ig-media.v,.ig-post .ig-media.h{width:100%!important;max-width:none!important;margin:0!important}
+.ig-post .ig-car,.ig-post .ig-slide{width:100%}
+.ig-post .ig-slide video,.ig-post .ig-slide iframe,.ig-post .ig-slide>img{width:100%;height:100%;object-fit:contain;background:#000}
