@@ -1,7 +1,7 @@
-import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=161';
-import { ic } from './icons.js?v=161';
-import { urlImagem, urlPlayer } from './drive.js?v=161';
-import { config } from './config.js?v=161';
+import { esc, dataBR, mesNome, hojeISO, iniciais } from './util.js?v=164';
+import { ic } from './icons.js?v=164';
+import { urlImagem, urlPlayer } from './drive.js?v=164';
+import { config } from './config.js?v=164';
 
 // Visual de Instagram usado na prévia do painel e na página de aprovação do cliente.
 // Recebe os dados prontos, então funciona com ou sem login.
@@ -115,15 +115,45 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
   function aprovarHTML() {
     const conteudos = porDataAsc(lista.filter((p) => p.etapa === 'aprovacao'));
     const ideias = porDataAsc(plano.filter((p) => p.planejamento === 'aprovacao'));
-    if (!conteudos.length && !ideias.length) return `<div class="ig-nada"><p><b>Tudo em dia.</b> Não há nada aguardando a sua aprovação agora.</p></div>`;
+    if (!conteudos.length && !ideias.length) return `<div class="ig-hero ok"><b>${estado.concluiu ? 'Tudo certo. Obrigado!' : 'Tudo em dia'}</b><span>${estado.concluiu ? 'Você respondeu tudo o que estava pendente.' : 'Não há nada aguardando a sua aprovação agora.'}</span></div>`;
     const quando = (p) => (p.publicar ? dataBR(p.publicar) : 'Sem data');
     const linhaC = (p) => `<button class="ig-li" data-ig-abrir="${esc(p.id)}">${tile(p, { pequeno: true, passivo: true })}<span class="ig-li-t"><b>${esc(p.titulo || 'Peça')}</b><small>${esc(quando(p))} · ${esc(fmt(p).nome)}</small></span><span class="chip cor-info">Ver e aprovar</span></button>`;
     const linhaI = (p) => `<button class="ig-li" data-ig-pl-abrir="${esc(p.id)}">${tile(p, { pequeno: true, passivo: true })}<span class="ig-li-t"><b>${esc(p.titulo || 'Ideia')}</b><small>${esc(quando(p))} · ${esc(fmt(p).nome)}</small></span><span class="chip cor-info">Ver a ideia</span></button>`;
     const n = conteudos.length + ideias.length;
-    const guia = `<div class="ig-guia"><b>Olá! ${n === 1 ? 'Há 1 item esperando' : `Há ${n} itens esperando`} a sua resposta.</b>
-      <ol><li>Toque em um item da lista abaixo.</li><li>Confira ${conteudos.length ? 'o vídeo ou a arte e a legenda' : 'o tema e o roteiro'}.</li><li>Toque em <b>Aprovar</b>. Se quiser mudar algo, toque em <b>Pedir alteração</b> e escreva o que deve mudar.</li></ol></div>`;
-    return `${guia}${conteudos.length ? `<h4 class="ig-sub">Conteúdos prontos para aprovar <span class="lbl">${conteudos.length}</span></h4><div class="ig-lista">${conteudos.map(linhaC).join('')}</div>` : ''}
+    const hero = n ? `<div class="ig-hero"><span>Olá! Há</span><b>${n} ${n === 1 ? 'item' : 'itens'}</b><span>esperando a sua resposta.</span><button type="button" class="btn verde" data-ig-comecar>${ic('check')}Começar a aprovar</button><small>Você vê um de cada vez e toca em Aprovar ou em Pedir alteração.</small></div>` : '';
+    return `${hero}${n ? '<h4 class="ig-sub" style="margin-top:4px">Ou escolha um item</h4>' : ''}${conteudos.length ? `<h4 class="ig-sub">Conteúdos prontos para aprovar <span class="lbl">${conteudos.length}</span></h4><div class="ig-lista">${conteudos.map(linhaC).join('')}</div>` : ''}
       ${ideias.length ? `<h4 class="ig-sub">Ideias do planejamento para aprovar <span class="lbl">${ideias.length}</span></h4><div class="ig-lista">${ideias.map(linhaI).join('')}</div>` : ''}`;
+  }
+
+  /* ---------- Fluxo "Começar a aprovar": um item de cada vez, com o andamento ---------- */
+  const itemFila = () => Math.min(estado.fila.feitas + estado.fila.pulados.length + 1, estado.fila.total);
+  const progresso = () => `<div class="ig-prog" aria-hidden="true"><i style="width:${Math.round((estado.fila.feitas / estado.fila.total) * 100)}%"></i></div>`;
+  const itensPendentes = () => [
+    ...porDataAsc(lista.filter((p) => p.etapa === 'aprovacao')).map((p) => ({ id: p.id, tipo: 'c' })),
+    ...porDataAsc(plano.filter((p) => p.planejamento === 'aprovacao')).map((p) => ({ id: p.id, tipo: 'p' })),
+  ];
+  function comecar() {
+    const itens = itensPendentes();
+    if (!itens.length) return;
+    estado.fila = { total: itens.length, feitas: 0, ids: itens.map((x) => x.id), pulados: [] };
+    estado.concluiu = false;
+    proximoDaFila();
+  }
+  function proximoDaFila(aviso = '') {
+    const f = estado.fila;
+    if (!f) return;
+    const pend = itensPendentes().filter((x) => f.ids.includes(x.id));
+    const prox = pend.find((x) => !f.pulados.includes(x.id));
+    if (!prox) { terminarFila(pend.length === 0); return; }
+    if (prox.tipo === 'c') { fecharPlano(true); abrir(prox.id); } else { fechar(false); abrirPlano(prox.id); }
+    if (aviso) (prox.tipo === 'c' ? overlay : planoOv)?.querySelector('.ig-ap, .ig-pl')?.insertAdjacentHTML('afterbegin', `<p class="ig-msg ok">${esc(aviso)}</p>`);
+  }
+  function terminarFila(tudo) {
+    fechar();
+    fecharPlano();
+    estado.aba = 'aprovar';
+    estado.concluiu = tudo;
+    desenhar();
   }
 
   function grade(itens, stories = false) {
@@ -245,10 +275,10 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
   function abrirPlano(id) {
     const p = plano.find((x) => x.id === id);
     if (!p) return;
-    fecharPlano();
+    fecharPlano(true);
     planoOv = document.createElement('div');
     planoOv.className = 'overlay ig-ov';
-    planoOv.innerHTML = `<div class="ig-post ig-pl-modal" role="dialog" aria-modal="true" aria-label="${esc(p.titulo || 'Ideia')}"><header class="ig-ph"><b style="font:700 15px var(--ui)">Ideia do dia</b><button class="iconbtn" data-ig-pl-fechar aria-label="Fechar" style="width:40px;height:40px;font-size:18px;box-shadow:none;margin-left:auto">${ic('x')}</button></header><div style="padding:0 14px 14px">${cardPlano(p)}</div></div>`;
+    planoOv.innerHTML = `<div class="ig-post ig-pl-modal" role="dialog" aria-modal="true" aria-label="${esc(p.titulo || 'Ideia')}"><header class="ig-ph"><b style="font:700 15px var(--ui)">${estado.fila ? `Item ${itemFila()} de ${estado.fila.total}` : 'Ideia do dia'}</b><button class="iconbtn" data-ig-pl-fechar aria-label="Fechar" style="width:40px;height:40px;font-size:18px;box-shadow:none;margin-left:auto">${ic('x')}</button></header>${estado.fila ? progresso() : ''}<div style="padding:0 14px 14px">${cardPlano(p)}${estado.fila ? `<button type="button" class="btn ghost sm" data-ig-pular-pl="${esc(p.id)}" style="margin-top:8px">Pular por agora</button>` : ''}</div></div>`;
     document.body.appendChild(planoOv);
     document.body.style.overflow = 'hidden';
     planoOv.addEventListener('mousedown', (e) => { if (e.target === planoOv) fecharPlano(); });
@@ -256,15 +286,18 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
     planoOv.addEventListener('submit', enviarPlano);
   }
 
-  function fecharPlano() {
+  function fecharPlano(manter = false) {
     planoOv?.remove();
     planoOv = null;
+    if (!manter) estado.fila = null;
     if (!overlay) document.body.style.overflow = '';
   }
 
   // Cliques da aba Planejamento (valem na tela e dentro da janela da ideia). Devolve true se tratou o clique.
   function clicarPlano(e) {
     const alvo = e.target;
+    const pularPl = alvo.closest('[data-ig-pular-pl]');
+    if (pularPl) { estado.fila?.pulados.push(pularPl.dataset.igPularPl); proximoDaFila(); return true; }
     const aprovar = alvo.closest('[data-ig-pl-aprovar]');
     if (aprovar) { responderPlano(aprovar.dataset.igPlAprovar, 'plano_aprovar'); return true; }
     const ajustar = alvo.closest('[data-ig-pl-ajustar]');
@@ -304,7 +337,9 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
       await aoResponder(p, acao, comentario);
       p.planejamento = acao === 'plano_aprovar' ? 'aprovado' : 'ajustes';
       if (acao === 'plano_ajustar') p.ajustePlano = comentario;
-      if (!agrupado) { fecharPlano(); desenhar(); }
+      if (!agrupado) {
+        if (estado.fila) { estado.fila.feitas += 1; fecharPlano(true); desenhar(); proximoDaFila(acao === 'plano_aprovar' ? 'Aprovado. Vamos para o próximo.' : 'Pedido enviado. Vamos para o próximo.'); } else { fecharPlano(); desenhar(); }
+      }
       return true;
     } catch (err) {
       card?.querySelectorAll('button').forEach((b) => { b.disabled = false; });
@@ -376,6 +411,7 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
     return `<div class="ig-ap">${msg}
       ${previa ? '<p class="lbl" style="margin-bottom:8px">Prévia: o cliente vê estes botões para aprovar ou pedir alteração.</p>' : ''}
       <div class="ig-ap-b"><button class="btn verde" data-ig-aprovar ${p.etapa === 'aprovado' ? 'disabled' : ''}>${ic('check')}Aprovar</button><button class="btn sec" data-ig-ajustar>${ic('edit')}Pedir alteração</button></div>
+      ${estado.fila ? '<button type="button" class="btn ghost sm" data-ig-pular style="margin-top:8px">Pular por agora</button>' : ''}
       <form class="ig-aj" hidden><label for="ig-com">O que você gostaria de mudar?</label><textarea id="ig-com" rows="3" maxlength="1500" placeholder="Ex.: trocar a foto da capa e incluir o horário de funcionamento"></textarea>
         <div class="actions"><button class="btn pri" type="submit">Enviar pedido</button><button class="btn ghost" type="button" data-ig-cancelar>Cancelar</button></div></form>
       <p class="ig-erro" role="alert" hidden></p></div>`;
@@ -398,9 +434,9 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
     const nav = posicao(p);
     return `<article class="ig-post${f.vertical ? ' vert' : ''}" role="dialog" aria-modal="true" aria-label="${esc(p.titulo || 'Publicação')}">
       <header class="ig-ph">${avatar()}<div><b>${esc(handle)}</b><small>${esc(f.nome)}${p.publicar ? ' · ' + esc(dataBR(p.publicar)) : ''}</small></div>
-        ${nav.total > 1 ? `<span class="ig-nav-h">${setaNav(-1, nav.ant, 'ig-nav-b', 'Publicação anterior')}<small>${nav.pos} de ${nav.total}</small>${setaNav(1, nav.prox, 'ig-nav-b', 'Próxima publicação')}</span>` : ''}
+        ${estado.fila ? `<span class="ig-nav-h"><small>Item ${itemFila()} de ${estado.fila.total}</small></span>` : nav.total > 1 ? `<span class="ig-nav-h">${setaNav(-1, nav.ant, 'ig-nav-b', 'Publicação anterior')}<small>${nav.pos} de ${nav.total}</small>${setaNav(1, nav.prox, 'ig-nav-b', 'Próxima publicação')}</span>` : ''}
         <button class="iconbtn" data-ig-fechar aria-label="Fechar" style="width:40px;height:40px;font-size:18px;box-shadow:none;margin-left:auto">${ic('x')}</button></header>
-      ${midia(p)}
+      ${estado.fila ? progresso() : ''}${midia(p)}
       <div class="ig-acts"><button data-ig-curtir aria-label="Curtir">${ic('heart')}</button><span>${ic('comment')}</span><span>${ic('send')}</span><span class="ig-sv">${ic('bookmark')}</span></div>
       ${legenda(p)}
       ${p.publicar ? `<p class="ig-data">${esc(dataBR(p.publicar))}</p>` : ''}
@@ -417,7 +453,7 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
     overlay = document.createElement('div');
     overlay.className = `overlay ig-ov${trocando ? ' troca' : ''}`;
     const nav = posicao(p);
-    overlay.innerHTML = post(p) + (nav.total > 1 ? setaNav(-1, nav.ant, 'ig-nav', 'Publicação anterior') + setaNav(1, nav.prox, 'ig-nav', 'Próxima publicação') : '');
+    overlay.innerHTML = post(p) + (nav.total > 1 && !estado.fila ? setaNav(-1, nav.ant, 'ig-nav', 'Publicação anterior') + setaNav(1, nav.prox, 'ig-nav', 'Próxima publicação') : '');
     document.body.appendChild(overlay);
     document.body.style.overflow = 'hidden';
     ligarCarrossel();
@@ -431,7 +467,7 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
   function fechar(liberar = true) {
     overlay?.remove();
     overlay = null;
-    if (liberar) { estado.aberta = null; document.body.style.overflow = ''; }
+    if (liberar) { estado.aberta = null; estado.fila = null; document.body.style.overflow = ''; }
   }
 
   function ligarCarrossel() {
@@ -464,6 +500,7 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
       p.etapa = acao === 'aprovar' ? 'aprovado' : 'ajustes';
       if (acao === 'ajustar') p.ajuste = comentario;
       const id = p.id;
+      if (estado.fila) { estado.fila.feitas += 1; desenhar(); proximoDaFila(acao === 'aprovar' ? 'Aprovado. Vamos para o próximo.' : 'Pedido enviado. Vamos para o próximo.'); return; }
       desenhar();
       abrir(id);
       const ap = overlay?.querySelector('.ig-ap');
@@ -511,6 +548,7 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
       alvo.querySelector('video').addEventListener('error', doDrive, { once: true });
       return;
     }
+    if (q('[data-ig-pular]')) { estado.fila?.pulados.push(estado.aberta); return proximoDaFila(); }
     if (q('[data-ig-aprovar]')) return responder('aprovar');
     if (q('[data-ig-ajustar]')) { const f = overlay.querySelector('.ig-aj'); f.hidden = false; f.querySelector('textarea').focus(); return; }
     if (q('[data-ig-cancelar]')) overlay.querySelector('.ig-aj').hidden = true;
@@ -520,6 +558,7 @@ export function montarFeed(raiz, { cliente, pecas, aoResponder = null, previa = 
   raiz.addEventListener('submit', enviarPlano);
   raiz.addEventListener('click', (e) => {
     if (clicarPlano(e)) return;
+    if (e.target.closest('[data-ig-comecar]')) return comecar();
     const plAbrir = e.target.closest('[data-ig-pl-abrir]');
     if (plAbrir) return abrirPlano(plAbrir.dataset.igPlAbrir);
     const abrirBtn = e.target.closest('[data-ig-abrir]');

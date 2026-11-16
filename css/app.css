@@ -1212,3 +1212,13 @@ a.chip{text-decoration:none}
 .sel-chip{border:1px solid var(--line);background:var(--poco);border-radius:8px;padding:3px 5px;font-size:11px;text-align:left;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)}
 .sel-chip.on{background:var(--petroleo);color:#fff;border-color:var(--petroleo)}
 .sel-semdata{display:flex;flex-wrap:wrap;gap:4px}
+
+/* Página do cliente: entrada com o resumo e fluxo de um item de cada vez */
+.ig-hero{background:var(--petroleo);color:#fff;border-radius:20px;padding:18px 16px;display:grid;gap:6px;margin:0 0 16px;justify-items:start}
+.ig-hero b{font-size:36px;line-height:1.05;font-weight:700}
+.ig-hero span{font-size:14px;opacity:.9}
+.ig-hero small{font-size:12px;opacity:.8;margin-top:2px}
+.ig-hero .btn{margin-top:6px}
+.ig-hero.ok b{font-size:24px}
+.ig-prog{height:5px;background:var(--line);border-radius:3px;margin:0 14px 8px;overflow:hidden}
+.ig-prog i{display:block;height:100%;background:var(--verde);border-radius:3px;transition:width .3s}
