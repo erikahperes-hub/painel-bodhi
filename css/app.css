@@ -1358,3 +1358,6 @@ html[data-modo="noturno"] .aviso-arq{background:rgba(232,184,74,.16);color:#F3DF
 .resp-seg button.on{background:var(--petroleo);color:#fff}
 @media (max-width:640px){.resp-seg{width:100%}.resp-seg button{flex:1;padding:8px 6px}}
 html[data-modo="noturno"] .resp-seg{background:rgba(255,255,255,.08)}
+
+/* Enviar arquivo do computador para o Drive (dentro da tarefa). */
+.ft-envio-st{font:400 12.5px var(--ui);color:var(--ink-3);align-self:center}

@@ -1,9 +1,10 @@
-import { store } from './store.js?v=187';
-import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=187';
-import { ic } from './icons.js?v=187';
-import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=187';
-import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=187';
-import { idDrive, avisoLinkDrive, urlAbrir, urlImagem } from './drive.js?v=187';
+import { store } from './store.js?v=188';
+import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=188';
+import { ic } from './icons.js?v=188';
+import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=188';
+import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=188';
+import { idDrive, avisoLinkDrive, urlAbrir, urlImagem } from './drive.js?v=188';
+import { prepararGoogle, tokenValido, entrarGoogle, pastaDestino, enviarArquivo, nomeDoArquivo } from './drive-envio.js?v=188';
 
 // Ficha da tarefa de conteúdo. Pensada para o dia a dia de quem cria posts:
 //  - em cima, o caminho da tarefa (planejamento até publicado) com o próximo passo em destaque;
@@ -109,6 +110,7 @@ export function abrirTarefa(p = null, padrao = {}) {
     const ms = t.midias || [];
     return `${ms.length ? `<div class="ft-ths">${ms.map(miniatura).join('')}</div>` : ''}
       <div class="ft-add"><select data-nova="tipo" aria-label="Tipo de arquivo"><option value="imagem">Imagem</option><option value="video">Vídeo</option></select><input data-nova="url" placeholder="Cole o link do arquivo no Drive e aperte Enter" aria-label="Link do arquivo no Drive"><button type="button" class="btn sec sm" data-t="add-midia">${ic('plus')}Adicionar</button></div>
+      <div class="ft-add"><button type="button" class="btn sec sm" data-t="enviar-pc">${ic('upload')}Enviar do computador</button><input type="file" data-envio hidden multiple accept="image/*,video/*"><span class="ft-envio-st" data-envio-st aria-live="polite"></span></div>
       <p class="ft-ajuda">Carrossel: um arquivo por slide, na ordem. Reels e story em vídeo: escolha “Vídeo”.</p>`;
   };
 
@@ -163,6 +165,7 @@ export function abrirTarefa(p = null, padrao = {}) {
   const arte = (t) => `<section class="ft-arte"><h3>Arte e arquivos</h3><div data-previa>${previa(t)}</div><div data-arquivos>${arquivos(t)}</div>
     <details class="ft-mais"><summary>Mais opções</summary>
       <label class="ft-lbl" for="ft_capa">Capa (imagem)</label><input id="ft_capa" data-campo="capa" value="${esc(t.capa ? urlAbrir(t.capa) : '')}" placeholder="Link da imagem de capa no Drive">
+      <div class="ft-add"><button type="button" class="btn sec sm" data-t="enviar-capa">${ic('upload')}Enviar capa do computador</button><input type="file" data-envio-capa hidden accept="image/*"></div>
       <label class="ft-lbl" for="ft_link">Arquivo editável (só a equipe vê)</label><input id="ft_link" data-campo="link" value="${esc(t.link || '')}" placeholder="Canva, Drive ou onde estiver">
     </details></section>`;
 
@@ -308,6 +311,35 @@ export function abrirTarefa(p = null, padrao = {}) {
     } catch (e) { toast(e.message || 'Não consegui criar a tarefa agora.', true); }
   };
 
+  // Envio do computador para o Drive (Aprovação / cliente / mês). O login do Google precisa de um clique; depois dele, outro clique abre a escolha do arquivo.
+  const statusEnvio = (txt) => { const s = q('[data-envio-st]'); if (s) s.textContent = txt; };
+  const botaoEnviar = async (capa) => {
+    if (!tokenValido()) {
+      try { await entrarGoogle(); toast('Google conectado. Clique de novo para escolher o arquivo.'); } catch (e) { toast(e.message || 'Não consegui entrar no Google.', true); }
+      return;
+    }
+    q(capa ? '[data-envio-capa]' : '[data-envio]').click();
+  };
+  const enviarDoComputador = async (lista, comoCapa) => {
+    const t0 = atual();
+    const cli = store.obter('cliente', t0.clienteId);
+    if (!cli) { toast('Escolha o cliente da tarefa antes de enviar arquivos.', true); return; }
+    try {
+      statusEnvio('Preparando a pasta no Drive…');
+      const pasta = await pastaDestino(cli.nome, (/^\d{4}-\d{2}/.test(t0.publicar || '') ? t0.publicar : new Date().toISOString()).slice(0, 7));
+      for (const f of lista) {
+        if (/\.mov$/i.test(f.name)) toast('Dica: vídeo .mov do iPhone pode não tocar no celular do cliente. Se der problema, exporte em MP4.');
+        const n = (atual().midias || []).length + 1;
+        const nome = nomeDoArquivo(atual(), f, n, comoCapa);
+        const r = await enviarArquivo(f, { nome, pasta, aoProgredir: (p) => statusEnvio(`Enviando ${f.name}… ${Math.round(p * 100)}%`) });
+        if (comoCapa) { await mudar({ capa: r.id }); const c = q('#ft_capa'); if (c) c.value = urlAbrir(r.id); pintarArquivos(); }
+        else { await mudar({ midias: [...(atual().midias || []), { tipo: f.type.startsWith('video') ? 'video' : 'imagem', id: r.id }] }); pintarArquivos(); }
+      }
+      statusEnvio('');
+      toast(lista.length > 1 ? 'Arquivos enviados para o Drive' : 'Arquivo enviado para o Drive');
+    } catch (e) { statusEnvio(''); toast(e.message || 'Não consegui enviar o arquivo.', true); }
+  };
+
   const adicionarArquivo = async () => {
     const url = q('[data-nova=url]');
     const tipo = q('[data-nova=tipo]').value;
@@ -444,6 +476,8 @@ Qualquer dúvida, é só chamar!`;
       return;
     }
     if (a === 'add-midia') return adicionarArquivo();
+    if (a === 'enviar-pc') return botaoEnviar(false);
+    if (a === 'enviar-capa') return botaoEnviar(true);
     if (a === 'rm-midia') {
       const i = Number(b.dataset.i);
       await mudar({ midias: (atual().midias || []).filter((_, k) => k !== i) });
@@ -483,6 +517,7 @@ Qualquer dúvida, é só chamar!`;
     }
   };
 
+  prepararGoogle();
   g = abrirGaveta({
     titulo: p ? 'Tarefa de conteúdo' : 'Nova tarefa de conteúdo',
     corpo: montar(),
@@ -502,6 +537,12 @@ Qualquer dúvida, é só chamar!`;
   });
   g.el.addEventListener('change', async (e) => {
     const el = e.target;
+    if (el.matches('[data-envio], [data-envio-capa]')) {
+      const lista = [...(el.files || [])];
+      el.value = '';
+      if (lista.length) enviarDoComputador(lista, el.matches('[data-envio-capa]'));
+      return;
+    }
     const campo = el.dataset.campo;
     if (!campo) return;
     if (['clienteId', 'publicar', 'planejamento'].includes(campo)) {

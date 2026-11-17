@@ -72,3 +72,13 @@ Nada publica hoje. O painel só LÊ o Instagram. Não rode nada que publique (`m
 - **A API do Instagram não apaga posts.** Para testar sem postar, crie só o "rascunho" da mídia (container) e não chame a publicação; ele expira em 24 horas.
 - **Alternativa ao login do Instagram:** conexão pelo login do Facebook, ligada a uma Página (`instagram_content_publish`, `pages_show_list`). Falta conferir se o @bodhi.mkt está ligado a uma Página que a Érika administra.
 - Um teste de rascunho foi feito no código e depois removido (a função `instagram` no Supabase deve estar igual a `supabase/functions/instagram/index.ts` do repositório, sem ação `teste-rascunho`).
+
+## 9. Link na bio da Bôdhi (começado em 16/11/2026)
+
+Página própria, sem Linktree, inspirada no LinkCommerce (vídeos de referência no Drive: Edições Claude/Avulsos/Link bio). Arquivos: `links.html`, `js/links.js`, `js/links-dados.js`, `css/links.css`.
+- Versão 1: perfil, redes, botão "Como podemos ajudar seu negócio?" com perguntas rápidas, recomendação personalizada, contato (nome, WhatsApp, @) e links.
+- Falta: rodar `supabase/linkbio.sql` (salva os contatos como leads), confirmar o número de WhatsApp da Bôdhi, contar cliques por botão, editar tudo por uma aba do painel, decidir o endereço (bodhi.marketing/links ou link.bodhi.marketing).
+
+## 10. Link na bio como serviço para clientes (PRÓXIMO depois do item 9)
+
+Decidido pela Érika em 16/11/2026: a mesma estrutura vira serviço, com uma página por cliente (ex.: bodhi.marketing/dr-caio), editada no painel, e os contatos de cada página caindo no painel ligados ao cliente.

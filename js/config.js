@@ -11,4 +11,8 @@ export const config = {
   // Chave do Google para "Importar da pasta" (só lê o Drive e só vale em painel.bodhi.marketing; pública por desenho, como a anon).
   // Projeto "My First Project" no Google Cloud (conta erikahperes@gmail.com), API Drive ativada, restrição por site.
   driveKey: 'AIzaSyBMslqhcuZ6o8O8IZY9W5VQ6rRRjfGVTro',
+  // "Enviar do computador" (js/drive-envio.js): ID do cliente OAuth "Painel Bôdhi (anexos)" no mesmo projeto do Google Cloud (público por desenho,
+  // só vale em painel.bodhi.marketing) e código da pasta Aprovação no Drive (pública por desenho).
+  googleClientId: '655896643773-nahd3vna03vd4530dpv2r7b40vgarqsh.apps.googleusercontent.com',
+  driveAprovacao: '16cdti1VEzkvn1fisGq8X5qkQaozL9BIm',
 };
