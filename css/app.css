@@ -1285,3 +1285,28 @@ a.chip{text-decoration:none}
   .ig-post .ig-ph>div b{font-size:14px}
   .ig-post .ig-ph>div small{white-space:normal;font-size:12px;line-height:1.25}
 }
+
+/* Quadro de status (Conteúdo): cada etapa com a sua cor suave e cada cartão com a faixa do formato.
+   Só cor: tamanhos, rolagem e o comportamento no celular seguem as regras de .kol e .peca acima. */
+.kol{--kc-bg:rgba(41,43,45,.06);--kc-cab:rgba(41,43,45,.14);--kc-tx:#292B2D}
+.kol[data-etapa="criacao"]{--kc-bg:rgba(7,63,86,.08);--kc-cab:rgba(7,63,86,.20);--kc-tx:#073F56}
+.kol[data-etapa="aprovacao"]{--kc-bg:rgba(233,106,106,.10);--kc-cab:rgba(233,106,106,.30);--kc-tx:#8E2F2F}
+.kol[data-etapa="ajustes"]{--kc-bg:rgba(232,184,74,.14);--kc-cab:rgba(232,184,74,.38);--kc-tx:#6B4E0A}
+.kol[data-etapa="aprovado"]{--kc-bg:rgba(35,187,132,.11);--kc-cab:rgba(35,187,132,.30);--kc-tx:#0C5A3F}
+.kol[data-etapa="publicado"]{--kc-bg:rgba(79,106,133,.10);--kc-cab:rgba(79,106,133,.24);--kc-tx:#1F3347}
+.kol:not(.alvo){background:var(--kc-bg)}
+.kol-h{background:var(--kc-cab);color:var(--kc-tx);border-radius:99px;padding:9px 10px 9px 16px}
+.kol-h .chip{background:rgba(255,255,255,.82);color:#292B2D}
+.peca{position:relative;overflow:hidden;padding-top:19px}
+.peca::before{content:'';position:absolute;left:0;right:0;top:0;height:6px;background:var(--fm-cor,transparent)}
+.peca[data-fm="reels"]{--fm-cor:rgba(7,63,86,.5)}
+.peca[data-fm="carrossel"]{--fm-cor:rgba(35,187,132,.65)}
+.peca[data-fm="feed"],.peca[data-fm="estatico"]{--fm-cor:rgba(232,184,74,.75)}
+.peca[data-fm="story"]{--fm-cor:rgba(233,106,106,.65)}
+/* Modo noturno: fundos mais escuros e títulos das colunas em tons claros */
+html[data-modo="noturno"] .kol{--kc-bg:rgba(255,255,255,.05);--kc-cab:rgba(255,255,255,.14);--kc-tx:#E4E6E8}
+html[data-modo="noturno"] .kol[data-etapa="criacao"]{--kc-cab:rgba(120,190,220,.24);--kc-tx:#BFE0EE}
+html[data-modo="noturno"] .kol[data-etapa="aprovacao"]{--kc-cab:rgba(233,106,106,.30);--kc-tx:#F5B5B5}
+html[data-modo="noturno"] .kol[data-etapa="ajustes"]{--kc-cab:rgba(232,184,74,.28);--kc-tx:#F2D58C}
+html[data-modo="noturno"] .kol[data-etapa="aprovado"]{--kc-cab:rgba(35,187,132,.28);--kc-tx:#A5E8CC}
+html[data-modo="noturno"] .kol[data-etapa="publicado"]{--kc-cab:rgba(140,170,200,.24);--kc-tx:#C8D6E6}

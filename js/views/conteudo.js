@@ -1,16 +1,16 @@
-import { store } from '../store.js?v=180';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=180';
-import { ic, flor } from '../icons.js?v=180';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=180';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=180';
-import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=180';
-import { feedPerfil } from '../feed-perfil.js?v=180';
-import { igApi } from '../instagram-api.js?v=180';
-import { lerPasta } from '../drive-pasta.js?v=180';
-import { lerTabela } from '../planejamento.js?v=180';
-import { config } from '../config.js?v=180';
-import { histCartao, histMontar, importarHistorico } from '../historico.js?v=180';
-import { abrirTarefa } from '../tarefa.js?v=180';
+import { store } from '../store.js?v=182';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=182';
+import { ic, flor } from '../icons.js?v=182';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=182';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=182';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=182';
+import { feedPerfil } from '../feed-perfil.js?v=182';
+import { igApi } from '../instagram-api.js?v=182';
+import { lerPasta } from '../drive-pasta.js?v=182';
+import { lerTabela } from '../planejamento.js?v=182';
+import { config } from '../config.js?v=182';
+import { histCartao, histMontar, importarHistorico } from '../historico.js?v=182';
+import { abrirTarefa } from '../tarefa.js?v=182';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
@@ -626,7 +626,7 @@ function cartao(p, mostrarCliente) {
   const meta = [mostrarCliente ? (cli?.nome || 'Cliente removido') : '', p.publicar ? dataBR(p.publicar).slice(0, 5) : 'Sem data', p.responsavel].filter(Boolean).join(' · ');
   const atras = atrasada(p);
   const botoes = (PROXIMOS[p.etapa] || []).map(([para, texto, estilo]) => `<button class="btn ${estilo || 'sec'} sm" data-act="mover-peca" data-id="${p.id}" data-para="${para}">${esc(texto)}</button>`).join('');
-  return `<div class="peca${enviadaNoPlano(p) ? ' enviado' : ''}${p.concluida ? ' feita' : ''}" draggable="true" data-peca="${p.id}">
+  return `<div class="peca${enviadaNoPlano(p) ? ' enviado' : ''}${p.concluida ? ' feita' : ''}" draggable="true" data-peca="${p.id}" data-fm="${FORMATOS[p.formato] ? p.formato : 'feed'}">
     <div class="actions" style="gap:6px">${botaoConcluir(p)}<span class="chip ${fmCls(p)}">${ic(f.icone)}${esc(f.nome)}</span>${redeChip(p)}${funilChip(p)}${atras ? '<span class="chip warn">Atrasada</span>' : ''}${p.link && urlSegura(p.link) ? `<a class="chip mute" href="${esc(urlSegura(p.link))}" target="_blank" rel="noopener noreferrer" title="Abrir a arte">${ic('file')}Arte</a>` : ''}</div>
     <button class="peca-t" data-act="editar-peca" data-id="${p.id}">${esc(p.titulo || '(sem título)')}</button>
     <div class="peca-m">${esc(meta)}</div>
