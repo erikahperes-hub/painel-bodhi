@@ -17,8 +17,10 @@ http.createServer(async (req, res) => {
     if (p.endsWith('/')) p += 'index.html';
     const file = join(root, normalize(p));
     if (!file.startsWith(root)) { res.writeHead(403); return res.end(); }
-    const data = await readFile(file);
-    res.writeHead(200, { 'Content-Type': types[extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
+    let data; let tipo = types[extname(file)];
+    // Como o GitHub Pages: /a abre a.html
+    try { data = await readFile(file); } catch { data = await readFile(file + '.html'); tipo = types['.html']; }
+    res.writeHead(200, { 'Content-Type': tipo || 'application/octet-stream', 'Cache-Control': 'no-store' });
     res.end(data);
   } catch {
     res.writeHead(404, { 'Content-Type': 'text/plain' });

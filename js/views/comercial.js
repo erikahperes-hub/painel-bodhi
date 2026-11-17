@@ -1,8 +1,8 @@
-import { store } from '../store.js?v=183';
-import { metricas } from '../calc.js?v=183';
-import { brl, esc, toast } from '../util.js?v=183';
-import { ic } from '../icons.js?v=183';
-import { formulario, confirmar } from '../ui.js?v=183';
+import { store } from '../store.js?v=184';
+import { metricas } from '../calc.js?v=184';
+import { brl, esc, toast } from '../util.js?v=184';
+import { ic } from '../icons.js?v=184';
+import { formulario, confirmar } from '../ui.js?v=184';
 
 // Nome antigo do motivo, ainda salvo em alguns bancos, exibido com o termo novo.
 const titulo = (t) => (t === 'Financeiro do cliente' ? 'Problemas financeiros' : t);

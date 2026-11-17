@@ -1,9 +1,9 @@
-import { store } from './store.js?v=183';
-import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=183';
-import { ic } from './icons.js?v=183';
-import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=183';
-import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=183';
-import { idDrive, avisoLinkDrive, urlAbrir, urlImagem } from './drive.js?v=183';
+import { store } from './store.js?v=184';
+import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=184';
+import { ic } from './icons.js?v=184';
+import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=184';
+import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=184';
+import { idDrive, avisoLinkDrive, urlAbrir, urlImagem } from './drive.js?v=184';
 
 // Ficha da tarefa de conteúdo. Pensada para o dia a dia de quem cria posts:
 //  - em cima, o caminho da tarefa (planejamento até publicado) com o próximo passo em destaque;
@@ -364,7 +364,7 @@ export function abrirTarefa(p = null, padrao = {}) {
     let verTudo = true;
     let token;
     try { token = await store.linkTarefa(t.clienteId, id, { verTudo }); } catch (e) { toast(e.message || 'Não consegui gerar o link agora.', true); return; }
-    const montarUrl = (tk) => `${location.origin}${location.pathname.replace(/[^/]*$/, '')}aprovar.html#${tk}`;
+    const montarUrl = (tk) => `${location.origin}${location.pathname.replace(/[^/]*$/, '')}a#${tk}`;
     let url = montarUrl(token);
     const eIdeia = !emAprovacao && ideia;
     const oQue = eIdeia ? 'a ideia' : ({ reels: 'o reels', carrossel: 'o carrossel', story: 'o story', feed: 'o post' }[t.formato] || 'o post');

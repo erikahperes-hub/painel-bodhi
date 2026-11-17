@@ -1,16 +1,16 @@
-import { store } from '../store.js?v=183';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=183';
-import { ic, flor } from '../icons.js?v=183';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=183';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=183';
-import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=183';
-import { feedPerfil } from '../feed-perfil.js?v=183';
-import { igApi } from '../instagram-api.js?v=183';
-import { lerPasta } from '../drive-pasta.js?v=183';
-import { lerTabela } from '../planejamento.js?v=183';
-import { config } from '../config.js?v=183';
-import { histCartao, histMontar, importarHistorico } from '../historico.js?v=183';
-import { abrirTarefa } from '../tarefa.js?v=183';
+import { store } from '../store.js?v=184';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=184';
+import { ic, flor } from '../icons.js?v=184';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=184';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=184';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=184';
+import { feedPerfil } from '../feed-perfil.js?v=184';
+import { igApi } from '../instagram-api.js?v=184';
+import { lerPasta } from '../drive-pasta.js?v=184';
+import { lerTabela } from '../planejamento.js?v=184';
+import { config } from '../config.js?v=184';
+import { histCartao, histMontar, importarHistorico } from '../historico.js?v=184';
+import { abrirTarefa } from '../tarefa.js?v=184';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
@@ -851,45 +851,58 @@ export default {
     'link-aprovacao': async (el) => {
       const c = store.obter('cliente', el.dataset.cliente);
       if (!c) return;
-      const montar = (token) => `${location.origin}${location.pathname.replace(/[^/]*$/, '')}aprovar.html#${token}`;
+      const montar = (token) => `${location.origin}${location.pathname.replace(/[^/]*$/, '')}a#${token}`;
       let url = montar(await store.linkAprovacao(c.id));
       const m = abrirModal({
         titulo: `Link de aprovação: ${c.nome}`,
-        subtitulo: 'Envie este link ao cliente. Ele vê só as tarefas dele (as que estão em “Aguardando aprovação” ou depois) e não precisa de senha. Para ver como ele enxerga, use “Prévia do cliente”.',
-        corpo: `<div class="field"><label for="link-ap">Link do cliente</label><input id="link-ap" readonly value="${esc(url)}"></div>
-          <p class="lbl" style="margin-top:10px">Quem tem este link consegue ver e aprovar as tarefas de ${esc(c.nome)}. Se ele for parar em mãos erradas, gere um novo: o antigo deixa de funcionar.</p>
-          <div class="field" style="margin-top:14px"><span class="lbl">Abas que o cliente vê neste link</span>
-            <label class="ln-check"><input type="checkbox" data-ver="plano"><span>Planejamento<small>As ideias que você enviar em Enviar planejamento, para ele aprovar. A aba só aparece quando há ideias enviadas.</small></span></label>
-            <label class="ln-check"><input type="checkbox" data-ver="feed"><span>Feed<small>A grade de publicações do cliente.</small></span></label>
-            <label class="ln-check" style="margin-left:30px" data-ver-sub><input type="checkbox" data-ver="feedContinuo"><span>No Feed, usar a ordem do Instagram<small>Ligado: todas as publicações juntas, as fixadas primeiro e depois as mais novas, como no perfil. Desligado: uma página por mês, com setas para trocar de mês.</small></span></label>
-            <label class="ln-check"><input type="checkbox" data-ver="stories"><span>Stories<small>Os stories do mês.</small></span></label>
-            <label class="ln-check"><input type="checkbox" data-ver="calendario"><span>Calendário<small>O mês com cada tarefa no dia de publicar.</small></span></label>
-            <span class="lbl" style="display:block;margin-top:12px">Quais tarefas aparecem nessas abas</span>
-            <label class="ln-check"><input type="checkbox" data-ver="selecao"><span>Escolher exatamente quais tarefas ele vê<small>Ligado: o cliente vê só as tarefas que você marcar. Desligado: vê tudo que aguarda resposta e o aprovado ou publicado recente. <b data-ver-n></b></small></span></label>
-            <div class="actions" style="margin-top:6px"><button type="button" class="btn sec sm" data-escolher>Escolher as tarefas</button></div></div>
-          <div class="modal-f"><button class="btn ghost danger" data-renovar>Gerar novo link</button><div class="actions"><button class="btn sec" data-fechar-link>Fechar</button><button class="btn sec" data-previa>${ic('image')}Prévia do cliente</button>${navigator.share ? `<button class="btn sec" data-compartilhar>${ic('send')}Compartilhar</button>` : ''}<button class="btn pri" data-copiar>${ic('link')}Copiar link</button></div></div>`,
+        subtitulo: 'Quem tem este link vê só o que você liberar abaixo. Não precisa de senha.',
+        corpo: `<div class="lk-topo"><input id="link-ap" readonly value="${esc(url)}" aria-label="Link do cliente"><button class="btn pri" data-copiar>${ic('link')}Copiar link</button></div>
+          <p class="lk-aviso">Se o link for parar em mãos erradas, gere um novo: o antigo deixa de funcionar.</p>
+          <span class="lk-sec">O que o cliente vê</span>
+          <div class="lk-grade">
+            <div class="lk-t lk-fixo"><div class="lk-r"><b>Para aprovar</b><em>sempre</em></div><small>O que espera a resposta dele</small></div>
+            <div class="lk-t"><label class="lk-r"><b>Planejamento</b><input type="checkbox" data-ver="plano"><span class="lk-sw"></span></label><small>As ideias que você enviar</small></div>
+            <div class="lk-t"><label class="lk-r"><b>Feed</b><input type="checkbox" data-ver="feed"><span class="lk-sw"></span></label><small data-feed-leg>A grade de publicações</small>
+              <div class="lk-seg"><button type="button" data-feedmodo="0">Por mês</button><button type="button" data-feedmodo="1">Igual ao Instagram</button></div></div>
+            <div class="lk-t"><label class="lk-r"><b>Stories</b><input type="checkbox" data-ver="stories"><span class="lk-sw"></span></label><small>Os stories do mês</small></div>
+            <div class="lk-t"><label class="lk-r"><b>Calendário</b><input type="checkbox" data-ver="calendario"><span class="lk-sw"></span></label><small>Cada tarefa no dia de publicar</small></div>
+          </div>
+          <span class="lk-sec">Quais tarefas aparecem</span>
+          <div class="lk-dois">
+            <button type="button" class="lk-t" data-sel="0"><b>Tudo que espera resposta</b><small>Automático, mais o aprovado recente</small></button>
+            <button type="button" class="lk-t" data-sel="1"><b>Eu escolho</b><small data-ver-n></small></button>
+          </div>
+          <div class="actions" style="margin-top:8px"><button type="button" class="btn sec sm" data-escolher>Escolher as tarefas</button></div>
+          <div class="lk-res" data-res></div>
+          <div class="modal-f"><button class="btn ghost danger" data-renovar>Gerar novo link</button><div class="actions"><button class="btn sec" data-fechar-link>Fechar</button><button class="btn sec" data-previa>${ic('image')}Prévia do cliente</button>${navigator.share ? `<button class="btn sec" data-compartilhar>${ic('send')}Compartilhar</button>` : ''}</div></div>`,
       });
-      // Chaves do que o cliente vê (Feed, Stories, Calendário e modo seleção). Pelo menos uma das três abas fica ligada.
+      // Chaves do que o cliente vê (abas, Feed por mês ou igual ao Instagram, e quais tarefas). Pelo menos uma entre Feed, Stories e Calendário fica ligada.
       const marcarVer = () => {
         const v = verDoCliente(store.obter('cliente', c.id));
-        m.el.querySelectorAll('[data-ver]').forEach((x) => { x.checked = !!v[x.dataset.ver]; });
-        const sub = m.el.querySelector('[data-ver="feedContinuo"]');
-        if (sub) { sub.disabled = !v.feed; sub.closest('[data-ver-sub]').style.opacity = v.feed ? '' : '.5'; }
-        const n = candidatasDoLink(c.id).filter((p) => p.clienteVe).length;
-        m.el.querySelector('[data-ver-n]').textContent = v.selecao ? `${n} ${n === 1 ? 'tarefa escolhida' : 'tarefas escolhidas'}.` : '';
+        m.el.querySelectorAll('[data-ver]').forEach((x) => { x.checked = !!v[x.dataset.ver]; x.closest('.lk-t').classList.toggle('on', x.checked); });
+        m.el.querySelectorAll('[data-feedmodo]').forEach((b) => { const on = (b.dataset.feedmodo === '1') === !!v.feedContinuo; b.classList.toggle('a', on); b.setAttribute('aria-pressed', on); b.disabled = !v.feed; });
+        m.el.querySelector('[data-feed-leg]').textContent = v.feedContinuo ? 'Tudo junto, fixadas primeiro, como no perfil' : 'Uma página por mês, com setas';
+        const cand = candidatasDoLink(c.id);
+        const n = cand.filter((p) => p.clienteVe).length;
+        m.el.querySelectorAll('[data-sel]').forEach((b) => { const on = (b.dataset.sel === '1') === !!v.selecao; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+        m.el.querySelector('[data-ver-n]').textContent = v.selecao ? `${n} de ${cand.length} ${cand.length === 1 ? 'tarefa marcada' : 'tarefas marcadas'}` : 'Você marca uma por uma';
         m.el.querySelector('[data-escolher]').style.display = v.selecao ? '' : 'none';
+        const abas = ['Para aprovar', v.plano && 'Planejamento', v.feed && 'Feed', v.stories && 'Stories', v.calendario && 'Calendário'].filter(Boolean);
+        m.el.querySelector('[data-res]').innerHTML = `O cliente vai ver: ${abas.map((a) => `<i>${a}</i>`).join('')}`;
       };
       marcarVer();
-      m.el.querySelectorAll('[data-ver]').forEach((x) => x.addEventListener('change', async () => {
-        const chave = x.dataset.ver;
+      const mudar = async (chave, valor) => {
         const v = verDoCliente(store.obter('cliente', c.id));
-        if (chave !== 'selecao' && chave !== 'feedContinuo' && chave !== 'plano' && !x.checked && ['feed', 'stories', 'calendario'].filter((k) => k !== chave).every((k) => v[k] === false)) { x.checked = true; toast('Deixe pelo menos uma das três ligada: Feed, Stories ou Calendário.', true); return; }
-        try { await salvarVerNoLink(c.id, { [chave]: x.checked }); } catch (err) { toast(err.message || 'Não consegui salvar.', true); marcarVer(); return; }
+        if (valor === false && ['feed', 'stories', 'calendario'].includes(chave) && ['feed', 'stories', 'calendario'].filter((k) => k !== chave).every((k) => v[k] === false)) { toast('Deixe pelo menos uma das três ligada: Feed, Stories ou Calendário.', true); marcarVer(); return; }
+        try { await salvarVerNoLink(c.id, { [chave]: valor }); } catch (err) { toast(err.message || 'Não consegui salvar.', true); marcarVer(); return; }
         marcarVer();
-        if (chave === 'selecao' && x.checked && !candidatasDoLink(c.id).some((p) => p.clienteVe)) { toast('Modo seleção ligado. Nenhuma tarefa marcada ainda: o cliente verá a página vazia até você escolher.'); escolherTarefasDoLink(c.id, marcarVer); }
-        else toast(chave === 'selecao' ? (x.checked ? 'Modo seleção ligado' : 'Modo seleção desligado') : 'Salvo');
-        if (chave === 'feedContinuo' && x.checked) toast('Feed igual ao Instagram ligado. Para o cliente ver as capas, elas precisam estar marcadas no modo seleção.');
-      }));
+        if (chave === 'selecao' && valor && !candidatasDoLink(c.id).some((p) => p.clienteVe)) { toast('Modo “Eu escolho” ligado. Nenhuma tarefa marcada ainda: o cliente verá a página vazia até você escolher.'); escolherTarefasDoLink(c.id, marcarVer); }
+        else toast(chave === 'selecao' ? (valor ? 'Modo “Eu escolho” ligado' : 'Voltou para “Tudo que espera resposta”') : 'Salvo');
+        if (chave === 'feedContinuo' && valor) toast('Feed igual ao Instagram ligado. Para o cliente ver as capas, elas precisam estar marcadas em “Eu escolho”.');
+      };
+      m.el.querySelectorAll('[data-ver]').forEach((x) => x.addEventListener('change', () => mudar(x.dataset.ver, x.checked)));
+      m.el.querySelectorAll('[data-feedmodo]').forEach((b) => b.addEventListener('click', () => mudar('feedContinuo', b.dataset.feedmodo === '1')));
+      m.el.querySelectorAll('[data-sel]').forEach((b) => b.addEventListener('click', () => mudar('selecao', b.dataset.sel === '1')));
       m.el.querySelector('[data-escolher]').onclick = () => escolherTarefasDoLink(c.id, marcarVer);
       const campo = m.el.querySelector('#link-ap');
       campo.addEventListener('focus', () => campo.select());

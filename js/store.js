@@ -1,5 +1,5 @@
-import { config } from './config.js?v=183';
-import { uid } from './util.js?v=183';
+import { config } from './config.js?v=184';
+import { uid } from './util.js?v=184';
 
 const KINDS = ['cliente', 'proposta', 'contrato', 'pendencia', 'lancamento', 'processo', 'conteudo', 'insights', 'config'];
 const LS_KEY = 'bodhi.painel.v1';
@@ -78,6 +78,14 @@ function salvarLocal() {
     const registros = KINDS.flatMap((k) => Object.values(db[k]).map((d) => ({ kind: k, id: d.id, data: d })));
     localStorage.setItem(LS_KEY, JSON.stringify({ registros }));
   } catch { /* navegador sem armazenamento */ }
+}
+
+// Código do link do cliente: 12 letras e números (62^12, cerca de 71 bits), curto para colar no WhatsApp e impossível de adivinhar. Links antigos (48 caracteres) continuam valendo.
+const ALFABETO = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+function tokenCurto(tamanho = 12) {
+  let t = '';
+  while (t.length < tamanho) for (const b of crypto.getRandomValues(new Uint8Array(24))) { if (b < 248 && t.length < tamanho) t += ALFABETO[b % 62]; }
+  return t;
 }
 
 export const store = {
@@ -191,7 +199,7 @@ export const store = {
       if (error) throw falha(error);
       if (data?.length) return data[0].token;
     }
-    const token = [...crypto.getRandomValues(new Uint8Array(24))].map((b) => b.toString(16).padStart(2, '0')).join('');
+    const token = tokenCurto();
     const { error } = await sb.from('aprovacao_links').insert({ token, cliente_id: clienteId });
     if (error) throw falha(error);
     return token;
@@ -219,7 +227,7 @@ export const store = {
         return data[0].token;
       }
     }
-    const token = [...crypto.getRandomValues(new Uint8Array(24))].map((b) => b.toString(16).padStart(2, '0')).join('');
+    const token = tokenCurto();
     const { error } = await sb.from('aprovacao_links').insert({ token, cliente_id: clienteId, peca_id: pecaId, ver_tudo: verTudo });
     if (error) throw falha(error);
     return token;
