@@ -63,7 +63,7 @@ begin
   select coalesce(jsonb_agg(jsonb_build_object('mes', mes, 'formato', formato, 'n', n)), '[]'::jsonb) into v_ent
     from (select substr(r.data->>'publicar', 1, 7) as mes, coalesce(nullif(r.data->>'formato', ''), 'feed') as formato, count(*) as n
             from records r
-           where r.kind = 'conteudo' and r.data->>'clienteId' = v_cliente
+           where r.kind = 'conteudo' and r.data->>'clienteId' = v_cliente and coalesce(r.data->>'arquivada', 'false') <> 'true'
              and r.data->>'etapa' in ('aprovado', 'publicado')
              and coalesce(r.data->>'publicar', '') <> '' and substr(r.data->>'publicar', 1, 7) >= v_desde
            group by 1, 2) t;
