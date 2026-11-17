@@ -240,6 +240,7 @@ O modelo padrão é uma **minuta em revisão**. Edite as cláusulas em **Configu
 ```
 index.html           entrada do painel (com login)
 aprovar.html         página pública de aprovação do cliente (sem login, só com o link)
+manifest.webmanifest, sw.js, offline.html   app instalável (ver "App no celular")
 css/app.css          visual (paleta, fontes e formas da marca)
 js/                  telas, busca, geração de PDF, ligação com Supabase e Asaas
 assets/              fontes e logo oficiais da Bôdhi
@@ -249,6 +250,12 @@ seed/                dados validados (fica só no seu computador)
 CNAME                domínio do painel
 CLAUDE.md            regras que o Claude Code segue ao mexer no painel
 ```
+
+## App no celular (instalar o painel)
+
+O painel pode ser instalado como app, sem loja. **iPhone:** abra painel.bodhi.marketing no **Safari**, toque em Compartilhar e em **Adicionar à Tela de Início**. **Android:** no Chrome, menu ⋮ e **Instalar app** (ou Adicionar à tela inicial). O ícone é a logo da Bôdhi Marketing e o painel abre em tela cheia, sem a barra do navegador. Para desinstalar, é só apagar o ícone como qualquer app.
+
+Como foi feito: `manifest.webmanifest` (nome, cores e ícones), ícones em `assets/icons/`, `sw.js` (service worker mínimo) e `offline.html` (tela de "Sem internet"). O `sw.js` **não guarda os arquivos do painel**: tudo vem da internet, então cada versão publicada chega na hora, como no site. Ele só mostra a tela "Sem internet" se o painel for aberto sem conexão. Não mexe na página do cliente (`aprovar.html`). No `?local` ele fica desligado. Para trocar o ícone, gere de novo os quatro PNGs de `assets/icons/` (192, 512, maskable 512 e apple-touch 180) e publique. Notificações no celular ainda não existem (ficam para junto do agendamento).
 
 ## Aparência (claro e noturno)
 

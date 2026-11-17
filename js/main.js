@@ -1,25 +1,25 @@
-import { store } from './store.js?v=182';
-import { logo } from './logo.js?v=182';
-import { ic, flor } from './icons.js?v=182';
-import { esc, toast, debounce } from './util.js?v=182';
-import { alertas } from './calc.js?v=182';
-import { igApi } from './instagram-api.js?v=182';
-import { ligarDicas } from './dicas.js?v=182';
-import { buscar, htmlResultados } from './search.js?v=182';
-import { temModal, fecharTopo, formulario } from './ui.js?v=182';
+import { store } from './store.js?v=183';
+import { logo } from './logo.js?v=183';
+import { ic, flor } from './icons.js?v=183';
+import { esc, toast, debounce } from './util.js?v=183';
+import { alertas } from './calc.js?v=183';
+import { igApi } from './instagram-api.js?v=183';
+import { ligarDicas } from './dicas.js?v=183';
+import { buscar, htmlResultados } from './search.js?v=183';
+import { temModal, fecharTopo, formulario } from './ui.js?v=183';
 
-import inicio from './views/inicio.js?v=182';
-import comercial from './views/comercial.js?v=182';
-import clientes from './views/clientes.js?v=182';
-import conteudo from './views/conteudo.js?v=182';
-import previa from './views/previa.js?v=182';
-import relatorio from './views/relatorio.js?v=182';
-import propostas from './views/propostas.js?v=182';
-import contratos from './views/contratos.js?v=182';
-import financeiro from './views/financeiro.js?v=182';
-import processo from './views/processo.js?v=182';
-import prospeccao from './views/prospeccao.js?v=182';
-import configuracoes from './views/configuracoes.js?v=182';
+import inicio from './views/inicio.js?v=183';
+import comercial from './views/comercial.js?v=183';
+import clientes from './views/clientes.js?v=183';
+import conteudo from './views/conteudo.js?v=183';
+import previa from './views/previa.js?v=183';
+import relatorio from './views/relatorio.js?v=183';
+import propostas from './views/propostas.js?v=183';
+import contratos from './views/contratos.js?v=183';
+import financeiro from './views/financeiro.js?v=183';
+import processo from './views/processo.js?v=183';
+import prospeccao from './views/prospeccao.js?v=183';
+import configuracoes from './views/configuracoes.js?v=183';
 
 const VIEWS = { inicio, comercial, clientes, conteudo, previa, relatorio, propostas, contratos, financeiro, processo, prospeccao, configuracoes };
 const NAV = [
@@ -285,3 +285,8 @@ window.addEventListener('atualizar-tela', () => { if (document.getElementById('v
     telaErro(`Verifique sua conexão com a internet e tente novamente. Detalhe técnico: ${err?.message || err}`);
   }
 })();
+
+// App instalável: registra o service worker mínimo (ele não guarda arquivos do painel, só a tela "sem internet").
+if ("serviceWorker" in navigator && !location.search.includes("local") && (location.protocol === "https:" || location.hostname === "localhost")) {
+  window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+}
