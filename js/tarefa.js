@@ -1,10 +1,10 @@
-import { store } from './store.js?v=189';
-import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=189';
-import { ic } from './icons.js?v=189';
-import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=189';
-import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=189';
-import { idDrive, avisoLinkDrive, urlAbrir, urlImagem } from './drive.js?v=189';
-import { prepararGoogle, tokenValido, entrarGoogle, pastaDestino, enviarArquivo, nomeDoArquivo } from './drive-envio.js?v=189';
+import { store } from './store.js?v=190';
+import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=190';
+import { ic } from './icons.js?v=190';
+import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=190';
+import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=190';
+import { idDrive, avisoLinkDrive, urlAbrir, urlImagem } from './drive.js?v=190';
+import { prepararGoogle, tokenValido, entrarGoogle, pastaDestino, enviarArquivo, nomeDoArquivo } from './drive-envio.js?v=190';
 
 // Ficha da tarefa de conteúdo. Pensada para o dia a dia de quem cria posts:
 //  - em cima, o caminho da tarefa (planejamento até publicado) com o próximo passo em destaque;
@@ -110,7 +110,7 @@ export function abrirTarefa(p = null, padrao = {}) {
     const ms = t.midias || [];
     return `${ms.length ? `<div class="ft-ths">${ms.map(miniatura).join('')}</div>` : ''}
       <div class="ft-add"><select data-nova="tipo" aria-label="Tipo de arquivo"><option value="imagem">Imagem</option><option value="video">Vídeo</option></select><input data-nova="url" placeholder="Cole o link do arquivo no Drive e aperte Enter" aria-label="Link do arquivo no Drive"><button type="button" class="btn sec sm" data-t="add-midia">${ic('plus')}Adicionar</button></div>
-      <div class="ft-add"><button type="button" class="btn sec sm" data-t="enviar-pc">${ic('upload')}Enviar do computador</button><input type="file" data-envio hidden multiple accept="image/*,video/*"><span class="ft-envio-st" data-envio-st aria-live="polite"></span></div>
+      <div class="ft-add"><button type="button" class="btn sec sm" data-t="enviar-pc" title="Anexar um arquivo do computador (vai para o Drive)">${ic('upload')}Anexar</button><input type="file" data-envio hidden multiple accept="image/*,video/*"><span class="ft-envio-st" data-envio-st aria-live="polite"></span></div>
       <p class="ft-ajuda">Carrossel: um arquivo por slide, na ordem. Reels e story em vídeo: escolha “Vídeo”.</p>`;
   };
 
@@ -165,8 +165,11 @@ export function abrirTarefa(p = null, padrao = {}) {
   const arte = (t) => `<section class="ft-arte"><h3>Arte e arquivos</h3><div data-previa>${previa(t)}</div><div data-arquivos>${arquivos(t)}</div>
     <details class="ft-mais"><summary>Mais opções</summary>
       <label class="ft-lbl" for="ft_capa">Capa (imagem)</label><input id="ft_capa" data-campo="capa" value="${esc(t.capa ? urlAbrir(t.capa) : '')}" placeholder="Link da imagem de capa no Drive">
-      <div class="ft-add"><button type="button" class="btn sec sm" data-t="enviar-capa">${ic('upload')}Enviar capa do computador</button><input type="file" data-envio-capa hidden accept="image/*"></div>
+      <div class="ft-add"><button type="button" class="btn sec sm" data-t="enviar-capa" title="Anexar a capa do computador (vai para o Drive)">${ic('upload')}Anexar capa</button><input type="file" data-envio-capa hidden accept="image/*"></div>
       <label class="ft-lbl" for="ft_link">Arquivo editável (só a equipe vê)</label><input id="ft_link" data-campo="link" value="${esc(t.link || '')}" placeholder="Canva, Drive ou onde estiver">
+      <label class="ft-lbl" for="ft_video">Vídeo no Drive (só a equipe vê)</label><input id="ft_video" data-campo="videoDrive" value="${esc(t.videoDrive || '')}" placeholder="Link do vídeo no Drive">
+      <label class="ft-lbl" for="ft_ig">Link do post no Instagram</label><input id="ft_ig" data-campo="igLink" value="${esc(t.igLink || '')}" placeholder="https://www.instagram.com/p/…">
+      <label class="ft-ck"><input type="checkbox" data-collab ${t.collab ? 'checked' : ''}><span>Collab: post do parceiro, sem arquivo nosso. Fica marcado no calendário.</span></label>
     </details></section>`;
 
   // Aprovação da ideia e do roteiro pelo cliente (antes de produzir). A equipe só envia ou cancela o envio;
@@ -283,6 +286,7 @@ export function abrirTarefa(p = null, padrao = {}) {
     if (nome === 'titulo') v = v.trim();
     if (nome === 'link') { v = v.trim(); if (v && !urlSegura(v)) { indicar('O link precisa começar com http:// ou https://', false); return; } v = urlSegura(v); }
     if (nome === 'capa') { v = v.trim(); if (v && !idDrive(v)) { indicar('Capa: ' + avisoLinkDrive(v), false); return; } v = idDrive(v); }
+    if (nome === 'igLink' || nome === 'videoDrive') { v = v.trim(); if (v && !urlSegura(v)) { indicar('O link precisa começar com http:// ou https://', false); return; } v = urlSegura(v); }
     if (nome === 'titulo' && id && !v) { indicar('Dê um título à tarefa', false); return; }
     return mudar({ [nome]: v }).then(() => { if (nome === 'capa' || nome === 'legenda') q('[data-previa]').innerHTML = previa(atual()); });
   };
@@ -537,6 +541,7 @@ Qualquer dúvida, é só chamar!`;
   });
   g.el.addEventListener('change', async (e) => {
     const el = e.target;
+    if (el.matches('[data-collab]')) { await mudar({ collab: el.checked }, el.checked ? 'marcou como collab' : 'tirou a marcação de collab'); return; }
     if (el.matches('[data-envio], [data-envio-capa]')) {
       const lista = [...(el.files || [])];
       el.value = '';

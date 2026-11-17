@@ -1,5 +1,5 @@
-import { config } from './config.js?v=189';
-import { uid } from './util.js?v=189';
+import { config } from './config.js?v=190';
+import { uid } from './util.js?v=190';
 
 const KINDS = ['cliente', 'proposta', 'contrato', 'pendencia', 'lancamento', 'processo', 'conteudo', 'insights', 'config'];
 const LS_KEY = 'bodhi.painel.v1';

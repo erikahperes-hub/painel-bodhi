@@ -1361,3 +1361,10 @@ html[data-modo="noturno"] .resp-seg{background:rgba(255,255,255,.08)}
 
 /* Enviar arquivo do computador para o Drive (dentro da tarefa). */
 .ft-envio-st{font:400 12.5px var(--ui);color:var(--ink-3);align-self:center}
+
+/* Collab (post do parceiro, sem arquivo nosso): etiqueta no quadro e no calendário, e a caixa dentro da tarefa. */
+.chip.collab{background:rgba(233,106,106,.16);color:#8E2F2F}
+.cal-collab{font-style:normal;font-weight:700;font-size:10.5px;margin-right:6px;padding:1px 7px;border-radius:99px;background:rgba(233,106,106,.18);color:#8E2F2F}
+html[data-modo="noturno"] .chip.collab,html[data-modo="noturno"] .cal-collab{background:rgba(233,106,106,.25);color:#FFC9C9}
+.ft-ck{display:flex;gap:8px;align-items:flex-start;margin-top:12px;font:400 13px var(--ui);cursor:pointer}
+.ft-ck input{width:18px;height:18px;margin-top:1px;accent-color:var(--verde);flex:none}
