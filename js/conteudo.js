@@ -1,5 +1,5 @@
-import { store } from './store.js?v=184';
-import { diasAte } from './util.js?v=184';
+import { store } from './store.js?v=185';
+import { diasAte } from './util.js?v=185';
 
 // Etapas do caminho de cada tarefa de conteúdo, na ordem em que acontecem.
 export const ETAPAS = [
@@ -55,5 +55,10 @@ export const etapaDe = (p) => ETAPAS.find((e) => e.id === p.etapa) || ETAPAS[0];
 // Tarefa concluída (botão de concluir) ou já publicada não conta como atrasada.
 export const atrasada = (p) => !!p.publicar && p.etapa !== 'publicado' && !p.concluida && diasAte(p.publicar) !== null && diasAte(p.publicar) < 0;
 
-export const pecas = () => store.todos('conteudo');
+// Tarefas arquivadas (botão Arquivar dentro da tarefa) não aparecem em lugar nenhum: nem no quadro, nem no calendário, no feed, nos alertas,
+// na busca ou no link do cliente. Só reaparecem em Conteúdo > Filtros > Arquivadas, de onde dá para restaurar.
+export const pecas = () => store.todos('conteudo').filter((p) => !p.arquivada);
+export const pecasArquivadas = () => store.todos('conteudo').filter((p) => p.arquivada);
+// Todas, com as arquivadas: só para histórico (Métricas e relatório contam o que foi entregue, mesmo arquivado).
+export const pecasTodas = () => store.todos('conteudo');
 export const pecasDoCliente = (clienteId) => pecas().filter((p) => p.clienteId === clienteId);

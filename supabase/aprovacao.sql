@@ -77,6 +77,7 @@ begin
   from records r
   where r.kind = 'conteudo'
     and r.data->>'clienteId' = v_cliente
+    and coalesce(r.data->>'arquivada', 'false') <> 'true'
     and (
       r.id = v_peca
       or (

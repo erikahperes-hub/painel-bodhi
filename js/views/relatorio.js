@@ -1,10 +1,10 @@
-import { store } from '../store.js?v=184';
-import { esc, toast, norm, hojeISO } from '../util.js?v=184';
-import { ic, flor } from '../icons.js?v=184';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=184';
-import { FORMATOS, pecas } from '../conteudo.js?v=184';
-import { igApi } from '../instagram-api.js?v=184';
-import { corpoRelatorio, painelMetricas, frasesResumo, ligarIndice, ymAnterior, ymMais, nomeMes } from '../relatorio-html.js?v=184';
+import { store } from '../store.js?v=185';
+import { esc, toast, norm, hojeISO } from '../util.js?v=185';
+import { ic, flor } from '../icons.js?v=185';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=185';
+import { FORMATOS, pecasTodas } from '../conteudo.js?v=185';
+import { igApi } from '../instagram-api.js?v=185';
+import { corpoRelatorio, painelMetricas, frasesResumo, ligarIndice, ymAnterior, ymMais, nomeMes } from '../relatorio-html.js?v=185';
 
 // Métricas do cliente nas redes sociais (no menu: Métricas) e o relatório mensal. Começa pelo Instagram.
 // Três abas: Métricas (indicadores do mês), Relatório mensal (o relatório completo, para enviar ao cliente) e Contas (conectar e atualizar o Instagram).
@@ -29,7 +29,7 @@ function clientesDoRelatorio() {
 
 // O que a Bôdhi produziu no mês, a partir das tarefas do Conteúdo (publicadas ou aprovadas com data no mês).
 function producaoDoMes(clienteId, ym) {
-  const lista = pecas().filter((p) => p.clienteId === clienteId && (p.publicar || '').slice(0, 7) === ym && ['aprovado', 'publicado'].includes(p.etapa));
+  const lista = pecasTodas().filter((p) => p.clienteId === clienteId && (p.publicar || '').slice(0, 7) === ym && ['aprovado', 'publicado'].includes(p.etapa));
   const porFormato = Object.keys(FORMATOS).map((f) => [FORMATOS[f].nome, lista.filter((p) => (FORMATOS[p.formato] ? p.formato : 'feed') === f).length]).filter(([, n]) => n);
   return { total: lista.length, porFormato };
 }
@@ -131,7 +131,7 @@ function avisoLeitura(c) {
 const NOME_FUNIL = { topo: 'Topo de funil (atrair)', meio: 'Meio de funil (considerar)', fundo: 'Fundo de funil (converter)' };
 const FORMATO_DO_TIPO = { Reels: 'reels', Carrossel: 'carrossel', 'Estático': 'feed' };
 function funilPorEtapa(clienteId, serie, ym) {
-  const tarefas = pecas().filter((p) => p.clienteId === clienteId && NOME_FUNIL[p.funil] && p.publicar);
+  const tarefas = pecasTodas().filter((p) => p.clienteId === clienteId && NOME_FUNIL[p.funil] && p.publicar);
   const usadas = new Set();
   const grupos = {};
   for (let i = 0; i < 6; i++) {

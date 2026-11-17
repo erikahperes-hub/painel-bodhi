@@ -1,9 +1,9 @@
-import { store } from './store.js?v=184';
-import { alertas } from './calc.js?v=184';
-import { esc, norm, brl, dataBR } from './util.js?v=184';
-import { ic } from './icons.js?v=184';
-import { listaProcessos } from './views/processo.js?v=184';
-import { FORMATOS, etapaDe } from './conteudo.js?v=184';
+import { store } from './store.js?v=185';
+import { alertas } from './calc.js?v=185';
+import { esc, norm, brl, dataBR } from './util.js?v=185';
+import { ic } from './icons.js?v=185';
+import { listaProcessos } from './views/processo.js?v=185';
+import { FORMATOS, etapaDe } from './conteudo.js?v=185';
 
 export const SECOES = [
   { rota: 'inicio', nome: 'Início', ic: 'home', extra: 'resumo visão geral' },
@@ -38,7 +38,7 @@ function indice() {
       texto: [nome, c.objeto, c.contratanteRazao, c.contratanteCnpj, c.contratanteEndereco, c.contratanteRepresentante, c.foro, c.propriedade, c.formaPagamento, ...(c.escopo || [])].join(' '),
     });
   });
-  store.todos('conteudo').forEach((p) => {
+  store.todos('conteudo').filter((p) => !p.arquivada).forEach((p) => {
     const cli = store.obter('cliente', p.clienteId)?.nome || '';
     it.push({
       grupo: 'Conteúdo', icone: FORMATOS[p.formato]?.icone || 'grid', titulo: `${cli}: ${p.titulo}`, sub: [FORMATOS[p.formato]?.nome, etapaDe(p).nome, p.publicar ? dataBR(p.publicar) : ''].filter(Boolean).join(' · '),

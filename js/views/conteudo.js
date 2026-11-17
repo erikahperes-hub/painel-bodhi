@@ -1,16 +1,16 @@
-import { store } from '../store.js?v=184';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=184';
-import { ic, flor } from '../icons.js?v=184';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=184';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas } from '../conteudo.js?v=184';
-import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=184';
-import { feedPerfil } from '../feed-perfil.js?v=184';
-import { igApi } from '../instagram-api.js?v=184';
-import { lerPasta } from '../drive-pasta.js?v=184';
-import { lerTabela } from '../planejamento.js?v=184';
-import { config } from '../config.js?v=184';
-import { histCartao, histMontar, importarHistorico } from '../historico.js?v=184';
-import { abrirTarefa } from '../tarefa.js?v=184';
+import { store } from '../store.js?v=185';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=185';
+import { ic, flor } from '../icons.js?v=185';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=185';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas, pecasArquivadas } from '../conteudo.js?v=185';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=185';
+import { feedPerfil } from '../feed-perfil.js?v=185';
+import { igApi } from '../instagram-api.js?v=185';
+import { lerPasta } from '../drive-pasta.js?v=185';
+import { lerTabela } from '../planejamento.js?v=185';
+import { config } from '../config.js?v=185';
+import { histCartao, histMontar, importarHistorico } from '../historico.js?v=185';
+import { abrirTarefa } from '../tarefa.js?v=185';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
@@ -33,6 +33,8 @@ const meuNome = () => {
   const achado = ['Érika', 'Milena'].find((r) => norm(r) === norm(n) || norm(n).startsWith(norm(r)));
   return achado || '';
 };
+let verArquivadas = false; // Filtros > Arquivadas: mostra só as tarefas arquivadas (para restaurar). Vale até recarregar a página.
+let nArqCli = 0; // quantas tarefas arquivadas tem o cliente escolhido (ou todos), para o número do botão Arquivadas
 let filtroRede = ''; // '', um código de REDES ou 'sem'
 const casaRede = (p) => !filtroRede || (filtroRede === 'sem' ? !REDES[p.rede] : p.rede === filtroRede);
 const nFiltros = () => [filtroTipo, filtroFunil, filtroRede].filter(Boolean).length;
@@ -43,7 +45,7 @@ const redeChip = (p) => (REDES[p.rede] ? `<span class="chip rd-${p.rede}">${esc(
 // Tipo, funil e rede só valem no Calendário; o responsável vale no Status, Calendário e Feed.
 let filtrosAberto = false;
 let baseFiltros = []; // tarefas do mês mostrado (do cliente escolhido), para os números dentro do painel
-const nAtivos = () => (filtroPessoa ? 1 : 0) + (aba === 'calendario' ? nFiltros() : 0);
+const nAtivos = () => (verArquivadas ? 1 : 0) + (filtroPessoa ? 1 : 0) + (aba === 'calendario' ? nFiltros() : 0);
 
 function painelFiltros() {
   const eu = meuNome();
@@ -81,10 +83,14 @@ function painelFiltros() {
     resto = tipo + funil + rede;
   }
 
+  const mostrar = nArqCli || verArquivadas ? grupo('Mostrar', [
+    chip('cor-mute', 'ver-arquivadas', 'data-v="0"', !verArquivadas, 'Ativas'),
+    chip('cor-mute', 'ver-arquivadas', 'data-v="1"', verArquivadas, `${ic('arquivo')}Arquivadas ${nArqCli}`),
+  ].join('')) : '';
   const n = nAtivos();
   return `<div class="fl-fundo"></div><div class="fl-pop" role="dialog" aria-label="Filtros">
     <div class="fl-h"><b>Filtros</b><span>Números do mês mostrado</span></div>
-    ${resp}${resto}
+    ${resp}${resto}${mostrar}
     <div class="fl-f"><button type="button" class="btn ghost sm" data-act="limpar-tudo"${n ? '' : ' disabled'}>Limpar filtros</button><button type="button" class="btn pri sm" data-act="fechar-filtros">Pronto</button></div></div>`;
 }
 
@@ -174,7 +180,7 @@ const ETAPAS_DO_LINK = ['aprovacao', 'ajustes', 'aprovado', 'publicado'];
 const PLANO_DO_LINK = ['aprovacao', 'ajustes', 'aprovado'];
 // Tarefas que podem aparecer para o cliente (as que já foram enviadas para aprovação do conteúdo ou do planejamento), as mais novas primeiro.
 const candidatasDoLink = (clienteId) => store.todos('conteudo')
-  .filter((p) => p.clienteId === clienteId && (ETAPAS_DO_LINK.includes(p.etapa) || PLANO_DO_LINK.includes(p.planejamento)))
+  .filter((p) => !p.arquivada && p.clienteId === clienteId && (ETAPAS_DO_LINK.includes(p.etapa) || PLANO_DO_LINK.includes(p.planejamento)))
   .sort((a, b) => String(b.publicar || '').localeCompare(String(a.publicar || '')));
 
 function escolherTarefasDoLink(clienteId, aoFechar) {
@@ -733,7 +739,8 @@ export default {
       const corpoIn = filtro ? histCartao(store.obter('cliente', filtro), recarregarTela) : `<div class="card empty">${flor()}<h2>Escolha um cliente inativo</h2><p>Aqui ficam os clientes que já saíram, com todo o histórico de tarefas que vinha do Asana. Toque no nome do cliente acima.</p></div>`;
       return `${seg}<div class="cbtns" style="margin-bottom:16px">${chipsIn}</div>${corpoIn}`;
     }
-    const todasBase = pecas();
+    nArqCli = pecasArquivadas().filter((p) => !filtro || p.clienteId === filtro).length;
+    const todasBase = verArquivadas ? pecasArquivadas() : pecas();
     const todas = todasBase.filter(casaPessoa);
     const lista = filtro ? todas.filter((p) => p.clienteId === filtro) : todas;
     // Mês escolhido (vale no Status e no Calendário). Status e números mostram esse mês, mais as tarefas sem data (para não sumirem).
@@ -762,7 +769,8 @@ export default {
     // Números do painel Filtros: tarefas do mês mostrado (do cliente escolhido), antes de aplicar o responsável.
     const baseMes = (filtro ? todasBase.filter((p) => p.clienteId === filtro) : todasBase).filter((p) => !!p.publicar && p.publicar.slice(0, 7) === ymChips);
     baseFiltros = baseMes;
-    const cabeca = `${seg}<div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>${numeros}${abas}`;
+    const avisoArq = verArquivadas ? `<div class="aviso-arq"><span>Mostrando só as tarefas <b>arquivadas</b>. Abra uma tarefa e use o botão de arquivo, no topo dela, para restaurar.</span><button type="button" class="btn sec sm" data-act="ver-arquivadas" data-v="0">Voltar às tarefas ativas</button></div>` : '';
+    const cabeca = `${seg}<div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>${avisoArq}${numeros}${abas}`;
     if (aba === 'calendario') return cabeca + calendario({ filtro, lista });
     if (aba === 'feed') {
       const cabecaFeed = `${cabeca}<div class="actions barra-filtros">${botaoFiltros()}</div>`;
@@ -839,7 +847,8 @@ export default {
     'enviar-planejamento': (el) => { if (store.obter('cliente', el.dataset.cliente)) escolherPlanejamento(el.dataset.cliente); },
     'abrir-filtros': () => { filtrosAberto = !filtrosAberto; recarregarTela(); },
     'fechar-filtros': () => { filtrosAberto = false; recarregarTela(); },
-    'limpar-tudo': () => { filtroPessoa = ''; filtroFunil = ''; filtroTipo = ''; filtroRede = ''; recarregarTela(); },
+    'ver-arquivadas': (el) => { verArquivadas = el.dataset.v === '1'; recarregarTela(); },
+    'limpar-tudo': () => { verArquivadas = false; filtroPessoa = ''; filtroFunil = ''; filtroTipo = ''; filtroRede = ''; recarregarTela(); },
     'filtro-tipo': (el) => { filtroTipo = el.dataset.tipo === filtroTipo ? '' : el.dataset.tipo; recarregarTela(); },
     'limpar-filtros': () => { filtroFunil = ''; filtroTipo = ''; filtroRede = ''; recarregarTela(); },
     'filtro-rede': (el) => { filtroRede = el.dataset.rede === filtroRede ? '' : el.dataset.rede; recarregarTela(); },

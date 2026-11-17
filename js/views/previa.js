@@ -1,7 +1,7 @@
-import { store } from '../store.js?v=184';
-import { esc, hojeISO } from '../util.js?v=184';
-import { ic, flor } from '../icons.js?v=184';
-import { montarFeed, ETAPAS_CLIENTE } from '../instagram.js?v=184';
+import { store } from '../store.js?v=185';
+import { esc, hojeISO } from '../util.js?v=185';
+import { ic, flor } from '../icons.js?v=185';
+import { montarFeed, ETAPAS_CLIENTE } from '../instagram.js?v=185';
 
 export default {
   titulo: () => 'Prévia do cliente',
@@ -43,7 +43,7 @@ export default {
     // Modo seleção: com ele ligado, o cliente só vê as tarefas marcadas (função aprovacao_ver, versão 5).
     const selecao = !!c.verNoLink?.selecao;
     const pecas = store.todos('conteudo')
-      .filter((p) => p.clienteId === c.id && (!selecao || p.clienteVe) && (visivel(p) || rascunho(p)))
+      .filter((p) => !p.arquivada && p.clienteId === c.id && (!selecao || p.clienteVe) && (visivel(p) || rascunho(p)))
       .map((p) => (noPlano(p) ? p : rascunho(p) ? { ...p, _rascunho: true, planejamento: '', ajustePlano: '' } : { ...p, roteiro: '', planejamento: '', ajustePlano: '', funil: '' }));
     montarFeed(alvo, { cliente: c, pecas, previa: true });
   },

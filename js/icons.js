@@ -13,6 +13,7 @@ const P = {
   logout: '<path d="M9 4.5H6A1.5 1.5 0 0 0 4.5 6v12A1.5 1.5 0 0 0 6 19.5h3"/><path d="m15 8 4 4-4 4"/><path d="M19 12H9"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
   edit: '<path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17z"/><path d="m14.5 7.5 3 3"/>',
+  arquivo: '<rect x="3.5" y="4.5" width="17" height="4" rx="1"/><path d="M5 8.5V19h14V8.5"/><path d="M10 12.5h4"/>',
   trash: '<path d="M5 7h14"/><path d="M9 7V5h6v2"/><path d="m7 7 1 12h8l1-12"/>',
   download: '<path d="M12 4v11"/><path d="m7.5 11 4.5 4.5 4.5-4.5"/><path d="M5 19.5h14"/>',
   x: '<path d="M6 6l12 12M18 6 6 18"/>',

@@ -1,9 +1,9 @@
-import { store } from './store.js?v=184';
-import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=184';
-import { ic } from './icons.js?v=184';
-import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=184';
-import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=184';
-import { idDrive, avisoLinkDrive, urlAbrir, urlImagem } from './drive.js?v=184';
+import { store } from './store.js?v=185';
+import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=185';
+import { ic } from './icons.js?v=185';
+import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=185';
+import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=185';
+import { idDrive, avisoLinkDrive, urlAbrir, urlImagem } from './drive.js?v=185';
 
 // Ficha da tarefa de conteúdo. Pensada para o dia a dia de quem cria posts:
 //  - em cima, o caminho da tarefa (planejamento até publicado) com o próximo passo em destaque;
@@ -68,7 +68,7 @@ export function abrirTarefa(p = null, padrao = {}) {
   const vizinhas = () => {
     const t = atual();
     if (!id || !t.clienteId) return [];
-    return store.todos('conteudo').filter((x) => x.clienteId === t.clienteId)
+    return store.todos('conteudo').filter((x) => x.clienteId === t.clienteId && (!x.arquivada || t.arquivada))
       .sort((a, b) => String(a.publicar || '9999').localeCompare(String(b.publicar || '9999')) || String(a.titulo || '').localeCompare(String(b.titulo || '')));
   };
 
@@ -88,7 +88,7 @@ export function abrirTarefa(p = null, padrao = {}) {
         ${eyebrow(t)}
         <div class="ft-linha">${marca(t)}<input class="ft-titulo" data-campo="titulo" value="${esc(t.titulo || '')}" placeholder="Título da tarefa" aria-label="Título da tarefa" maxlength="200"></div>
       </div>
-      <div class="ft-topo-d"><span class="ft-salvo" data-salvo aria-live="polite"></span>${id ? `<button type="button" class="btn pri sm ft-env" data-t="enviar" title="Gera o link para o cliente aprovar só esta tarefa">${ic('send')}<span>Enviar ao cliente</span></button>` : ''}${nav}${id ? `<button type="button" class="iconbtn ft-ib" data-t="excluir" aria-label="Excluir tarefa" title="Excluir tarefa">${ic('trash')}</button>` : ''}<button type="button" class="iconbtn ft-ib" data-t="fechar" aria-label="Fechar" title="Fechar (Esc)">${ic('x')}</button></div>
+      <div class="ft-topo-d"><span class="ft-salvo" data-salvo aria-live="polite"></span>${id ? `<button type="button" class="btn pri sm ft-env" data-t="enviar" title="Gera o link para o cliente aprovar só esta tarefa">${ic('send')}<span>Enviar ao cliente</span></button>` : ''}${nav}${id ? `<button type="button" class="iconbtn ft-ib" data-t="arquivar" aria-label="${atual().arquivada ? 'Restaurar tarefa' : 'Arquivar tarefa'}" title="${atual().arquivada ? 'Restaurar tarefa (volta para o quadro e o calendário)' : 'Arquivar tarefa (some do quadro, do calendário e do feed, e dá para restaurar)'}">${ic('arquivo')}</button>` : ''}${id ? `<button type="button" class="iconbtn ft-ib" data-t="excluir" aria-label="Excluir tarefa" title="Excluir tarefa">${ic('trash')}</button>` : ''}<button type="button" class="iconbtn ft-ib" data-t="fechar" aria-label="Fechar" title="Fechar (Esc)">${ic('x')}</button></div>
     </header>`;
   };
 
@@ -466,6 +466,15 @@ Qualquer dúvida, é só chamar!`;
       if (!(await confirmar('Excluir este comentário?', 'Excluir', true))) return;
       await mudar({ comentarios: (atual().comentarios || []).filter((c) => c.id !== b.dataset.id) });
       pintarConversa();
+      return;
+    }
+    if (a === 'arquivar') {
+      const t = atual();
+      const arquivando = !t.arquivada;
+      if (arquivando && !(await confirmar(`Arquivar a tarefa “${t.titulo}”? Ela some do quadro, do calendário e do feed, e não aparece mais para o cliente. Dá para restaurar depois em Filtros > Arquivadas.`, 'Arquivar'))) return;
+      await mudar({ arquivada: arquivando, arquivadaEm: arquivando ? new Date().toISOString() : '' }, arquivando ? 'arquivou esta tarefa' : 'restaurou esta tarefa');
+      g.fechar();
+      toast(arquivando ? 'Tarefa arquivada' : 'Tarefa restaurada');
       return;
     }
     if (a === 'excluir') {

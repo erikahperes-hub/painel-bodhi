@@ -1,7 +1,7 @@
-import { store } from './store.js?v=184';
-import { sum, diasAte, diasTxt, dataBR } from './util.js?v=184';
-import { atrasada } from './conteudo.js?v=184';
-import { igApi } from './instagram-api.js?v=184';
+import { store } from './store.js?v=185';
+import { sum, diasAte, diasTxt, dataBR } from './util.js?v=185';
+import { atrasada } from './conteudo.js?v=185';
+import { igApi } from './instagram-api.js?v=185';
 
 export function faixaProposta(p) {
   const valores = (p.pacotes || []).map((x) => Number(x.preco) || 0).filter((v) => v > 0);
@@ -109,7 +109,7 @@ export function alertas() {
     lista.push({ nivel: 2, tipo: 'info', tag: 'Aguardando retorno', icone: 'send', rota: 'propostas', ref: p.id,
       titulo: p.clienteNome, texto: `${p.titulo}: proposta enviada, aguardando resposta.` });
   });
-  store.todos('conteudo').forEach((p) => {
+  store.todos('conteudo').filter((p) => !p.arquivada).forEach((p) => {
     const nome = cli(p.clienteId)?.nome || 'Cliente';
     if (p.planejamento === 'ajustes') {
       lista.push({ nivel: 1, tipo: 'warn', tag: 'Ajuste no planejamento', icone: 'edit', rota: 'conteudo', ref: p.clienteId,

@@ -1344,3 +1344,8 @@ button.lk-t[data-sel].on{border-color:var(--petroleo);box-shadow:inset 0 0 0 1px
 html[data-modo="noturno"] .lk-res i{background:rgba(35,187,132,.22);color:#BFEFDD}
 html[data-modo="noturno"] .lk-sw{background:rgba(255,255,255,.28)}
 html[data-modo="noturno"] .lk-t.on .lk-sw{background:var(--verde)}
+
+/* Tarefas arquivadas (Conteúdo > Filtros > Arquivadas): faixa de aviso no alto da tela. */
+.aviso-arq{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 16px;padding:10px 14px;border-radius:14px;background:rgba(232,184,74,.16);color:#6B4E0A;font:400 13.5px var(--ui)}
+.aviso-arq b{font-weight:600}
+html[data-modo="noturno"] .aviso-arq{background:rgba(232,184,74,.16);color:#F3DFA8}
