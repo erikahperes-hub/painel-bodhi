@@ -1,16 +1,16 @@
-import { store } from '../store.js?v=188';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=188';
-import { ic, flor } from '../icons.js?v=188';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=188';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas, pecasArquivadas } from '../conteudo.js?v=188';
-import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=188';
-import { feedPerfil } from '../feed-perfil.js?v=188';
-import { igApi } from '../instagram-api.js?v=188';
-import { lerPasta } from '../drive-pasta.js?v=188';
-import { lerTabela } from '../planejamento.js?v=188';
-import { config } from '../config.js?v=188';
-import { histCartao, histMontar, importarHistorico } from '../historico.js?v=188';
-import { abrirTarefa } from '../tarefa.js?v=188';
+import { store } from '../store.js?v=189';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=189';
+import { ic, flor } from '../icons.js?v=189';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=189';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas, pecasArquivadas } from '../conteudo.js?v=189';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=189';
+import { feedPerfil } from '../feed-perfil.js?v=189';
+import { igApi } from '../instagram-api.js?v=189';
+import { lerPasta } from '../drive-pasta.js?v=189';
+import { lerTabela } from '../planejamento.js?v=189';
+import { config } from '../config.js?v=189';
+import { histCartao, histMontar, importarHistorico } from '../historico.js?v=189';
+import { abrirTarefa } from '../tarefa.js?v=189';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
@@ -637,7 +637,7 @@ function cartao(p, mostrarCliente) {
   const atras = atrasada(p);
   const botoes = (PROXIMOS[p.etapa] || []).map(([para, texto, estilo]) => `<button class="btn ${estilo || 'sec'} sm" data-act="mover-peca" data-id="${p.id}" data-para="${para}">${esc(texto)}</button>`).join('');
   return `<div class="peca${enviadaNoPlano(p) ? ' enviado' : ''}${p.concluida ? ' feita' : ''}" draggable="true" data-peca="${p.id}" data-fm="${FORMATOS[p.formato] ? p.formato : 'feed'}">
-    <div class="actions" style="gap:6px">${botaoConcluir(p)}<span class="chip ${fmCls(p)}">${ic(f.icone)}${esc(f.nome)}</span>${redeChip(p)}${funilChip(p)}${atras ? '<span class="chip warn">Atrasada</span>' : ''}${p.link && urlSegura(p.link) ? `<a class="chip mute" href="${esc(urlSegura(p.link))}" target="_blank" rel="noopener noreferrer" title="Abrir a arte">${ic('file')}Arte</a>` : ''}</div>
+    <div class="actions" style="gap:6px">${botaoConcluir(p)}<span class="chip ${fmCls(p)}">${ic(f.icone)}${esc(f.nome)}</span>${redeChip(p)}${funilChip(p)}${atras ? '<span class="chip warn">Atrasada</span>' : ''}${p.collab ? '<span class="chip collab" title="Post do parceiro, sem arquivo nosso">Collab</span>' : ''}${p.igLink && urlSegura(p.igLink) ? `<a class="chip mute" href="${esc(urlSegura(p.igLink))}" target="_blank" rel="noopener noreferrer" title="Abrir o post no Instagram">${ic('link')}Instagram</a>` : ''}${p.videoDrive && urlSegura(p.videoDrive) ? `<a class="chip mute" href="${esc(urlSegura(p.videoDrive))}" target="_blank" rel="noopener noreferrer" title="Abrir o vídeo no Drive">${ic('play')}Vídeo</a>` : ''}${p.link && urlSegura(p.link) ? `<a class="chip mute" href="${esc(urlSegura(p.link))}" target="_blank" rel="noopener noreferrer" title="Abrir a arte">${ic('file')}Arte</a>` : ''}</div>
     <button class="peca-t" data-act="editar-peca" data-id="${p.id}">${esc(p.titulo || '(sem título)')}</button>
     <div class="peca-m">${esc(meta)}</div>
     ${faltas(p)}
@@ -667,7 +667,7 @@ function blocoPeca(p, mostrarCliente) {
   const e = etapaDe(p);
   const cli = store.obter('cliente', p.clienteId)?.nome || '';
   return `<button class="cal-p ${fmCls(p)}${atrasada(p) ? ' atras' : ''}${p.concluida ? ' feita' : ''}${casaFunil(p) && casaTipo(p) && casaRede(p) ? '' : ' apagado'}" data-act="editar-peca" data-id="${p.id}" draggable="true" data-peca="${p.id}" title="${esc([p.titulo, cli, f.nome, REDES[p.rede]?.nome, e.nome, p.concluida ? 'Concluída' : ''].filter(Boolean).join(' · '))}">
-    ${botaoConcluir(p, true)}${inicialResp(p)}<span><b>${esc(p.titulo || '(sem título)')}</b>${mostrarCliente && cli ? `<small>${esc(cli)}</small>` : ''}</span></button>`;
+    ${botaoConcluir(p, true)}${inicialResp(p)}<span><b>${p.collab ? '<em class="cal-collab">Collab</em>' : ''}${esc(p.titulo || '(sem título)')}</b>${mostrarCliente && cli ? `<small>${esc(cli)}</small>` : ''}</span></button>`;
 }
 
 // Escolha do mês, igual no Status e no Calendário (o mês escolhido vale nas duas abas).

@@ -42,7 +42,7 @@ for (const arq of arquivos) {
     usadas.get(m[1]).add(relative(raiz, arq));
   }
 }
-for (const pagina of ['index.html', 'aprovar.html', 'relatorio.html']) {
+for (const pagina of ['index.html', 'aprovar.html', 'relatorio.html', 'links.html']) {
   const html = await readFile(join(raiz, pagina), 'utf8');
   for (const m of html.matchAll(/(?:css\/(?:app|visual-novo)\.css|js\/(?:main|aprovar|relatorio-publico)\.js)\?v=(\d+)/g)) {
     if (!usadas.has(m[1])) usadas.set(m[1], new Set());

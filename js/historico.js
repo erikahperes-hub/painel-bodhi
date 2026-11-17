@@ -1,7 +1,7 @@
-import { store } from './store.js?v=188';
-import { esc, norm, slug, toast, dataBR } from './util.js?v=188';
-import { ic, flor } from './icons.js?v=188';
-import { confirmar } from './ui.js?v=188';
+import { store } from './store.js?v=189';
+import { esc, norm, slug, toast, dataBR } from './util.js?v=189';
+import { ic, flor } from './icons.js?v=189';
+import { confirmar } from './ui.js?v=189';
 
 // Histórico do Asana: tarefas antigas guardadas à parte (tipo "historico" no banco). Elas NÃO entram na carga normal do painel
 // (store.recarregar as ignora); só são buscadas quando alguém abre o Histórico de um cliente.

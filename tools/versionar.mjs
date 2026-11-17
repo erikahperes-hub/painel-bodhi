@@ -30,7 +30,7 @@ for (const arq of await arquivosJs(join(raiz, 'js'))) {
     .replace(/(\bimport\(\s*['"])(\.{1,2}\/[^'"?]+\.js)(\?v=\d+)?(['"])/g, `$1$2?v=${versao}$4`);
   if (depois !== antes) { await writeFile(arq, depois, 'utf8'); alterados += 1; }
 }
-for (const pagina of ['index.html', 'aprovar.html', 'relatorio.html']) {
+for (const pagina of ['index.html', 'aprovar.html', 'relatorio.html', 'links.html']) {
   const html = join(raiz, pagina);
   await writeFile(html, (await readFile(html, 'utf8')).replace(/(css\/app\.css|css\/visual-novo\.css|js\/main\.js|js\/aprovar\.js|js\/relatorio-publico\.js)(\?v=\d+)?/g, `$1?v=${versao}`), 'utf8');
 }

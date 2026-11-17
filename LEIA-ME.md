@@ -268,3 +268,10 @@ Como foi feito: `manifest.webmanifest` (nome, cores e ícones), ícones em `asse
 ## Aparência (claro e noturno)
 
 Em Configurações > Aparência cada pessoa escolhe, só no próprio navegador, entre **Claro** (fundo cinza azulado, o padrão) e **Noturno** (azul escuro). Não há mais as opções de visual atual, areia, rosa e verde: quem tinha uma delas guardada volta ao Claro ou ao Noturno sozinho. As cores de cada aparência ficam em variáveis no começo de `css/visual-novo.css` (a de cima é o Claro, a seguinte é o Noturno), então para ajustar um tom basta mudar a variável. A página de aprovação do cliente usa o mesmo fundo claro.
+
+## Link na bio (links.html)
+
+Página pública da Bôdhi Marketing para a bio do Instagram, sem Linktree: perfil, redes, serviços, Método Consolidar, links e o botão "Como podemos ajudar seu negócio?", que abre uma conversa de 5 perguntas, pede nome, WhatsApp e @ e mostra uma indicação de serviço.
+- **Mudar textos, links, perguntas ou indicações:** arquivo `js/links-dados.js` (cada pergunta soma pontos para uma indicação; ganha a de mais pontos). O número de WhatsApp vai em `whatsapp` (vazio = botões de WhatsApp escondidos).
+- **Contatos e cliques:** só gravam depois de rodar `supabase/linkbio.sql` no SQL Editor. Os contatos entram como `lead` (origem "Link na bio") e os cliques na tabela `linkbio_cliques`. A página só grava, nunca lê.
+- **Teste local:** `http://localhost:5173/links.html` não grava nada no banco (mostra no console). Para testar gravando de verdade, use `links.html?gravar`.

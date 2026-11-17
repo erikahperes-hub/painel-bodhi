@@ -1,0 +1,170 @@
+/* Link na bio da Bôdhi Marketing (links.html). Paleta e fontes oficiais da marca. */
+@font-face{font-family:'Roca Two';src:url(../assets/fonts/RocaTwo-Bold.ttf) format('truetype');font-weight:700;font-display:swap}
+@font-face{font-family:'Arial Nova';src:url(../assets/fonts/ArialNova-Regular.ttf) format('truetype');font-weight:400;font-display:swap}
+@font-face{font-family:'Arial Nova';src:url(../assets/fonts/ArialNova-Bold.ttf) format('truetype');font-weight:700;font-display:swap}
+@font-face{font-family:'Argent CF';src:url(../assets/fonts/ArgentCF-Regular.otf) format('opentype');font-weight:400;font-display:swap}
+@font-face{font-family:'Argent CF';src:url(../assets/fonts/ArgentCF-DemiBold.otf) format('opentype');font-weight:600;font-display:swap}
+
+:root{
+  --creme:#FFFCF6;--grafite:#292B2D;--petroleo:#073F56;--verde:#23BB84;--coral:#E96A6A;
+  --ink:#292B2D;--ink-2:#5E6265;--line:rgba(41,43,45,.10);
+  --verde-s:rgba(35,187,132,.14);--coral-s:rgba(233,106,106,.14);
+  --ui:'Arial Nova',Arial,Helvetica,sans-serif;
+  --body:'Argent CF',Georgia,'Times New Roman',serif;
+  --display:'Roca Two',Georgia,serif;
+  --sh:0 1px 2px rgba(41,43,45,.05),0 10px 26px rgba(41,43,45,.07);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--creme);color:var(--ink);font:400 16px/1.5 var(--body);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+h1,h2,h3,p{margin:0}
+a{color:inherit;text-decoration:none}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+svg.ic{width:1em;height:1em;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+:focus-visible{outline:2px solid var(--verde);outline-offset:3px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* Fundo: formas da marca soltas, só no desktop/tablet */
+.fundo{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.fundo span{position:absolute;border-radius:50%;opacity:.9}
+.fundo .f1{width:280px;height:280px;background:var(--verde-s);top:-90px;left:-80px}
+.fundo .f2{width:200px;height:200px;background:var(--coral-s);bottom:8%;right:-70px}
+.fundo .f3{width:120px;height:120px;background:rgba(7,63,86,.07);top:40%;left:-50px}
+
+.pg{position:relative;z-index:1;max-width:480px;margin:0 auto;padding:28px 16px 40px}
+
+/* Topo */
+.topo{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;padding-top:10px}
+.avatar{width:96px;height:96px;border-radius:50%;background:var(--petroleo);display:grid;place-items:center;box-shadow:0 0 0 5px var(--creme),0 0 0 6px var(--line)}
+.avatar svg{width:70px;height:auto;display:block}
+.topo h1{font:700 30px/1.1 var(--display);letter-spacing:-.01em}
+.topo .frase{font:700 16px/1.3 var(--ui);color:var(--verde)}
+.topo .sub{color:var(--ink-2);font-size:15.5px;max-width:330px}
+.redes{display:flex;gap:10px;justify-content:center;margin-top:2px}
+.redes a{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:#fff;box-shadow:var(--sh);font-size:21px;color:var(--grafite);transition:transform .15s,background .15s,color .15s}
+.redes a:hover{transform:translateY(-2px);background:var(--grafite);color:var(--creme)}
+
+/* Chamada da conversa */
+.chamada{margin-top:26px;width:100%;display:flex;align-items:center;gap:14px;text-align:left;border:0;border-radius:24px;padding:18px 18px 18px 18px;background:var(--grafite);color:var(--creme);box-shadow:0 14px 30px rgba(41,43,45,.22);position:relative;overflow:hidden;transition:transform .15s}
+.chamada:hover{transform:translateY(-2px)}
+.chamada .bolha{position:relative;width:46px;height:46px;border-radius:50%;background:var(--verde);display:grid;place-items:center;flex:none;font-size:22px;color:#fff;animation:pulso 2.4s infinite}
+.chamada b{display:block;font:700 17px/1.25 var(--ui)}
+.chamada small{display:block;margin-top:4px;font-size:14px;line-height:1.4;color:rgba(255,252,246,.78)}
+.chamada .seta{margin-left:auto;width:34px;height:34px;border-radius:50%;background:rgba(255,252,246,.12);display:grid;place-items:center;flex:none;font-size:18px}
+.chamada::after{content:'';position:absolute;right:-30px;top:-30px;width:70px;height:70px;border-radius:50%;background:var(--coral);opacity:.9;z-index:0}
+.chamada > *{position:relative;z-index:1}
+@keyframes pulso{0%{box-shadow:0 0 0 0 rgba(35,187,132,.55)}70%{box-shadow:0 0 0 14px rgba(35,187,132,0)}100%{box-shadow:0 0 0 0 rgba(35,187,132,0)}}
+
+/* Seções */
+.secao{margin-top:34px}
+.secao > h2{font:700 21px/1.15 var(--display);margin:0 4px 14px}
+
+/* Método */
+.metodo{background:#fff;border-radius:24px;padding:20px;box-shadow:var(--sh)}
+.metodo h3{font:700 22px/1.15 var(--display)}
+.metodo > p{color:var(--ink-2);font-size:15px;margin-top:6px}
+.fases{display:grid;gap:10px;margin-top:16px;counter-reset:f}
+.fase{display:flex;gap:12px;align-items:flex-start}
+.fase i{counter-increment:f;font:700 14px/1 var(--ui);font-style:normal;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;flex:none;color:#fff}
+.fase i::before{content:counter(f)}
+.fase b{font:700 15px/1.3 var(--ui);display:block}
+.fase span{font-size:14.5px;color:var(--ink-2);line-height:1.4}
+
+/* Serviços: carrossel horizontal */
+.carrossel{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 16px 14px;margin:0 -16px;scrollbar-width:none}
+.carrossel::-webkit-scrollbar{display:none}
+.serv{scroll-snap-align:start;flex:0 0 172px;height:200px;border-radius:22px;padding:16px;display:flex;flex-direction:column;justify-content:space-between;color:#fff;position:relative;overflow:hidden;box-shadow:var(--sh);transition:transform .15s}
+.serv:hover{transform:translateY(-2px)}
+.serv .forma{position:absolute;right:-26px;bottom:-26px;width:92px;height:92px;opacity:.35;z-index:0}
+.serv .forma svg{width:100%;height:100%;display:block}
+.serv > *:not(.forma){z-index:1}
+.serv b{font:700 18px/1.15 var(--display);position:relative;z-index:1}
+.serv span{font-size:13.5px;line-height:1.35;opacity:.9;position:relative;display:block}
+.serv em{font:700 13px/1 var(--ui);font-style:normal;display:inline-flex;align-items:center;gap:6px;margin-top:10px;position:relative}
+.c-verde{background:var(--verde)}.c-coral{background:var(--coral)}.c-petroleo{background:var(--petroleo)}.c-grafite{background:var(--grafite)}
+
+/* Botões de link */
+.links{display:grid;gap:10px}
+.lk{display:flex;align-items:center;gap:14px;background:#fff;border-radius:20px;padding:14px 16px;box-shadow:var(--sh);transition:transform .15s}
+.lk:hover{transform:translateY(-2px)}
+.lk .ico{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:var(--verde-s);color:var(--petroleo);font-size:20px;flex:none}
+.lk b{display:block;font:700 15.5px/1.25 var(--ui)}
+.lk small{display:block;font-size:13.5px;color:var(--ink-2)}
+.lk .ic.fim{margin-left:auto;color:var(--ink-2)}
+.lk.zap{background:var(--verde);color:#fff}
+.lk.zap .ico{background:rgba(255,255,255,.2);color:#fff}
+.lk.zap small,.lk.zap .ic.fim{color:rgba(255,255,255,.85)}
+
+.rodape{margin-top:40px;display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--ink-2);font-size:12.5px}
+.rodape svg{width:78px;height:auto}
+
+/* ---------- Conversa ---------- */
+.chat{position:fixed;inset:0;z-index:20;display:flex;justify-content:center;align-items:flex-end;background:rgba(41,43,45,.45);opacity:0;pointer-events:none;transition:opacity .2s}
+.chat.on{opacity:1;pointer-events:auto}
+.janela{width:100%;max-width:480px;height:100%;max-height:100dvh;background:var(--creme);display:flex;flex-direction:column;transform:translateY(30px);transition:transform .25s}
+.chat.on .janela{transform:none}
+@media (min-width:560px){.chat{align-items:center;padding:24px}.janela{height:min(760px,100%);border-radius:28px;overflow:hidden;box-shadow:0 30px 60px rgba(0,0,0,.25)}}
+.chat-h{display:flex;align-items:center;gap:12px;padding:14px 16px;background:#fff;border-bottom:1px solid var(--line)}
+.chat-h .mini{width:40px;height:40px;border-radius:50%;background:var(--petroleo);display:grid;place-items:center;flex:none}
+.chat-h .mini svg{width:30px;height:auto}
+.chat-h b{display:block;font:700 15px/1.2 var(--ui)}
+.chat-h small{display:flex;align-items:center;gap:6px;font:400 12.5px var(--ui);color:var(--ink-2)}
+.chat-h small::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--verde)}
+.fechar{margin-left:auto;width:38px;height:38px;border-radius:50%;border:0;background:transparent;display:grid;place-items:center;font-size:20px;color:var(--ink-2)}
+.fechar:hover{background:rgba(41,43,45,.06)}
+.progresso{height:3px;background:var(--line)}
+.progresso i{display:block;height:100%;width:0;background:var(--verde);transition:width .35s}
+
+.msgs{flex:1;overflow-y:auto;padding:18px 16px 10px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
+.msgs > *{flex-shrink:0}
+.msg{max-width:84%;padding:11px 15px;border-radius:20px;font-size:15.5px;line-height:1.45;animation:entra .25s ease}
+.msg.dela{background:#fff;box-shadow:0 1px 2px rgba(41,43,45,.06);border-bottom-left-radius:6px;align-self:flex-start}
+.msg.eu{background:var(--grafite);color:var(--creme);border-bottom-right-radius:6px;align-self:flex-end}
+@keyframes entra{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.digitando{display:flex;gap:4px;padding:14px 16px}
+.digitando i{width:7px;height:7px;border-radius:50%;background:var(--ink-2);opacity:.4;animation:pisca 1s infinite}
+.digitando i:nth-child(2){animation-delay:.15s}.digitando i:nth-child(3){animation-delay:.3s}
+@keyframes pisca{50%{opacity:1}}
+.opcoes{display:grid;gap:8px;margin-top:4px;animation:entra .25s ease}
+.opcoes small{font:400 12.5px/1 var(--ui);color:var(--ink-2);text-align:center;margin:4px 0 2px}
+.op{display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:16px;padding:12px 14px;font:700 14.5px/1.3 var(--ui);transition:border-color .15s,background .15s}
+.op:hover{border-color:var(--verde);background:var(--verde-s)}
+
+.entrada{display:flex;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line)}
+[hidden]{display:none!important}
+.entrada input{flex:1;min-width:0;border:1.5px solid var(--line);border-radius:99px;padding:11px 16px;background:var(--creme);font-size:16px;outline:0}
+.entrada input:focus{border-color:var(--verde)}
+.enviar{width:46px;height:46px;border-radius:50%;border:0;background:var(--grafite);color:var(--creme);display:grid;place-items:center;font-size:19px;flex:none}
+.enviar:disabled{opacity:.35;cursor:default}
+
+/* Cartão de contato e resultado (dentro da conversa) */
+.cartao{background:#fff;border-radius:22px;padding:18px;box-shadow:var(--sh);animation:entra .25s ease;margin-top:4px}
+.cartao h3{font:700 19px/1.2 var(--display)}
+.cartao > p{font-size:14.5px;color:var(--ink-2);margin-top:6px}
+.campo{display:block;margin-top:12px}
+.campo span{display:block;font:700 12.5px var(--ui);color:var(--ink-2);margin-bottom:5px}
+.campo input{width:100%;border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;background:var(--creme);font-size:16px;outline:0}
+.campo input:focus{border-color:var(--verde)}
+.campo input[aria-invalid=true]{border-color:var(--coral)}
+.erro{color:#A13A3A;font:400 13px var(--ui);margin-top:8px;min-height:1em}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:0;border-radius:99px;padding:14px 18px;font:700 15px var(--ui);background:var(--grafite);color:var(--creme);margin-top:14px;transition:opacity .15s}
+.btn:disabled{opacity:.5}
+.btn.verde{background:var(--verde);color:#fff}
+.btn.sec{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.privacidade{font:400 12px/1.4 var(--ui);color:var(--ink-2);margin-top:10px;text-align:center}
+
+.resultado{border-radius:22px;overflow:hidden;box-shadow:var(--sh);animation:entra .3s ease;background:#fff;margin-top:4px}
+.resultado .capa{background:var(--petroleo);color:var(--creme);padding:20px 18px 18px;position:relative;overflow:hidden}
+.resultado .capa small{font:700 13px/1 var(--ui);color:var(--verde)}
+.resultado .capa h3{font:700 24px/1.15 var(--display);margin-top:8px;position:relative;max-width:85%}
+.resultado .capa svg.flor{position:absolute;right:-18px;bottom:-18px;width:96px;height:96px;opacity:.9}
+.resultado .corpo{padding:16px 18px 18px}
+.resultado .corpo p{font-size:15px;line-height:1.5}
+.resultado .corpo .btn{margin-top:12px}
+
+/* Telas maiores: serviços em grade, sem carrossel */
+@media (min-width:560px){
+  .carrossel{display:grid;grid-template-columns:1fr 1fr;overflow:visible;margin:0;padding:0}
+  .serv{height:180px}
+}
