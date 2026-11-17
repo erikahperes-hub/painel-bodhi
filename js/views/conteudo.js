@@ -1,16 +1,16 @@
-import { store } from '../store.js?v=185';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=185';
-import { ic, flor } from '../icons.js?v=185';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=185';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas, pecasArquivadas } from '../conteudo.js?v=185';
-import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=185';
-import { feedPerfil } from '../feed-perfil.js?v=185';
-import { igApi } from '../instagram-api.js?v=185';
-import { lerPasta } from '../drive-pasta.js?v=185';
-import { lerTabela } from '../planejamento.js?v=185';
-import { config } from '../config.js?v=185';
-import { histCartao, histMontar, importarHistorico } from '../historico.js?v=185';
-import { abrirTarefa } from '../tarefa.js?v=185';
+import { store } from '../store.js?v=186';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=186';
+import { ic, flor } from '../icons.js?v=186';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=186';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas, pecasArquivadas } from '../conteudo.js?v=186';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=186';
+import { feedPerfil } from '../feed-perfil.js?v=186';
+import { igApi } from '../instagram-api.js?v=186';
+import { lerPasta } from '../drive-pasta.js?v=186';
+import { lerTabela } from '../planejamento.js?v=186';
+import { config } from '../config.js?v=186';
+import { histCartao, histMontar, importarHistorico } from '../historico.js?v=186';
+import { abrirTarefa } from '../tarefa.js?v=186';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
@@ -25,7 +25,11 @@ let filtroFunil = '';
 let filtroTipo = ''; // '', 'reels', 'carrossel', 'feed' (estático) ou 'story'
 const casaFunil = (p) => !filtroFunil || (filtroFunil === 'sem' ? !FUNIL_COR[p.funil] : p.funil === filtroFunil);
 const casaTipo = (p) => !filtroTipo || (FORMATOS[p.formato] ? p.formato : 'feed') === filtroTipo;
-let filtroPessoa = ''; // '', o nome de quem é responsável (Érika, Milena) ou 'sem'. Vale no Status, Calendário e Feed até recarregar a página.
+// O filtro de responsável (Todas, Minhas, da outra pessoa) fica gravado neste navegador: cada uma abre o painel já no seu filtro.
+const CHAVE_PESSOA = 'bodhi.filtro-responsavel';
+const lerPessoa = () => { try { const v = localStorage.getItem(CHAVE_PESSOA) || ''; return ['Érika', 'Milena', 'sem'].includes(v) ? v : ''; } catch { return ''; } };
+const guardarPessoa = (v) => { try { localStorage.setItem(CHAVE_PESSOA, v); } catch { /* sem armazenamento: vale só até recarregar */ } };
+let filtroPessoa = lerPessoa(); // '', o nome de quem é responsável (Érika, Milena) ou 'sem'. Vale no Status, Calendário e Feed até recarregar a página.
 const casaPessoa = (p) => !filtroPessoa || (filtroPessoa === 'sem' ? !p.responsavel : p.responsavel === filtroPessoa);
 // Quem está usando o painel, para o botão "Minhas": o nome da conta ou o começo do e-mail (se for uma das responsáveis).
 const meuNome = () => {
@@ -769,8 +773,13 @@ export default {
     // Números do painel Filtros: tarefas do mês mostrado (do cliente escolhido), antes de aplicar o responsável.
     const baseMes = (filtro ? todasBase.filter((p) => p.clienteId === filtro) : todasBase).filter((p) => !!p.publicar && p.publicar.slice(0, 7) === ymChips);
     baseFiltros = baseMes;
+    // Responsável à vista, ao lado das abas (vale no Status, Calendário e Feed, de um cliente ou de todos): Todas, Minhas e da outra pessoa.
+    const eu = meuNome();
+    const nResp = (r) => baseMes.filter((p) => p.responsavel === r).length;
+    const opcoesResp = [['', 'Todas', baseMes.length], ...(eu ? [[eu, 'Minhas', nResp(eu)]] : []), ...['Érika', 'Milena'].filter((r) => r !== eu).map((r) => [r, r, nResp(r)])];
+    const respSeg = `<div class="resp-seg" role="group" aria-label="Responsável pela tarefa">${opcoesResp.map(([v, t, k]) => `<button type="button" class="${filtroPessoa === v ? 'on' : ''}" data-act="filtro-pessoa" data-v="${esc(v)}" aria-pressed="${filtroPessoa === v}">${esc(t)}<b>${k}</b></button>`).join('')}</div>`;
     const avisoArq = verArquivadas ? `<div class="aviso-arq"><span>Mostrando só as tarefas <b>arquivadas</b>. Abra uma tarefa e use o botão de arquivo, no topo dela, para restaurar.</span><button type="button" class="btn sec sm" data-act="ver-arquivadas" data-v="0">Voltar às tarefas ativas</button></div>` : '';
-    const cabeca = `${seg}<div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>${avisoArq}${numeros}${abas}`;
+    const cabeca = `${seg}<div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>${avisoArq}${numeros}<div class="linha-abas">${abas}${respSeg}</div>`;
     if (aba === 'calendario') return cabeca + calendario({ filtro, lista });
     if (aba === 'feed') {
       const cabecaFeed = `${cabeca}<div class="actions barra-filtros">${botaoFiltros()}</div>`;
@@ -848,7 +857,7 @@ export default {
     'abrir-filtros': () => { filtrosAberto = !filtrosAberto; recarregarTela(); },
     'fechar-filtros': () => { filtrosAberto = false; recarregarTela(); },
     'ver-arquivadas': (el) => { verArquivadas = el.dataset.v === '1'; recarregarTela(); },
-    'limpar-tudo': () => { verArquivadas = false; filtroPessoa = ''; filtroFunil = ''; filtroTipo = ''; filtroRede = ''; recarregarTela(); },
+    'limpar-tudo': () => { verArquivadas = false; filtroPessoa = ''; guardarPessoa(''); filtroFunil = ''; filtroTipo = ''; filtroRede = ''; recarregarTela(); },
     'filtro-tipo': (el) => { filtroTipo = el.dataset.tipo === filtroTipo ? '' : el.dataset.tipo; recarregarTela(); },
     'limpar-filtros': () => { filtroFunil = ''; filtroTipo = ''; filtroRede = ''; recarregarTela(); },
     'filtro-rede': (el) => { filtroRede = el.dataset.rede === filtroRede ? '' : el.dataset.rede; recarregarTela(); },
@@ -974,7 +983,7 @@ export default {
       }
       recarregarTela();
     },
-    'filtro-pessoa': (el) => { filtroPessoa = el.dataset.v === filtroPessoa ? '' : el.dataset.v; recarregarTela(); },
+    'filtro-pessoa': (el) => { filtroPessoa = el.dataset.v === filtroPessoa ? '' : el.dataset.v; guardarPessoa(filtroPessoa); recarregarTela(); },
     'nova-peca': (el) => abrirPeca(null, { ...(el.dataset.cliente ? { clienteId: el.dataset.cliente } : {}), ...(el.dataset.data ? { publicar: el.dataset.data } : {}) }),
     'editar-peca': (el) => abrirPeca(store.obter('conteudo', el.dataset.id)),
     'mover-peca': async (el) => {

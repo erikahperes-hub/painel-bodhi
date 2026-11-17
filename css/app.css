@@ -1349,3 +1349,12 @@ html[data-modo="noturno"] .lk-t.on .lk-sw{background:var(--verde)}
 .aviso-arq{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 16px;padding:10px 14px;border-radius:14px;background:rgba(232,184,74,.16);color:#6B4E0A;font:400 13.5px var(--ui)}
 .aviso-arq b{font-weight:600}
 html[data-modo="noturno"] .aviso-arq{background:rgba(232,184,74,.16);color:#F3DFA8}
+
+/* Responsável à vista (Conteúdo): Todas, Minhas e da outra pessoa, ao lado das abas Status, Calendário e Feed. */
+.linha-abas{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.resp-seg{display:inline-flex;gap:4px;padding:5px;margin-bottom:16px;background:rgba(41,43,45,.06);border-radius:99px;max-width:100%}
+.resp-seg button{border:0;background:transparent;border-radius:99px;padding:8px 14px;font:700 13px var(--ui);color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.resp-seg button b{margin-left:6px;font-weight:600;font-size:12px;opacity:.7}
+.resp-seg button.on{background:var(--petroleo);color:#fff}
+@media (max-width:640px){.resp-seg{width:100%}.resp-seg button{flex:1;padding:8px 6px}}
+html[data-modo="noturno"] .resp-seg{background:rgba(255,255,255,.08)}
