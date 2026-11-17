@@ -1,16 +1,16 @@
-import { store } from '../store.js?v=191';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=191';
-import { ic, flor } from '../icons.js?v=191';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=191';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas, pecasArquivadas } from '../conteudo.js?v=191';
-import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=191';
-import { feedPerfil } from '../feed-perfil.js?v=191';
-import { igApi } from '../instagram-api.js?v=191';
-import { lerPasta } from '../drive-pasta.js?v=191';
-import { lerTabela } from '../planejamento.js?v=191';
-import { config } from '../config.js?v=191';
-import { histCartao, histMontar, importarHistorico } from '../historico.js?v=191';
-import { abrirTarefa } from '../tarefa.js?v=191';
+import { store } from '../store.js?v=192';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=192';
+import { ic, flor } from '../icons.js?v=192';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=192';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas, pecasArquivadas } from '../conteudo.js?v=192';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=192';
+import { feedPerfil } from '../feed-perfil.js?v=192';
+import { igApi } from '../instagram-api.js?v=192';
+import { lerPasta } from '../drive-pasta.js?v=192';
+import { lerTabela } from '../planejamento.js?v=192';
+import { config } from '../config.js?v=192';
+import { histCartao, histMontar, importarHistorico } from '../historico.js?v=192';
+import { abrirTarefa } from '../tarefa.js?v=192';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
@@ -38,7 +38,14 @@ const meuNome = () => {
   return achado || '';
 };
 // Conteúdo em duas colunas: clientes à esquerda, a tela (números, abas e conteúdo) à direita. No celular a lista passa para cima.
-const lay = (lateral, corpo) => `<div class="cont-lay"><aside class="cont-lat" aria-label="Clientes">${lateral}</aside><div class="cont-main">${corpo}</div></div>`;
+// A lista pode ser escondida (botão "Esconder clientes"); a escolha fica gravada neste navegador.
+const CHAVE_LAT = 'bodhi.clientes-recolhidos';
+const lerLat = () => { try { return localStorage.getItem(CHAVE_LAT) === '1'; } catch { return false; } };
+const guardarLat = (v) => { try { localStorage.setItem(CHAVE_LAT, v ? '1' : '0'); } catch { /* vale só até recarregar */ } };
+let latRecolhida = lerLat();
+const lay = (lateral, corpo, atual = 'Todos') => latRecolhida
+  ? `<div class="cont-lay recolhida"><div class="cont-main"><button type="button" class="btn sec sm lat-abrir" data-act="lat-alternar" aria-expanded="false" title="Mostrar a lista de clientes">${ic('users')}Clientes · ${esc(atual)}</button>${corpo}</div></div>`
+  : `<div class="cont-lay"><aside class="cont-lat" aria-label="Clientes"><button type="button" class="lat-esconder" data-act="lat-alternar" aria-expanded="true" title="Esconder a lista de clientes"><span class="lat-ic">${ic('chev')}</span>Esconder clientes</button>${lateral}</aside><div class="cont-main">${corpo}</div></div>`;
 let verArquivadas = false; // Filtros > Arquivadas: mostra só as tarefas arquivadas (para restaurar). Vale até recarregar a página.
 let nArqCli = 0; // quantas tarefas arquivadas tem o cliente escolhido (ou todos), para o número do botão Arquivadas
 let filtroRede = ''; // '', um código de REDES ou 'sem'
@@ -743,7 +750,7 @@ export default {
     if (verInativos) {
       const chipsIn = inativos.map((c) => `<button class="cbtn ex ${c.id === filtro ? 'on' : ''}" data-act="ir" data-rota="conteudo" data-ref="${c.id}"><i></i>${esc(c.nome || '(sem nome)')}</button>`).join('');
       const corpoIn = filtro ? histCartao(store.obter('cliente', filtro), recarregarTela) : `<div class="card empty">${flor()}<h2>Escolha um cliente inativo</h2><p>Aqui ficam os clientes que já saíram, com todo o histórico de tarefas que vinha do Asana. Escolha o cliente na lista.</p></div>`;
-      return lay(`${seg}<div class="cli-lat-l">${chipsIn}</div>`, corpoIn);
+      return lay(`${seg}<div class="cli-lat-l">${chipsIn}</div>`, corpoIn, filtro ? store.obter('cliente', filtro)?.nome || 'Inativos' : 'Inativos');
     }
     nArqCli = pecasArquivadas().filter((p) => !filtro || p.clienteId === filtro).length;
     const todasBase = verArquivadas ? pecasArquivadas() : pecas();
@@ -783,10 +790,11 @@ export default {
     const respSeg = `<div class="resp-seg" role="group" aria-label="Responsável pela tarefa">${opcoesResp.map(([v, t, k]) => `<button type="button" class="${filtroPessoa === v ? 'on' : ''}" data-act="filtro-pessoa" data-v="${esc(v)}" aria-pressed="${filtroPessoa === v}">${esc(t)}<b>${k}</b></button>`).join('')}</div>`;
     const avisoArq = verArquivadas ? `<div class="aviso-arq"><span>Mostrando só as tarefas <b>arquivadas</b>. Abra uma tarefa e use o botão de arquivo, no topo dela, para restaurar.</span><button type="button" class="btn sec sm" data-act="ver-arquivadas" data-v="0">Voltar às tarefas ativas</button></div>` : '';
     const cabeca = `${avisoArq}${numeros}<div class="linha-abas">${abas}${respSeg}</div>`;
-    if (aba === 'calendario') return lay(lateral, cabeca + calendario({ filtro, lista }));
+    const nomeAtual = filtro ? store.obter('cliente', filtro)?.nome || 'Todos' : 'Todos';
+    if (aba === 'calendario') return lay(lateral, cabeca + calendario({ filtro, lista }), nomeAtual);
     if (aba === 'feed') {
       const cabecaFeed = `${cabeca}<div class="actions barra-filtros">${botaoFiltros()}</div>`;
-      if (!filtro) return lay(lateral, `${cabecaFeed}<div class="card empty">${flor()}<h2>Escolha um cliente</h2><p>O feed mostra o perfil de um cliente por vez, como ele fica no Instagram. Escolha o cliente na lista.</p></div>`);
+      if (!filtro) return lay(lateral, `${cabecaFeed}<div class="card empty">${flor()}<h2>Escolha um cliente</h2><p>O feed mostra o perfil de um cliente por vez, como ele fica no Instagram. Escolha o cliente na lista.</p></div>`, nomeAtual);
       const cli = store.obter('cliente', filtro);
       const ultimo = store.todos('insights').filter((i) => i.clienteId === filtro && Number.isFinite(Number(i.seguidores))).sort((a, b) => String(b.mes).localeCompare(String(a.mes)))[0];
       // Perfil real do Instagram, quando o cliente está conectado: busca uma vez e redesenha quando chegar.
@@ -795,7 +803,7 @@ export default {
         perfilPedido.add(filtro);
         igApi.perfil(filtro).then(recarregarTela);
       }
-      return lay(lateral, cabecaFeed + feedPerfil({ cliente: cli, pecas: lista, seguidores: ultimo?.seguidores, filtro: feedFiltro, aba: feedAba, real: conectado ? igApi.perfilGuardado(filtro) : null, conectado }));
+      return lay(lateral, cabecaFeed + feedPerfil({ cliente: cli, pecas: lista, seguidores: ultimo?.seguidores, filtro: feedFiltro, aba: feedAba, real: conectado ? igApi.perfilGuardado(filtro) : null, conectado }), nomeAtual);
     }
 
     const colunas = ETAPAS.map((e) => {
@@ -814,7 +822,7 @@ export default {
         <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2></div>
           ${botoesCabecalho(filtro)}</div>
         ${lista.length ? `${seletorMes(ym)}<div class="kanban">${colunas}</div>` : `<div class="empty" style="padding:30px 10px">${flor()}<h2>Nenhuma tarefa ainda</h2><p>Use “Nova tarefa” para registrar o primeiro reels, carrossel, estático ou story.</p></div>`}
-      </div>`);
+      </div>`, nomeAtual);
   },
 
   montar(el) {
@@ -986,6 +994,7 @@ export default {
       }
       recarregarTela();
     },
+    'lat-alternar': () => { latRecolhida = !latRecolhida; guardarLat(latRecolhida); recarregarTela(); },
     'filtro-pessoa': (el) => { filtroPessoa = el.dataset.v === filtroPessoa ? '' : el.dataset.v; guardarPessoa(filtroPessoa); recarregarTela(); },
     'nova-peca': (el) => abrirPeca(null, { ...(el.dataset.cliente ? { clienteId: el.dataset.cliente } : {}), ...(el.dataset.data ? { publicar: el.dataset.data } : {}) }),
     'editar-peca': (el) => abrirPeca(store.obter('conteudo', el.dataset.id)),

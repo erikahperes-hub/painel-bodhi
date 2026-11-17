@@ -226,6 +226,11 @@ button.card.clicavel:focus-visible{outline:2px solid var(--verde);outline-offset
 .cont-lat .seg-b{flex:1;padding:8px 6px;text-align:center}
 .cli-lat-l{display:flex;flex-direction:column;gap:6px}
 .cli-lat-l .cbtn{width:100%;justify-content:flex-start;border-radius:12px;padding:9px 12px;gap:8px}
+.lat-esconder{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;padding:4px 6px;margin:0 0 8px;font:700 12px var(--ui);color:var(--ink-3);border-radius:8px;cursor:pointer}
+.lat-esconder:hover{background:var(--graf-s);color:var(--ink)}
+.lat-ic{display:grid;transform:scaleX(-1);width:14px}
+.lat-abrir{margin:0 0 14px}
+.cont-lay.recolhida{grid-template-columns:minmax(0,1fr)}
 .cbtn .cn{font-weight:700;opacity:.6;margin-left:0}
 .cbtn.on .cn{opacity:.85}
 @media(max-width:900px){.cont-lay{grid-template-columns:minmax(0,1fr);gap:0}.cont-lat{position:static;max-height:none;margin-bottom:14px}.cli-lat-l{flex-direction:row;flex-wrap:wrap;gap:8px}.cli-lat-l .cbtn{width:auto;border-radius:99px;padding:8px 14px}}
