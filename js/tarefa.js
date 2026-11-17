@@ -1,10 +1,10 @@
-import { store } from './store.js?v=190';
-import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=190';
-import { ic } from './icons.js?v=190';
-import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=190';
-import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=190';
-import { idDrive, avisoLinkDrive, urlAbrir, urlImagem } from './drive.js?v=190';
-import { prepararGoogle, tokenValido, entrarGoogle, pastaDestino, enviarArquivo, nomeDoArquivo } from './drive-envio.js?v=190';
+import { store } from './store.js?v=191';
+import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=191';
+import { ic } from './icons.js?v=191';
+import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=191';
+import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=191';
+import { idDrive, avisoLinkDrive, urlAbrir, urlImagem } from './drive.js?v=191';
+import { prepararGoogle, tokenValido, entrarGoogle, pastaDestino, enviarArquivo, nomeDoArquivo } from './drive-envio.js?v=191';
 
 // Ficha da tarefa de conteúdo. Pensada para o dia a dia de quem cria posts:
 //  - em cima, o caminho da tarefa (planejamento até publicado) com o próximo passo em destaque;
@@ -169,7 +169,7 @@ export function abrirTarefa(p = null, padrao = {}) {
       <label class="ft-lbl" for="ft_link">Arquivo editável (só a equipe vê)</label><input id="ft_link" data-campo="link" value="${esc(t.link || '')}" placeholder="Canva, Drive ou onde estiver">
       <label class="ft-lbl" for="ft_video">Vídeo no Drive (só a equipe vê)</label><input id="ft_video" data-campo="videoDrive" value="${esc(t.videoDrive || '')}" placeholder="Link do vídeo no Drive">
       <label class="ft-lbl" for="ft_ig">Link do post no Instagram</label><input id="ft_ig" data-campo="igLink" value="${esc(t.igLink || '')}" placeholder="https://www.instagram.com/p/…">
-      <label class="ft-ck"><input type="checkbox" data-collab ${t.collab ? 'checked' : ''}><span>Collab: post do parceiro, sem arquivo nosso. Fica marcado no calendário.</span></label>
+      <label class="ft-ck"><input type="checkbox" data-collab ${t.collab ? 'checked' : ''}><span>Collab: outro perfil postou e nos chamou de colaborador (sem arquivo nosso). Se a gente postou, não marque.</span></label>
     </details></section>`;
 
   // Aprovação da ideia e do roteiro pelo cliente (antes de produzir). A equipe só envia ou cancela o envio;

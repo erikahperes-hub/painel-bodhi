@@ -1,16 +1,16 @@
-import { store } from '../store.js?v=190';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=190';
-import { ic, flor } from '../icons.js?v=190';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=190';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas, pecasArquivadas } from '../conteudo.js?v=190';
-import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=190';
-import { feedPerfil } from '../feed-perfil.js?v=190';
-import { igApi } from '../instagram-api.js?v=190';
-import { lerPasta } from '../drive-pasta.js?v=190';
-import { lerTabela } from '../planejamento.js?v=190';
-import { config } from '../config.js?v=190';
-import { histCartao, histMontar, importarHistorico } from '../historico.js?v=190';
-import { abrirTarefa } from '../tarefa.js?v=190';
+import { store } from '../store.js?v=191';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=191';
+import { ic, flor } from '../icons.js?v=191';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=191';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas, pecasArquivadas } from '../conteudo.js?v=191';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=191';
+import { feedPerfil } from '../feed-perfil.js?v=191';
+import { igApi } from '../instagram-api.js?v=191';
+import { lerPasta } from '../drive-pasta.js?v=191';
+import { lerTabela } from '../planejamento.js?v=191';
+import { config } from '../config.js?v=191';
+import { histCartao, histMontar, importarHistorico } from '../historico.js?v=191';
+import { abrirTarefa } from '../tarefa.js?v=191';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
@@ -37,6 +37,8 @@ const meuNome = () => {
   const achado = ['Érika', 'Milena'].find((r) => norm(r) === norm(n) || norm(n).startsWith(norm(r)));
   return achado || '';
 };
+// Conteúdo em duas colunas: clientes à esquerda, a tela (números, abas e conteúdo) à direita. No celular a lista passa para cima.
+const lay = (lateral, corpo) => `<div class="cont-lay"><aside class="cont-lat" aria-label="Clientes">${lateral}</aside><div class="cont-main">${corpo}</div></div>`;
 let verArquivadas = false; // Filtros > Arquivadas: mostra só as tarefas arquivadas (para restaurar). Vale até recarregar a página.
 let nArqCli = 0; // quantas tarefas arquivadas tem o cliente escolhido (ou todos), para o número do botão Arquivadas
 let filtroRede = ''; // '', um código de REDES ou 'sem'
@@ -740,8 +742,8 @@ export default {
     const seg = `<div class="seg" role="group" aria-label="Clientes ativos ou inativos"><button type="button" class="seg-b ${verInativos ? '' : 'on'}" data-act="ver-clientes" data-v="ativos" aria-pressed="${!verInativos}">Ativos · ${ativos.length}</button><button type="button" class="seg-b ${verInativos ? 'on' : ''}" data-act="ver-clientes" data-v="inativos" aria-pressed="${verInativos}">Inativos · ${inativos.length}</button></div>`;
     if (verInativos) {
       const chipsIn = inativos.map((c) => `<button class="cbtn ex ${c.id === filtro ? 'on' : ''}" data-act="ir" data-rota="conteudo" data-ref="${c.id}"><i></i>${esc(c.nome || '(sem nome)')}</button>`).join('');
-      const corpoIn = filtro ? histCartao(store.obter('cliente', filtro), recarregarTela) : `<div class="card empty">${flor()}<h2>Escolha um cliente inativo</h2><p>Aqui ficam os clientes que já saíram, com todo o histórico de tarefas que vinha do Asana. Toque no nome do cliente acima.</p></div>`;
-      return `${seg}<div class="cbtns" style="margin-bottom:16px">${chipsIn}</div>${corpoIn}`;
+      const corpoIn = filtro ? histCartao(store.obter('cliente', filtro), recarregarTela) : `<div class="card empty">${flor()}<h2>Escolha um cliente inativo</h2><p>Aqui ficam os clientes que já saíram, com todo o histórico de tarefas que vinha do Asana. Escolha o cliente na lista.</p></div>`;
+      return lay(`${seg}<div class="cli-lat-l">${chipsIn}</div>`, corpoIn);
     }
     nArqCli = pecasArquivadas().filter((p) => !filtro || p.clienteId === filtro).length;
     const todasBase = verArquivadas ? pecasArquivadas() : pecas();
@@ -756,8 +758,9 @@ export default {
     const ymChips = ym;
     const doMesChips = todas.filter((p) => !!p.publicar && p.publicar.slice(0, 7) === ymChips);
     const dicaMes = `Tarefas com publicação em ${mesNome(Number(ymChips.slice(5, 7)) - 1)}`;
-    const chipsClientes = [`<button class="cbtn ${filtro ? '' : 'on'}" data-act="ir" data-rota="conteudo" title="${esc(dicaMes)}">Todos · ${doMesChips.length}</button>`,
-      ...clientes.map((c) => `<button class="cbtn ${c.id === filtro ? 'on' : ''}" data-act="ir" data-rota="conteudo" data-ref="${c.id}" title="${esc(dicaMes)}"><i></i>${esc(c.nome || '(sem nome)')} · ${doMesChips.filter((p) => p.clienteId === c.id).length}</button>`)].join('');
+    const chipsClientes = [`<button class="cbtn ${filtro ? '' : 'on'}" data-act="ir" data-rota="conteudo" title="${esc(dicaMes)}">Todos<b class="cn">${doMesChips.length}</b></button>`,
+      ...clientes.map((c) => `<button class="cbtn ${c.id === filtro ? 'on' : ''}" data-act="ir" data-rota="conteudo" data-ref="${c.id}" title="${esc(dicaMes)}"><i></i>${esc(c.nome || '(sem nome)')}<b class="cn">${doMesChips.filter((p) => p.clienteId === c.id).length}</b></button>`)].join('');
+    const lateral = `${seg}<div class="cli-lat-l">${chipsClientes}</div>`;
 
     const abas = `<div class="tabs" role="tablist" aria-label="Visões de conteúdo">
       <button class="tab ${aba === 'status' ? 'on' : ''}" role="tab" aria-selected="${aba === 'status'}" data-act="aba-conteudo" data-aba="status">${ic('grid')}Status</button>
@@ -779,11 +782,11 @@ export default {
     const opcoesResp = [['', 'Todas', baseMes.length], ...(eu ? [[eu, 'Minhas', nResp(eu)]] : []), ...['Érika', 'Milena'].filter((r) => r !== eu).map((r) => [r, r, nResp(r)])];
     const respSeg = `<div class="resp-seg" role="group" aria-label="Responsável pela tarefa">${opcoesResp.map(([v, t, k]) => `<button type="button" class="${filtroPessoa === v ? 'on' : ''}" data-act="filtro-pessoa" data-v="${esc(v)}" aria-pressed="${filtroPessoa === v}">${esc(t)}<b>${k}</b></button>`).join('')}</div>`;
     const avisoArq = verArquivadas ? `<div class="aviso-arq"><span>Mostrando só as tarefas <b>arquivadas</b>. Abra uma tarefa e use o botão de arquivo, no topo dela, para restaurar.</span><button type="button" class="btn sec sm" data-act="ver-arquivadas" data-v="0">Voltar às tarefas ativas</button></div>` : '';
-    const cabeca = `${seg}<div class="cbtns" style="margin-bottom:16px">${chipsClientes}</div>${avisoArq}${numeros}<div class="linha-abas">${abas}${respSeg}</div>`;
-    if (aba === 'calendario') return cabeca + calendario({ filtro, lista });
+    const cabeca = `${avisoArq}${numeros}<div class="linha-abas">${abas}${respSeg}</div>`;
+    if (aba === 'calendario') return lay(lateral, cabeca + calendario({ filtro, lista }));
     if (aba === 'feed') {
       const cabecaFeed = `${cabeca}<div class="actions barra-filtros">${botaoFiltros()}</div>`;
-      if (!filtro) return `${cabecaFeed}<div class="card empty">${flor()}<h2>Escolha um cliente</h2><p>O feed mostra o perfil de um cliente por vez, como ele fica no Instagram. Toque no nome do cliente acima.</p></div>`;
+      if (!filtro) return lay(lateral, `${cabecaFeed}<div class="card empty">${flor()}<h2>Escolha um cliente</h2><p>O feed mostra o perfil de um cliente por vez, como ele fica no Instagram. Escolha o cliente na lista.</p></div>`);
       const cli = store.obter('cliente', filtro);
       const ultimo = store.todos('insights').filter((i) => i.clienteId === filtro && Number.isFinite(Number(i.seguidores))).sort((a, b) => String(b.mes).localeCompare(String(a.mes)))[0];
       // Perfil real do Instagram, quando o cliente está conectado: busca uma vez e redesenha quando chegar.
@@ -792,7 +795,7 @@ export default {
         perfilPedido.add(filtro);
         igApi.perfil(filtro).then(recarregarTela);
       }
-      return cabecaFeed + feedPerfil({ cliente: cli, pecas: lista, seguidores: ultimo?.seguidores, filtro: feedFiltro, aba: feedAba, real: conectado ? igApi.perfilGuardado(filtro) : null, conectado });
+      return lay(lateral, cabecaFeed + feedPerfil({ cliente: cli, pecas: lista, seguidores: ultimo?.seguidores, filtro: feedFiltro, aba: feedAba, real: conectado ? igApi.perfilGuardado(filtro) : null, conectado }));
     }
 
     const colunas = ETAPAS.map((e) => {
@@ -807,11 +810,11 @@ export default {
       </section>`;
     }).join('');
 
-    return cabeca + `<div class="card">
+    return lay(lateral, cabeca + `<div class="card">
         <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2></div>
           ${botoesCabecalho(filtro)}</div>
         ${lista.length ? `${seletorMes(ym)}<div class="kanban">${colunas}</div>` : `<div class="empty" style="padding:30px 10px">${flor()}<h2>Nenhuma tarefa ainda</h2><p>Use “Nova tarefa” para registrar o primeiro reels, carrossel, estático ou story.</p></div>`}
-      </div>`;
+      </div>`);
   },
 
   montar(el) {
