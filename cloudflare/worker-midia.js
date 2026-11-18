@@ -25,12 +25,15 @@ export default {
 
     const tipo = origem.headers.get('content-type') || '';
     if (!origem.ok && origem.status !== 206) return new Response('O Drive não entregou o arquivo', { status: 502 });
-    if (!/^(video|audio)\//.test(tipo)) return new Response('O Drive não liberou este vídeo agora', { status: 502 });
+    // Vídeo do iPhone (.mov) chega do Drive como application/octet-stream: vale, desde que não seja a página de aviso do Drive (text/html).
+    const generico = /^application\/octet-stream/.test(tipo);
+    if (!/^(video|audio)\//.test(tipo) && !generico) return new Response('O Drive não liberou este vídeo agora', { status: 502 });
 
     const saida = new Headers();
     for (const h of ['content-type', 'content-length', 'content-range', 'accept-ranges', 'etag', 'last-modified']) {
       if (origem.headers.has(h)) saida.set(h, origem.headers.get(h));
     }
+    if (generico) saida.set('Content-Type', 'video/mp4'); // o Safari reconhece o .mov pelo conteúdo; o rótulo só precisa dizer que é vídeo
     saida.set('Accept-Ranges', 'bytes');
     saida.set('Cache-Control', 'public, max-age=3600');
     saida.set('Content-Disposition', 'inline');
