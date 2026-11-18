@@ -1,8 +1,8 @@
-import { config } from './config.js?v=193';
-import { logo } from './logo.js?v=193';
-import { esc } from './util.js?v=193';
-import { flor } from './icons.js?v=193';
-import { montarFeed } from './instagram.js?v=193';
+import { config } from './config.js?v=194';
+import { logo } from './logo.js?v=194';
+import { esc } from './util.js?v=194';
+import { flor } from './icons.js?v=194';
+import { montarFeed } from './instagram.js?v=194';
 
 // Página pública de aprovação. Não tem login: o código do link (depois do #) identifica o cliente.
 // O banco só entrega as peças desse cliente e só aceita aprovar ou pedir alteração nelas.
@@ -16,7 +16,8 @@ function aviso(titulo, texto) {
 }
 
 async function iniciar() {
-  if (!demo && !/^[0-9a-f]{20,}$/i.test(token)) return aviso('Link incompleto', 'Confira se você copiou o link inteiro ou peça um novo para a Bôdhi Marketing.');
+  // Links antigos são longos (letras de a a f e números); os novos são curtos (12 letras e números). Os dois valem.
+  if (!demo && !/^[0-9A-Za-z]{10,}$/.test(token)) return aviso('Link incompleto', 'Confira se você copiou o link inteiro ou peça um novo para a Bôdhi Marketing.');
 
   let dados;
   let responder;
