@@ -1,10 +1,10 @@
-import { store } from './store.js?v=198';
-import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=198';
-import { ic } from './icons.js?v=198';
-import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=198';
-import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=198';
-import { idDrive, avisoLinkDrive, urlAbrir, urlImagem } from './drive.js?v=198';
-import { prepararGoogle, tokenValido, entrarGoogle, pastaDestino, enviarArquivo, nomeDoArquivo } from './drive-envio.js?v=198';
+import { store } from './store.js?v=199';
+import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=199';
+import { ic } from './icons.js?v=199';
+import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=199';
+import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=199';
+import { idDrive, avisoLinkDrive, urlAbrir, urlImagem } from './drive.js?v=199';
+import { prepararGoogle, tokenValido, entrarGoogle, pastaDestino, enviarArquivo, nomeDoArquivo } from './drive-envio.js?v=199';
 
 // Ficha da tarefa de conteúdo. Pensada para o dia a dia de quem cria posts:
 //  - em cima, o caminho da tarefa (planejamento até publicado) com o próximo passo em destaque;
