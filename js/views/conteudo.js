@@ -1,16 +1,16 @@
-import { store } from '../store.js?v=192';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=192';
-import { ic, flor } from '../icons.js?v=192';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=192';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas, pecasArquivadas } from '../conteudo.js?v=192';
-import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=192';
-import { feedPerfil } from '../feed-perfil.js?v=192';
-import { igApi } from '../instagram-api.js?v=192';
-import { lerPasta } from '../drive-pasta.js?v=192';
-import { lerTabela } from '../planejamento.js?v=192';
-import { config } from '../config.js?v=192';
-import { histCartao, histMontar, importarHistorico } from '../historico.js?v=192';
-import { abrirTarefa } from '../tarefa.js?v=192';
+import { store } from '../store.js?v=193';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=193';
+import { ic, flor } from '../icons.js?v=193';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=193';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas, pecasArquivadas } from '../conteudo.js?v=193';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=193';
+import { feedPerfil } from '../feed-perfil.js?v=193';
+import { igApi } from '../instagram-api.js?v=193';
+import { lerPasta } from '../drive-pasta.js?v=193';
+import { lerTabela } from '../planejamento.js?v=193';
+import { config } from '../config.js?v=193';
+import { histCartao, histMontar, importarHistorico } from '../historico.js?v=193';
+import { abrirTarefa } from '../tarefa.js?v=193';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
@@ -198,7 +198,9 @@ const candidatasDoLink = (clienteId) => store.todos('conteudo')
 
 function escolherTarefasDoLink(clienteId, aoFechar) {
   const c = store.obter('cliente', clienteId);
-  const lista = candidatasDoLink(clienteId);
+  // Além das que já esperam resposta, entram as que estão Em criação já com arte: ao marcar, vão para Aguardando aprovação.
+  const prontas = store.todos('conteudo').filter((p) => !p.arquivada && p.clienteId === clienteId && p.etapa === 'criacao' && ((p.midias || []).length || p.capa));
+  const lista = [...candidatasDoLink(clienteId), ...prontas].sort((a, b) => String(b.publicar || '').localeCompare(String(a.publicar || '')));
   const marcada = new Set(lista.filter((p) => p.clienteVe).map((p) => p.id));
   const etapaNome = (p) => (ETAPAS.find((e) => e.id === p.etapa)?.nome || p.etapa);
   const espera = (p) => ['aprovacao', 'ajustes'].includes(p.etapa) || ['aprovacao', 'ajustes'].includes(p.planejamento);
@@ -209,7 +211,7 @@ function escolherTarefasDoLink(clienteId, aoFechar) {
   // Linha da lista: caixa, capa, título com detalhes, e a caixinha do calendário. "Ver detalhes" abre a capa maior e o texto da tarefa.
   const linha = (p) => {
     const capa = capaDe(p);
-    const meta = `${p.publicar ? dataBR(p.publicar) : 'Sem data'} · ${FORMATOS[p.formato]?.nome || 'Estático'} · ${etapaNome(p)}${(p.midias || []).length || p.capa ? '' : ' · sem arte'}${p.somenteCapa ? ' · só capa' : ''}`;
+    const meta = `${p.publicar ? dataBR(p.publicar) : 'Sem data'} · ${FORMATOS[p.formato]?.nome || 'Estático'} · ${etapaNome(p)}${(p.midias || []).length || p.capa ? '' : ' · sem arte'}${p.somenteCapa ? ' · só capa' : ''}${p.etapa === 'criacao' ? ' · ao marcar, vai para Aguardando aprovação' : ''}`;
     const texto = curto(p.legenda, 360) || curto(p.roteiro, 360) || 'Sem legenda nem roteiro escritos.';
     return `<div class="sel-linha" data-linha data-id="${esc(p.id)}" data-busca="${esc(norm(`${p.titulo} ${etapaNome(p)}`))}">
       <div class="sel-topo">
@@ -225,7 +227,7 @@ function escolherTarefasDoLink(clienteId, aoFechar) {
 
   const m = abrirModal({
     titulo: `O que ${c.nome} vê`,
-    subtitulo: 'Marque as tarefas que o cliente vê. Use “Ver detalhes” para reconhecer a tarefa, ou o Calendário para escolher pelo dia. Na caixinha “Calendário” de cada linha você decide se ela também aparece no calendário dele. As desmarcadas ficam escondidas (continuam no painel).',
+    subtitulo: 'Marque as tarefas que o cliente vê. Use “Ver detalhes” para reconhecer a tarefa, ou o Calendário para escolher pelo dia. Na caixinha “Calendário” de cada linha você decide se ela também aparece no calendário dele. As desmarcadas ficam escondidas (continuam no painel). Tarefas Em criação que já têm arte também aparecem aqui: ao marcar, elas vão para Aguardando aprovação.',
     largo: true,
     corpo: `<div class="sel-barra">
         <div class="tabs" role="tablist" style="margin:0"><button type="button" class="tab on" data-vista="lista">Lista</button><button type="button" class="tab" data-vista="calendario">${ic('calendar')}Calendário</button></div>
@@ -323,6 +325,7 @@ function escolherTarefasDoLink(clienteId, aoFechar) {
         if (!!p.clienteVe === x.checked && cal === calAntes) continue;
         const novo = { ...p, clienteVe: x.checked, atualizadoEm: new Date().toISOString() };
         if (p.somenteCapa) { /* capa do Instagram: nunca entra no calendário */ } else novo.noCalendario = !cal;
+        if (x.checked && p.etapa === 'criacao') novo.etapa = 'aprovacao'; // marcou uma tarefa pronta: ela passa a esperar a resposta do cliente
         await store.salvar('conteudo', novo);
         n += 1;
       }
