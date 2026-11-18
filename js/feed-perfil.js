@@ -1,7 +1,7 @@
-import { esc, iniciais, dataBR, urlSegura } from './util.js?v=195';
-import { ic } from './icons.js?v=195';
-import { urlImagem } from './drive.js?v=195';
-import { ETAPAS, FORMATOS, etapaDe } from './conteudo.js?v=195';
+import { esc, iniciais, dataBR, urlSegura } from './util.js?v=196';
+import { ic } from './icons.js?v=196';
+import { urlImagem } from './drive.js?v=196';
+import { ETAPAS, FORMATOS, etapaDe } from './conteudo.js?v=196';
 
 // Aba "Feed" de Conteúdo: o perfil do cliente simulado como no Instagram (foto, @, números, bio, destaques e grade),
 // com as tarefas do Conteúdo nos lugares onde vão aparecer. Serve para a equipe ver como o feed fica, sem abrir a prévia do cliente.
@@ -77,10 +77,10 @@ export function feedPerfil({ cliente, pecas, seguidores, filtro = 'tudo', aba = 
   const stories = pecas.filter(ehStory);
   const visiveis = doFeed
     .filter((p) => casa(p, filtro) && (aba === 'reels' ? p.formato === 'reels' : true))
-    .sort((a, b) => String(b.publicar || '9999-99-99').localeCompare(String(a.publicar || '9999-99-99')));
+    .sort((a, b) => String(b.publicar || '0000-00-00').localeCompare(String(a.publicar || '0000-00-00')));
   // Misturadas por data com as tarefas do painel; aparecem em "Tudo", "Só com arte" e "Publicadas".
   const doIg = ['tudo', 'arte', 'publicado'].includes(filtro) ? postsDoInstagram(real, doFeed).filter((x) => (aba === 'reels' ? x.tipo === 'Reels' : true)) : [];
-  const itens = [...visiveis.map((p) => ({ d: String(p.publicar || '9999-99-99'), html: peca(p) })), ...doIg.map((x) => ({ d: x.data, html: pecaIg(x) }))]
+  const itens = [...visiveis.map((p) => ({ d: String(p.publicar || '0000-00-00'), html: peca(p) })), ...doIg.map((x) => ({ d: x.data, html: pecaIg(x) }))]
     .sort((a, b) => b.d.localeCompare(a.d));
   const destaques = (Array.isArray(cliente.destaques) ? cliente.destaques : String(cliente.destaques || '').split('\n')).map((x) => String(x).trim()).filter(Boolean);
   const site = urlSegura(real?.site || cliente.linkBio);

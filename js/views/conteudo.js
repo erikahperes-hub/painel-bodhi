@@ -1,16 +1,16 @@
-import { store } from '../store.js?v=195';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=195';
-import { ic, flor } from '../icons.js?v=195';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=195';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas, pecasArquivadas } from '../conteudo.js?v=195';
-import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=195';
-import { feedPerfil } from '../feed-perfil.js?v=195';
-import { igApi } from '../instagram-api.js?v=195';
-import { lerPasta } from '../drive-pasta.js?v=195';
-import { lerTabela } from '../planejamento.js?v=195';
-import { config } from '../config.js?v=195';
-import { histCartao, histMontar, importarHistorico } from '../historico.js?v=195';
-import { abrirTarefa } from '../tarefa.js?v=195';
+import { store } from '../store.js?v=196';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=196';
+import { ic, flor } from '../icons.js?v=196';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=196';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas, pecasArquivadas } from '../conteudo.js?v=196';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=196';
+import { feedPerfil } from '../feed-perfil.js?v=196';
+import { igApi } from '../instagram-api.js?v=196';
+import { lerPasta } from '../drive-pasta.js?v=196';
+import { lerTabela } from '../planejamento.js?v=196';
+import { config } from '../config.js?v=196';
+import { histCartao, histMontar, importarHistorico } from '../historico.js?v=196';
+import { abrirTarefa } from '../tarefa.js?v=196';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
@@ -661,7 +661,7 @@ function cartao(p, mostrarCliente) {
 
 // Visão escolhida (Status ou Calendário) e mês mostrado no calendário; valem até recarregar a página.
 let aba = 'status';
-let feedFiltro = 'tudo'; // filtro da grade do Feed
+let feedFiltro = 'arte'; // filtro da grade do Feed: abre em "Só com arte" (ideias sem arte e tarefas sem data não empurram as capas para baixo); "Tudo" mostra todas
 let feedAba = 'grade'; // 'grade' ou 'reels'
 let mesCal = null;
 const recarregarTela = () => window.dispatchEvent(new Event('atualizar-tela'));
