@@ -1,7 +1,7 @@
-import { esc, iniciais, dataBR, urlSegura } from './util.js?v=196';
-import { ic } from './icons.js?v=196';
-import { urlImagem } from './drive.js?v=196';
-import { ETAPAS, FORMATOS, etapaDe } from './conteudo.js?v=196';
+import { esc, iniciais, dataBR, urlSegura } from './util.js?v=197';
+import { ic } from './icons.js?v=197';
+import { urlImagem } from './drive.js?v=197';
+import { ETAPAS, FORMATOS, etapaDe } from './conteudo.js?v=197';
 
 // Aba "Feed" de Conteúdo: o perfil do cliente simulado como no Instagram (foto, @, números, bio, destaques e grade),
 // com as tarefas do Conteúdo nos lugares onde vão aparecer. Serve para a equipe ver como o feed fica, sem abrir a prévia do cliente.

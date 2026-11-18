@@ -1,8 +1,8 @@
-import { config } from './config.js?v=196';
-import { logo } from './logo.js?v=196';
-import { esc } from './util.js?v=196';
-import { flor } from './icons.js?v=196';
-import { pagina, conversa, indicacoes } from './links-dados.js?v=196';
+import { config } from './config.js?v=197';
+import { logo } from './logo.js?v=197';
+import { esc } from './util.js?v=197';
+import { flor } from './icons.js?v=197';
+import { pagina, conversa, indicacoes } from './links-dados.js?v=197';
 
 // Link na bio público (sem login). Só GRAVA no banco, por duas funções (supabase/linkbio.sql):
 // linkbio_clique (conta cliques) e linkbio_lead (contato vira lead no painel). Nunca lê nada.
