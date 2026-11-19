@@ -2,6 +2,21 @@
 
 Lista combinada entre Érika e Milena (15/10/2026). Quem for mexer no painel (com o Claude Code) deve ler `CLAUDE.md` antes e marcar aqui o que for concluído.
 
+## 0. Onde paramos (atualizado em 18/11/2026, versão 201)
+
+**Pronto desde 16/11:** app instalável (PWA); janela "Link de aprovação" refeita e link curto `painel.bodhi.marketing/a#código` (corrigido em 18/11: a página aceitava só o formato antigo); arquivar tarefas; filtro de responsável ao lado das abas; botão Anexar (do computador para o Drive); Collab, link do Instagram e vídeo no Drive dentro da tarefa; Conteúdo com clientes na coluna da esquerda (com botão Esconder); janela "Escolher as tarefas" refeita (resumo e blocos por destino); Feed da TRE (bio, link, destaques, abre em "Só com arte"); cores do calendário (cartão = tipo, bolinha = etapa, vermelho só atraso, filtro por tipo visível); servidor de vídeo aceita .mov do iPhone.
+
+**Para fazer, nesta ordem:**
+1. **Amanhã (19/11): agendamento no Meta.** A Érika entra no Facebook com a conta pessoal (erikahperes@gmail.com) no navegador do Claude; o Claude liga o app "Painel Bodhi Marketing" (id 986371023735478) ao portfólio "Bôdhi Marketing" (id 903170797936362), cria o usuário do sistema e libera a Página e o @bodhi.mkt. Regras da seção 8 valem (teste só no @bodhi.mkt, nada de cliente, só publica o aprovado).
+2. **Orçamento, contrato e assinatura na página do cliente** (aprovado pela Érika; referência Orkestrya: Enviar, Aceitar, Dados, Assinar; assinatura própria do painel com data, hora e cópia; nada pago). Falta o desenho para aprovar.
+3. **TRE: histórico.** Capas e arquivos antes de setembro: o Asana só tem imagens de carrosséis (29 anexos, pasta Histórico Asana (backup)/TRE Clinic), não tem vídeo; vídeos antigos só pela pasta POSTADOS do Drive (casamento fraco, listar para conferir). Faltam também as 56 tarefas mais antigas do Asana.
+4. **Collabs da TRE automáticos:** a **Érika vai conectar o Instagram da TRE** ao painel (lembrar!). Antes, o perfil da TRE precisa ser testador no app da Meta. Ponte enquanto isso: leitura semanal do perfil pelo navegador do Claude.
+5. **Aviso "Conferir vídeo"** na tarefa (verde: toca no player do cliente; amarelo: cai no player do Drive). Pendente de resposta clara da Érika (o texto da explicação ficou longo).
+6. **Anexar do computador:** a Érika não consegue entrar no Google por ele. Caminho recomendado: usar o Drive sincronizado no PC (G:) e o botão "Importar da pasta do Drive"; deixar o Anexar como opcional.
+7. **Painel no tamanho de iPhone:** a Érika vai olhar e mandar prints do que estiver feio; excesso de 29 px na lateral já existia.
+8. **Lembretes da Érika:** conectar o Instagram da TRE; entrar no Facebook para o agendamento (19/11); testar o painel no iPhone.
+9. Conversas separadas: link na bio (seções 9 e 10) e formatos/organização pessoal.
+
 ## 1. Financeiro: despesas e lucro (responsável: Milena)
 
 Para a Milena começar, siga o `PASSO-A-PASSO-MILENA.md` (convites, chave, skill e arquivos a enviar).
@@ -82,3 +97,14 @@ Página própria, sem Linktree, inspirada no LinkCommerce (vídeos de referênci
 ## 10. Link na bio como serviço para clientes (PRÓXIMO depois do item 9)
 
 Decidido pela Érika em 16/11/2026: a mesma estrutura vira serviço, com uma página por cliente (ex.: bodhi.marketing/dr-caio), editada no painel, e os contatos de cada página caindo no painel ligados ao cliente.
+
+## 11. Ideias do plano Master do Orkestrya (gravação de tela de 18/11/2026)
+
+Origem: `Edições Claude/Avulsos/ScreenRecording_11-18-2026 23-12-17_1.mp4` (stories do @orkestrya.com.br mostrando as novidades do plano Master, narrados pela Érika). Três ideias, com a nossa leitura de custo e esforço (tudo precisa ser gratuito):
+
+- **Cérebro (segundo cérebro):** junta anotações, demandas e posts agendados de todos os clientes num mapa de ligações. **Nosso caminho:** primeiro a base útil, sem o mapa visual: anotações por cliente (e por tarefa) com busca, mais uma linha do tempo do cliente (tarefas, propostas, reuniões, financeiro). O mapa em bolinhas é enfeite e fica por último. Esforço médio, custo zero (usa o Supabase que já existe).
+- **Fluxo (automações):** "quando o cliente pedir ajuste: marcar alta prioridade, comentar, avisar a equipe". **Nosso caminho:** 3 regras fixas, sem editor visual: (1) pediu ajuste: avisar o responsável no sino e marcar a tarefa; (2) aprovou: mover para Aprovado e avisar; (3) cliente sem resposta há 3 dias: lembrete. Hoje o sino já avisa o pedido de ajuste. Esforço pequeno a médio (gatilhos no Supabase). O editor visual só se um dia o painel for vendido.
+- **Mira (prospecção em mapa):** escolher segmento e cidade e receber lista de empresas para prospectar. **Nosso caminho:** o painel já tem a aba Prospecção; o mapa com busca automática depende de uma fonte de dados. Grátis: OpenStreetMap (cobertura de empresas no Brasil é irregular). Google Places tem crédito mensal gratuito mas exige cartão. Decisão depois do essencial; não prometer qualidade da lista.
+- Também aparece o painel **Comercial** (funil e metas): a aba Comercial do painel cobre o básico; comparar quando for evoluir.
+
+Ordem sugerida: Fluxo (regras fixas) primeiro, porque ganha tempo no dia a dia; Cérebro (anotações e linha do tempo) depois; Mira por último.
