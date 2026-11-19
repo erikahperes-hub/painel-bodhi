@@ -1,16 +1,16 @@
-import { store } from '../store.js?v=200';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=200';
-import { ic, flor } from '../icons.js?v=200';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=200';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas, pecasArquivadas } from '../conteudo.js?v=200';
-import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=200';
-import { feedPerfil } from '../feed-perfil.js?v=200';
-import { igApi } from '../instagram-api.js?v=200';
-import { lerPasta } from '../drive-pasta.js?v=200';
-import { lerTabela } from '../planejamento.js?v=200';
-import { config } from '../config.js?v=200';
-import { histCartao, histMontar, importarHistorico } from '../historico.js?v=200';
-import { abrirTarefa } from '../tarefa.js?v=200';
+import { store } from '../store.js?v=201';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=201';
+import { ic, flor } from '../icons.js?v=201';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=201';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas, pecasArquivadas } from '../conteudo.js?v=201';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=201';
+import { feedPerfil } from '../feed-perfil.js?v=201';
+import { igApi } from '../instagram-api.js?v=201';
+import { lerPasta } from '../drive-pasta.js?v=201';
+import { lerTabela } from '../planejamento.js?v=201';
+import { config } from '../config.js?v=201';
+import { histCartao, histMontar, importarHistorico } from '../historico.js?v=201';
+import { abrirTarefa } from '../tarefa.js?v=201';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
@@ -705,7 +705,7 @@ function blocoPeca(p, mostrarCliente) {
   const e = etapaDe(p);
   const cli = store.obter('cliente', p.clienteId)?.nome || '';
   return `<button class="cal-p ${fmCls(p)}${atrasada(p) ? ' atras' : ''}${p.concluida ? ' feita' : ''}${casaFunil(p) && casaTipo(p) && casaRede(p) ? '' : ' apagado'}" data-act="editar-peca" data-id="${p.id}" draggable="true" data-peca="${p.id}" title="${esc([p.titulo, cli, f.nome, REDES[p.rede]?.nome, e.nome, p.concluida ? 'Concluída' : ''].filter(Boolean).join(' · '))}">
-    ${botaoConcluir(p, true)}${inicialResp(p)}<span><b>${p.collab ? '<em class="cal-collab">Collab</em>' : ''}${esc(p.titulo || '(sem título)')}</b>${mostrarCliente && cli ? `<small>${esc(cli)}</small>` : ''}</span></button>`;
+    ${botaoConcluir(p, true)}${inicialResp(p)}<span><b>${p.collab ? '<em class="cal-collab">Collab</em>' : ''}${esc(p.titulo || '(sem título)')}</b>${mostrarCliente && cli ? `<small>${esc(cli)}</small>` : ''}${atrasada(p) ? '<small class="cal-atras">Atrasada</small>' : ''}</span><i class="cal-dot cal-st cor-${e.cor}" title="${esc(e.nome)}" aria-label="${esc(e.nome)}"></i></button>`;
 }
 
 // Escolha do mês, igual no Status e no Calendário (o mês escolhido vale nas duas abas).
@@ -745,7 +745,9 @@ function calendario({ filtro, lista, chipsClientes }) {
     <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2><p class="sub">${listaMes.length} ${listaMes.length === 1 ? 'tarefa' : 'tarefas'} em ${nomeMes}.</p></div>
       ${botoesCabecalho(filtro)}</div>
     ${seletorMes(ym)}
+    <div class="cal-tipos" role="group" aria-label="Filtrar o calendário por tipo"><span class="lbl">Tipo</span>${Object.entries(FORMATOS).map(([id, f]) => `<button type="button" class="chip fm-${id} funil-btn tipo-btn${filtroTipo === id ? ' on' : ''}" data-act="filtro-tipo" data-tipo="${id}" aria-pressed="${filtroTipo === id}" title="${filtroTipo === id ? 'Clique de novo para mostrar todos os tipos' : `Mostrar só ${esc(f.nome)}`}">${ic(f.icone)}${esc(f.nome)} ${listaMes.filter((p) => (FORMATOS[p.formato] ? p.formato : 'feed') === id).length}</button>`).join('')}</div>
     <div class="calbox"><div class="calgrid">${DIAS_SEMANA.map((d) => `<div class="dow">${d}</div>`).join('')}${celulas}</div></div>
+    <div class="cal-leg" aria-label="O que significa a bolinha de cada tarefa"><span class="lbl">Bolinha</span>${ETAPAS.map((e) => `<span><i class="cal-dot cor-${e.cor}"></i>${esc(e.nome)}</span>`).join('')}<span><i style="background:transparent;box-shadow:0 0 0 1.5px var(--coral)"></i>Atrasada</span></div>
     ${listaFunil(listaMes, !filtro)}
     ${semData.length ? `<div class="semdata"><h3>Sem data de publicação</h3><p class="lbl">Abra a tarefa e escolha a data para ela aparecer no calendário.</p><div class="semdata-l">${semData.map((p) => blocoPeca(p, !filtro)).join('')}</div></div>` : ''}
   </div>`;

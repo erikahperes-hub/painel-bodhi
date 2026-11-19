@@ -1,7 +1,7 @@
-import { store } from '../store.js?v=200';
-import { esc, toast, baixar, hojeISO } from '../util.js?v=200';
-import { ic } from '../icons.js?v=200';
-import { formulario, confirmar } from '../ui.js?v=200';
+import { store } from '../store.js?v=201';
+import { esc, toast, baixar, hojeISO } from '../util.js?v=201';
+import { ic } from '../icons.js?v=201';
+import { formulario, confirmar } from '../ui.js?v=201';
 
 export default {
   titulo: () => 'Configurações',
