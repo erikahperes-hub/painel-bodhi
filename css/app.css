@@ -1036,6 +1036,12 @@ a.chip{text-decoration:none}
 .ft-arte .ft-add{grid-template-columns:96px minmax(0,1fr) auto}
 .ft-arte input,.ft-arte select{width:100%;background:#fff;border:1px solid var(--line);border-radius:14px;padding:9px 12px;font:400 14.5px var(--body);min-height:40px}
 .ft-arte input:focus,.ft-arte select:focus{border-color:var(--verde);outline:0}
+.ft-hist{margin-top:16px}
+.ft-ev.ok,.ft-ev.ajuste{color:var(--ink);font-size:13px}
+.ft-ev.ok::before,.ft-ev.ajuste::before{width:9px;height:9px;left:12.5px;top:.45em}
+.ft-ev.ok::before{background:var(--verde)}
+.ft-ev.ajuste::before{background:var(--coral)}
+.ft-ev-d{margin:5px 0 0;padding:7px 10px;border-left:3px solid var(--coral);background:var(--coral-s);border-radius:0 8px 8px 0;color:var(--ink);white-space:pre-wrap;font-size:13px}
 .ft-ativ{margin-top:12px}
 .ft-ativ summary{cursor:pointer;color:var(--ink-2);font:600 12.5px var(--ui);display:flex;align-items:center;gap:8px;list-style:none}
 .ft-ativ summary::-webkit-details-marker{display:none}
@@ -1401,3 +1407,19 @@ html[data-modo="noturno"] .chip.collab,html[data-modo="noturno"] .cal-collab{bac
 .cal-leg i{width:8px;height:8px;border-radius:50%;display:inline-block}
 .ft-ck{display:flex;gap:8px;align-items:flex-start;margin-top:12px;font:400 13px var(--ui);cursor:pointer}
 .ft-ck input{width:18px;height:18px;margin-top:1px;accent-color:var(--verde);flex:none}
+/* Anexos da equipe dentro da tarefa */
+.ft-anx{transition:background .15s,box-shadow .15s;border-radius:14px}
+.ft-anx.arrastando-arq{background:var(--verde-s);box-shadow:0 0 0 2px var(--verde)}
+.ft-anx-l{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
+.ft-anx-l li{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:6px 8px;background:var(--card)}
+.ft-anx-ic{width:34px;height:34px;border-radius:9px;background:var(--pet-s);color:var(--petroleo);display:grid;place-items:center;flex:none}
+.ft-anx-ic svg{width:18px;height:18px}
+.ft-anx-n{flex:1;min-width:0;border:0;background:transparent;text-align:left;cursor:pointer;display:grid;gap:1px;padding:2px 0;font-family:inherit;color:inherit}
+.ft-anx-n b{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ft-anx-n small{color:var(--ink-3);font-size:11.5px}
+.ft-anx-n:hover b{text-decoration:underline}
+.ft-anx-x{border:0;background:transparent;color:var(--ink-3);width:28px;height:28px;border-radius:8px;display:grid;place-items:center;cursor:pointer;flex:none}
+.ft-anx-x:hover{background:var(--coral-s);color:#8E2F2F}
+.ft-anx-x svg{width:14px;height:14px}
+.ft-anx-v{margin:8px 0 0;color:var(--ink-3);font-size:13px}
+.ft-add.ft-add-pc{display:flex;flex-wrap:wrap;align-items:center;gap:8px}

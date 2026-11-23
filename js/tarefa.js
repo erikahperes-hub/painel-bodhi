@@ -1,10 +1,10 @@
-import { store } from './store.js?v=201';
-import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=201';
-import { ic } from './icons.js?v=201';
-import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=201';
-import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=201';
-import { idDrive, avisoLinkDrive, urlAbrir, urlImagem } from './drive.js?v=201';
-import { prepararGoogle, tokenValido, entrarGoogle, pastaDestino, enviarArquivo, nomeDoArquivo } from './drive-envio.js?v=201';
+import { store } from './store.js?v=202';
+import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=202';
+import { ic } from './icons.js?v=202';
+import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=202';
+import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=202';
+import { idDrive, avisoLinkDrive, urlAbrir, urlImagem } from './drive.js?v=202';
+import { prepararGoogle, tokenValido, entrarGoogle, pastaDestino, enviarArquivo, nomeDoArquivo } from './drive-envio.js?v=202';
 
 // Ficha da tarefa de conteúdo. Pensada para o dia a dia de quem cria posts:
 //  - em cima, o caminho da tarefa (planejamento até publicado) com o próximo passo em destaque;
@@ -110,8 +110,24 @@ export function abrirTarefa(p = null, padrao = {}) {
     const ms = t.midias || [];
     return `${ms.length ? `<div class="ft-ths">${ms.map(miniatura).join('')}</div>` : ''}
       <div class="ft-add"><select data-nova="tipo" aria-label="Tipo de arquivo"><option value="imagem">Imagem</option><option value="video">Vídeo</option></select><input data-nova="url" placeholder="Cole o link do arquivo no Drive e aperte Enter" aria-label="Link do arquivo no Drive"><button type="button" class="btn sec sm" data-t="add-midia">${ic('plus')}Adicionar</button></div>
-      <div class="ft-add"><button type="button" class="btn sec sm" data-t="enviar-pc" title="Anexar um arquivo do computador (vai para o Drive)">${ic('upload')}Anexar</button><input type="file" data-envio hidden multiple accept="image/*,video/*"><span class="ft-envio-st" data-envio-st aria-live="polite"></span></div>
+      <div class="ft-add ft-add-pc"><button type="button" class="btn sec sm" data-t="enviar-pc" title="Envia a arte ou o vídeo do computador para a pasta do cliente no Drive (pede login do Google)">${ic('upload')}Enviar arte ao Drive</button><input type="file" data-envio hidden multiple accept="image/*,video/*"><span class="ft-envio-st" data-envio-st aria-live="polite"></span></div>
       <p class="ft-ajuda">Carrossel: um arquivo por slide, na ordem. Reels e story em vídeo: escolha “Vídeo”.</p>`;
+  };
+
+  // Anexos da equipe (briefing, referências, contrato, print, PDF...): vão para o armazenamento do próprio painel (Supabase Storage,
+  // bucket "anexos"), sem login do Google. Só a equipe vê. A lista fica na tarefa, no campo `anexos`.
+  const LIMITE_ANEXO = 50 * 1024 * 1024;
+  const tamanho = (n) => (n >= 1048576 ? `${(n / 1048576).toFixed(1).replace('.', ',')} MB` : `${Math.max(1, Math.round((n || 0) / 1024))} KB`);
+  const iconeAnexo = (a) => (/^image\//.test(a.tipo || '') ? 'image' : /^video\//.test(a.tipo || '') ? 'play' : 'doc');
+  const anexosSecao = (t) => {
+    const lista = t.anexos || [];
+    const item = (a) => `<li><span class="ft-anx-ic">${ic(iconeAnexo(a))}</span><button type="button" class="ft-anx-n" data-t="abrir-anexo" data-id="${esc(a.id)}" title="Abrir ou baixar"><b>${esc(a.nome)}</b><small>${esc(tamanho(a.tam))} · ${esc(primeiroNome(a.por))} · ${esc(quando(a.em))}</small></button><button type="button" class="ft-anx-x" data-t="rm-anexo" data-id="${esc(a.id)}" aria-label="Remover ${esc(a.nome)}" title="Remover">${ic('x')}</button></li>`;
+    return `<section class="ft-s ft-anx" data-anexos>
+      <div class="ft-h"><h3>Anexos${lista.length ? ` <span class="ft-n">${lista.length}</span>` : ''}</h3><span class="ft-h-d"><button type="button" class="btn sec sm" data-t="anexar">${ic('upload')}Anexar arquivo</button></span></div>
+      <input type="file" data-anexo-in hidden multiple>
+      ${lista.length ? `<ul class="ft-anx-l">${lista.map(item).join('')}</ul>` : '<p class="ft-anx-v">Arraste arquivos para cá ou use o botão. Serve para briefing, referência, contrato, print e PDF.</p>'}
+      <small class="ft-envio-st" data-anexo-st aria-live="polite"></small>
+      <p class="ft-ajuda">Só a equipe vê. Até 50 MB por arquivo. A arte e o vídeo que o cliente aprova continuam no Drive.</p></section>`;
   };
 
   const previa = (t) => {
@@ -165,7 +181,7 @@ export function abrirTarefa(p = null, padrao = {}) {
   const arte = (t) => `<section class="ft-arte"><h3>Arte e arquivos</h3><div data-previa>${previa(t)}</div><div data-arquivos>${arquivos(t)}</div>
     <details class="ft-mais"><summary>Mais opções</summary>
       <label class="ft-lbl" for="ft_capa">Capa (imagem)</label><input id="ft_capa" data-campo="capa" value="${esc(t.capa ? urlAbrir(t.capa) : '')}" placeholder="Link da imagem de capa no Drive">
-      <div class="ft-add"><button type="button" class="btn sec sm" data-t="enviar-capa" title="Anexar a capa do computador (vai para o Drive)">${ic('upload')}Anexar capa</button><input type="file" data-envio-capa hidden accept="image/*"></div>
+      <div class="ft-add ft-add-pc"><button type="button" class="btn sec sm" data-t="enviar-capa" title="Envia a capa do computador para o Drive (pede login do Google)">${ic('upload')}Enviar capa ao Drive</button><input type="file" data-envio-capa hidden accept="image/*"></div>
       <label class="ft-lbl" for="ft_link">Arquivo editável (só a equipe vê)</label><input id="ft_link" data-campo="link" value="${esc(t.link || '')}" placeholder="Canva, Drive ou onde estiver">
       <label class="ft-lbl" for="ft_video">Vídeo no Drive (só a equipe vê)</label><input id="ft_video" data-campo="videoDrive" value="${esc(t.videoDrive || '')}" placeholder="Link do vídeo no Drive">
       <label class="ft-lbl" for="ft_ig">Link do post no Instagram</label><input id="ft_ig" data-campo="igLink" value="${esc(t.igLink || '')}" placeholder="https://www.instagram.com/p/…">
@@ -190,7 +206,8 @@ export function abrirTarefa(p = null, padrao = {}) {
       ${ajustes ? `<section class="ft-s ft-alerta"><h3>${ic('alert')}O cliente pediu ajuste</h3><textarea data-campo="ajuste" rows="2" placeholder="O que o cliente pediu para mudar">${esc(t.ajuste || '')}</textarea></section>` : ''}
       ${ajustesPlano ? `<section class="ft-s ft-alerta"><h3>${ic('alert')}Alteração pedida no planejamento</h3><textarea data-campo="ajustePlano" rows="2" placeholder="O que o cliente pediu para mudar na ideia ou no roteiro">${esc(t.ajustePlano || '')}</textarea></section>` : ''}
       <section class="ft-s"><h3>Ideia e roteiro</h3><textarea data-campo="roteiro" rows="4" placeholder="Qual é a ideia? Como é o vídeo, cena a cena? Quando o planejamento é enviado para aprovação, o cliente lê este texto: escreva sem comentário interno.">${esc(t.roteiro || '')}</textarea><div class="ft-plano" data-plano>${planoLinha(t)}</div></section>
-      <section class="ft-s"><div class="ft-h"><h3>Legenda</h3><span class="ft-h-d"><small class="ft-cont" data-cont>${contar(t.legenda)}</small><button type="button" class="btn ghost sm" data-t="copiar">${ic('link')}Copiar</button></span></div><textarea data-campo="legenda" rows="4" placeholder="Texto que o cliente vê junto com a arte na hora de aprovar.">${esc(t.legenda || '')}</textarea></section>`;
+      <section class="ft-s"><div class="ft-h"><h3>Legenda</h3><span class="ft-h-d"><small class="ft-cont" data-cont>${contar(t.legenda)}</small><button type="button" class="btn ghost sm" data-t="copiar">${ic('link')}Copiar</button></span></div><textarea data-campo="legenda" rows="4" placeholder="Texto que o cliente vê junto com a arte na hora de aprovar.">${esc(t.legenda || '')}</textarea></section>
+      ${t.id || id ? anexosSecao(t) : ''}`;
   };
 
   // Comentários em destaque; os fixados ficam no alto (é para onde vão os combinados que não podem se perder).
@@ -199,15 +216,25 @@ export function abrirTarefa(p = null, padrao = {}) {
     const coms = [...(t.comentarios || [])].sort((x, y) => String(x.d).localeCompare(String(y.d)));
     const fixados = coms.filter((c) => c.fixado);
     const resto = coms.filter((c) => !c.fixado);
-    const ativ = [...(t.atividade || [])];
-    if (t.criadoEm && !ativ.some((a) => a.t === 'criou esta tarefa')) ativ.push({ d: t.criadoEm, a: '', t: 'Tarefa criada' });
-    ativ.sort((x, y) => String(x.d).localeCompare(String(y.d)));
+    // Histórico: o que a equipe mudou (etapa, responsável, data...) junto com o que o cliente fez no link dele
+    // (aprovou, pediu alteração e o que pediu, com dia e hora). Os mais recentes primeiro.
+    const ativ = (t.atividade || []).map((a) => ({ d: a.d, a: a.a, t: a.t, tipo: 'equipe' }));
+    if (t.criadoEm && !ativ.some((a) => a.t === 'criou esta tarefa')) ativ.push({ d: t.criadoEm, a: '', t: 'Tarefa criada', tipo: 'equipe' });
+    for (const h of t.historico || []) {
+      const plano = String(h.acao || '').startsWith('plano_');
+      const aprovou = h.acao === 'aprovar' || h.acao === 'plano_aprovar';
+      const ajustou = h.acao === 'ajustar' || h.acao === 'plano_ajustar';
+      if (!aprovou && !ajustou) continue;
+      ativ.push({ d: h.quando, a: 'Cliente', tipo: aprovou ? 'ok' : 'ajuste', detalhe: h.comentario || '',
+        t: aprovou ? (plano ? 'aprovou a ideia do planejamento' : 'aprovou o conteúdo') : (plano ? 'pediu alteração na ideia do planejamento' : 'pediu alteração') });
+    }
+    ativ.sort((x, y) => String(y.d).localeCompare(String(x.d)));
     const com = (c) => `<li class="ft-m${c.fixado ? ' fixado' : ''}"><i class="ft-av g">${esc(inicial(c.a))}</i><div class="ft-balao"><div class="ft-m-h"><b>${esc(primeiroNome(c.a))}</b><small>${c.fixado ? 'Fixado · ' : ''}${esc(quando(c.d))}</small>${c.id ? `<span class="ft-m-b"><button type="button" class="ft-m-p${c.fixado ? ' on' : ''}" data-t="fixar" data-id="${esc(c.id)}" aria-label="${c.fixado ? 'Desafixar comentário' : 'Fixar comentário no alto'}" title="${c.fixado ? 'Desafixar' : 'Fixar no alto'}">${ic('bookmark')}</button><button type="button" class="ft-m-x" data-t="rm-com" data-id="${esc(c.id)}" aria-label="Excluir comentário" title="Excluir comentário">${ic('x')}</button></span>` : ''}</div><p>${links(c.t)}</p></div></li>`;
-    const ev = (a) => `<li class="ft-ev">${a.a ? `<b>${esc(primeiroNome(a.a))}</b> ` : ''}${esc(a.t)} <small>${esc(quando(a.d))}</small></li>`;
+    const ev = (a) => `<li class="ft-ev ${a.tipo}">${a.a ? `<b>${esc(a.tipo === 'equipe' ? primeiroNome(a.a) : a.a)}</b> ` : ''}${esc(a.t)} <small>${esc(quando(a.d))}</small>${a.detalhe ? `<p class="ft-ev-d">${links(a.detalhe)}</p>` : ''}</li>`;
     return `<h3>Comentários${coms.length ? ` <span class="ft-n">${coms.length}</span>` : ''}</h3>
       ${fixados.length ? `<ul class="ft-conv ft-fix">${fixados.map(com).join('')}</ul>` : ''}
       <ul class="ft-conv">${resto.map(com).join('') || (fixados.length ? '' : '<li class="ft-vazio">Nenhum comentário ainda. Use este espaço para combinados, legendas alternativas e avisos da equipe. Para não perder um aviso, clique no marcador do comentário para fixá-lo no alto.</li>')}</ul>
-      ${ativ.length ? `<details class="ft-ativ" data-ativ${ativAberta ? ' open' : ''}><summary>Histórico de mudanças <span class="ft-n">${ativ.length}</span></summary><ul class="ft-conv">${ativ.map(ev).join('')}</ul></details>` : ''}`;
+      ${ativ.length ? `<section class="ft-hist"><h3>Histórico <span class="ft-n">${ativ.length}</span></h3><ul class="ft-conv">${ativ.map(ev).join('')}</ul></section>` : ''}`;
   };
 
   const rodapeConversa = () => `<form class="ft-novo" data-novo><i class="ft-av g">${esc(inicial(quem()))}</i><textarea rows="1" data-comentar placeholder="Escreva um comentário (Enter envia)" aria-label="Comentário"></textarea><button type="submit" class="btn pri sm" aria-label="Enviar comentário">${ic('send')}</button></form>`;
@@ -316,6 +343,51 @@ export function abrirTarefa(p = null, padrao = {}) {
   };
 
   // Envio do computador para o Drive (Aprovação / cliente / mês). O login do Google precisa de um clique; depois dele, outro clique abre a escolha do arquivo.
+  // Anexos da equipe: envio, abrir/baixar e remover.
+  const statusAnexo = (txt) => { const s = q('[data-anexo-st]'); if (s) s.textContent = txt; };
+  const pintarAnexos = () => { const el = q('[data-anexos]'); if (el) el.outerHTML = anexosSecao(atual()); };
+  const enviarAnexos = async (lista) => {
+    const sb = store.supabase();
+    if (!sb) { toast('Anexar funciona só no painel publicado (conectado ao Supabase).', true); return; }
+    if (!id) { toast('Crie a tarefa primeiro para poder anexar arquivos.', true); return; }
+    let n = 0;
+    for (const f of lista) {
+      if (f.size > LIMITE_ANEXO) { toast(`“${f.name}” passa de 50 MB. Para arquivo grande, coloque na pasta do cliente no Drive.`, true); continue; }
+      const t0 = atual();
+      const aid = Math.random().toString(36).slice(2, 10);
+      const seguro = f.name.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w.\-]+/g, '_');
+      const caminho = `${t0.clienteId || 'sem-cliente'}/${id}/${aid}-${seguro}`;
+      statusAnexo(`Enviando ${f.name}…`);
+      const { error } = await sb.storage.from('anexos').upload(caminho, f, { contentType: f.type || 'application/octet-stream', upsert: false });
+      if (error) { statusAnexo(''); toast(/bucket|not found/i.test(error.message || '') ? 'Falta ativar os anexos no Supabase: rode o arquivo supabase/anexos.sql no SQL Editor.' : `Não consegui enviar “${f.name}”: ${error.message || 'tente de novo'}`, true); continue; }
+      await mudar({ anexos: [...(atual().anexos || []), { id: aid, nome: f.name, tipo: f.type || '', tam: f.size, caminho, em: new Date().toISOString(), por: quem() }] }, `anexou o arquivo ${f.name}`);
+      n += 1;
+      pintarAnexos(); pintarConversa();
+    }
+    statusAnexo('');
+    if (n) toast(n > 1 ? `${n} arquivos anexados` : 'Arquivo anexado');
+  };
+  const abrirAnexo = async (aid) => {
+    const a = (atual().anexos || []).find((x) => x.id === aid);
+    const sb = store.supabase();
+    if (!a || !sb) return;
+    const w = window.open('about:blank', '_blank');
+    const { data, error } = await sb.storage.from('anexos').createSignedUrl(a.caminho, 3600);
+    if (error || !data?.signedUrl) { w?.close(); toast('Não consegui abrir o arquivo agora.', true); return; }
+    if (w) w.location.href = data.signedUrl; else window.location.href = data.signedUrl;
+  };
+  const removerAnexo = async (aid) => {
+    const a = (atual().anexos || []).find((x) => x.id === aid);
+    const sb = store.supabase();
+    if (!a || !sb) return;
+    if (!(await confirmar(`Remover o anexo “${a.nome}”? O arquivo é apagado.`, 'Remover', true))) return;
+    const { error } = await sb.storage.from('anexos').remove([a.caminho]);
+    if (error) { toast('Não consegui apagar o arquivo agora.', true); return; }
+    await mudar({ anexos: (atual().anexos || []).filter((x) => x.id !== aid) }, `removeu o anexo ${a.nome}`);
+    pintarAnexos(); pintarConversa();
+    toast('Anexo removido');
+  };
+
   const statusEnvio = (txt) => { const s = q('[data-envio-st]'); if (s) s.textContent = txt; };
   const botaoEnviar = async (capa) => {
     if (!tokenValido()) {
@@ -480,6 +552,9 @@ Qualquer dúvida, é só chamar!`;
       return;
     }
     if (a === 'add-midia') return adicionarArquivo();
+    if (a === 'anexar') return q('[data-anexo-in]')?.click();
+    if (a === 'abrir-anexo') return abrirAnexo(b.dataset.id);
+    if (a === 'rm-anexo') return removerAnexo(b.dataset.id);
     if (a === 'enviar-pc') return botaoEnviar(false);
     if (a === 'enviar-capa') return botaoEnviar(true);
     if (a === 'rm-midia') {
@@ -529,6 +604,10 @@ Qualquer dúvida, é só chamar!`;
   });
   g.el.addEventListener('click', aoClicar);
   g.el.addEventListener('toggle', (e) => { if (e.target.matches('[data-ativ]')) ativAberta = e.target.open; }, true);
+  // Arrastar arquivos para a caixa de Anexos.
+  g.el.addEventListener('dragover', (e) => { const s = e.target.closest?.('[data-anexos]'); if (s && [...(e.dataTransfer?.types || [])].includes('Files')) { e.preventDefault(); s.classList.add('arrastando-arq'); } });
+  g.el.addEventListener('dragleave', (e) => { const s = e.target.closest?.('[data-anexos]'); if (s && !s.contains(e.relatedTarget)) s.classList.remove('arrastando-arq'); });
+  g.el.addEventListener('drop', (e) => { const s = e.target.closest?.('[data-anexos]'); if (!s) return; e.preventDefault(); s.classList.remove('arrastando-arq'); const lista = [...(e.dataTransfer?.files || [])]; if (lista.length) enviarAnexos(lista); });
   g.el.addEventListener('input', (e) => {
     const el = e.target;
     if (el.matches('textarea')) crescer(el);
@@ -542,6 +621,12 @@ Qualquer dúvida, é só chamar!`;
   g.el.addEventListener('change', async (e) => {
     const el = e.target;
     if (el.matches('[data-collab]')) { await mudar({ collab: el.checked }, el.checked ? 'marcou como collab' : 'tirou a marcação de collab'); return; }
+    if (el.matches('[data-anexo-in]')) {
+      const lista = [...(el.files || [])];
+      el.value = '';
+      if (lista.length) enviarAnexos(lista);
+      return;
+    }
     if (el.matches('[data-envio], [data-envio-capa]')) {
       const lista = [...(el.files || [])];
       el.value = '';
