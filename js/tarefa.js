@@ -1,11 +1,11 @@
-import { store } from './store.js?v=203';
-import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=203';
-import { ic } from './icons.js?v=203';
-import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=203';
-import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=203';
-import { idDrive, avisoLinkDrive, urlAbrir, urlImagem } from './drive.js?v=203';
-import { escolherDaPasta } from './drive-escolher.js?v=203';
-import { prepararGoogle, tokenValido, entrarGoogle, pastaDestino, enviarArquivo, nomeDoArquivo } from './drive-envio.js?v=203';
+import { store } from './store.js?v=204';
+import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=204';
+import { ic } from './icons.js?v=204';
+import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=204';
+import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=204';
+import { idDrive, avisoLinkDrive, urlAbrir, urlImagem } from './drive.js?v=204';
+import { escolherDaPasta } from './drive-escolher.js?v=204';
+import { prepararGoogle, tokenValido, entrarGoogle, pastaDestino, enviarArquivo, nomeDoArquivo } from './drive-envio.js?v=204';
 
 // Ficha da tarefa de conteúdo. Pensada para o dia a dia de quem cria posts:
 //  - em cima, o caminho da tarefa (planejamento até publicado) com o próximo passo em destaque;
@@ -117,8 +117,8 @@ export function abrirTarefa(p = null, padrao = {}) {
     const carrossel = t.formato === 'carrossel';
     const botao = (acao, rot, extra = '') => `<button type="button" class="ft-slot-b" data-t="${acao}" ${extra}>${rot}</button>`;
     const abrir = (id) => `<a class="ft-slot-b" href="${esc(urlAbrir(id))}" target="_blank" rel="noopener noreferrer">Abrir</a>`;
-    const vazio = (slot, icone, rot, dica) => `<button type="button" class="ft-slot vazio" data-t="slot" data-slot="${slot}">${ic(icone)}<b>${rot}</b><span>${dica}</span></button>`;
-    const cheio = (id, rot, sobre, acoes) => `<div class="ft-slot cheio"><div class="ft-slot-img"><img src="${esc(urlImagem(id, 360))}" data-id="${esc(id)}" alt="" loading="lazy">${sobre}</div><b>${rot}</b><div class="ft-slot-a">${acoes}</div></div>`;
+    const vazio = (slot, icone, rot, dica) => `<button type="button" class="ft-slot vazio" data-t="slot" data-slot="${slot}">${ic(icone)}<span class="ft-slot-c"><b>${rot}</b><span>${dica}</span></span></button>`;
+    const cheio = (id, rot, sobre, acoes) => `<div class="ft-slot cheio"><div class="ft-slot-img"><img src="${esc(urlImagem(id, 240))}" data-id="${esc(id)}" alt="" loading="lazy">${sobre}</div><div class="ft-slot-c"><b>${rot}</b><div class="ft-slot-a">${acoes}</div></div></div>`;
     const slotVideo = video
       ? cheio(video.id, 'Vídeo', `<span class="ft-slot-p">${ic('play')}</span>`, `${botao('slot', 'Trocar', 'data-slot="video"')}${abrir(video.id)}${botao('rm-midia', 'Tirar', `data-i="${iv}"`)}`)
       : vazio('video', 'play', 'Vídeo', 'Escolher da pasta do Drive');
@@ -128,7 +128,7 @@ export function abrirTarefa(p = null, padrao = {}) {
     const miniArte = (m, k) => `<div class="ft-th" data-i="${m.i}"><img src="${esc(urlImagem(m.id, 320))}" data-id="${esc(m.id)}" alt="" loading="lazy"><span class="ft-th-t">${k + 1}</span><button type="button" class="ft-th-x" data-t="rm-midia" data-i="${m.i}" aria-label="Tirar a arte ${k + 1}">${ic('x')}</button><a class="ft-th-a" href="${esc(urlAbrir(m.id))}" target="_blank" rel="noopener noreferrer" aria-label="Abrir a arte ${k + 1} no Drive"></a></div>`;
     const slotArte = `<div class="ft-slot arte"><div class="ft-slot-ti"><b>${carrossel ? 'Slides do carrossel' : 'Arte'}</b>${imagens.length ? `<span class="ft-n">${imagens.length}</span>` : ''}${botao('slot', imagens.length ? (carrossel ? 'Adicionar mais' : 'Trocar') : 'Escolher da pasta do Drive', 'data-slot="arte"')}</div>${imagens.length ? `<div class="ft-ths">${imagens.map(miniArte).join('')}</div>` : `<p class="ft-slot-d">${carrossel ? 'Um arquivo por slide, na ordem em que o cliente vai ver.' : 'A imagem do post.'}</p>`}</div>`;
     const partes = vertical ? `${slotVideo}${slotCapa}${imagens.length ? slotArte : ''}` : `${video ? slotVideo : ''}${slotArte}`;
-    return `<div class="ft-slots${vertical && !imagens.length ? ' dois' : ''}">${partes}</div>
+    return `<div class="ft-slots">${partes}</div>
       <details class="ft-mais ft-outro"><summary>Colar link ou enviar do computador</summary>
         <div class="ft-add"><select data-nova="tipo" aria-label="O que é o arquivo">${vertical ? '<option value="video">Vídeo</option><option value="capa">Capa</option>' : '<option value="imagem">Arte</option><option value="video">Vídeo</option>'}</select><input data-nova="url" placeholder="Cole o link do arquivo no Drive e aperte Enter" aria-label="Link do arquivo no Drive"><button type="button" class="btn sec sm" data-t="add-midia">${ic('plus')}Adicionar</button></div>
         <div class="ft-add ft-add-pc"><button type="button" class="btn sec sm" data-t="enviar-pc" title="Envia a arte ou o vídeo do computador para a pasta do cliente no Drive (pede login do Google)">${ic('upload')}Enviar do computador ao Drive</button><input type="file" data-envio hidden multiple accept="image/*,video/*"><button type="button" class="btn ghost sm" data-t="enviar-capa" title="Envia a capa do computador para o Drive (pede login do Google)">${ic('upload')}Enviar capa</button><input type="file" data-envio-capa hidden accept="image/*"><span class="ft-envio-st" data-envio-st aria-live="polite"></span></div>
@@ -199,7 +199,7 @@ export function abrirTarefa(p = null, padrao = {}) {
   };
 
   // Arte e arquivos num lugar só (lado direito): prévia do post, miniaturas, campo para adicionar e opções extras.
-  const arte = (t) => `<section class="ft-arte"><h3>Arquivos</h3><div data-previa>${previa(t)}</div><div data-arquivos>${arquivos(t)}</div>
+  const arte = (t) => `<section class="ft-arte"><h3>Arquivos</h3><div data-arquivos>${arquivos(t)}</div><details class="ft-mais ft-vprev"><summary>Ver como fica no feed</summary><div data-previa>${previa(t)}</div></details>
     <details class="ft-mais"><summary>Mais opções</summary>
       <label class="ft-lbl" for="ft_link">Arquivo editável (só a equipe vê)</label><input id="ft_link" data-campo="link" value="${esc(t.link || '')}" placeholder="Canva, Drive ou onde estiver">
       <label class="ft-lbl" for="ft_video">Vídeo no Drive (só a equipe vê)</label><input id="ft_video" data-campo="videoDrive" value="${esc(t.videoDrive || '')}" placeholder="Link do vídeo no Drive">

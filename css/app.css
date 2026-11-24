@@ -1423,29 +1423,31 @@ html[data-modo="noturno"] .chip.collab,html[data-modo="noturno"] .cal-collab{bac
 .ft-anx-x svg{width:14px;height:14px}
 .ft-anx-v{margin:8px 0 0;color:var(--ink-3);font-size:13px}
 .ft-add.ft-add-pc{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
-/* Arquivos da tarefa: Vídeo, Capa e Arte cada um no seu quadro */
-.ft-slots{display:grid;grid-template-columns:1fr;gap:12px}
-.ft-slots.dois{grid-template-columns:repeat(2,minmax(0,1fr))}
-.ft-slot{border-radius:16px;min-width:0}
-.ft-slot.vazio{border:1.5px dashed var(--line);background:var(--canvas);padding:16px 10px;display:grid;justify-items:center;align-content:center;gap:4px;min-height:150px;text-align:center;cursor:pointer;font-family:inherit;color:var(--ink)}
+/* Arquivos da tarefa: Vídeo, Capa e Arte, em linhas compactas (miniatura, nome e botões) */
+.ft-slots{display:grid;grid-template-columns:1fr;gap:8px}
+.ft-slot{border-radius:14px;min-width:0;display:flex;align-items:center;gap:12px;padding:8px}
+.ft-slot.vazio{border:1.5px dashed var(--line);background:var(--canvas);padding:12px;text-align:left;cursor:pointer;font-family:inherit;color:var(--ink);width:100%}
 .ft-slot.vazio:hover{border-color:var(--petroleo);background:var(--pet-s)}
-.ft-slot.vazio svg{width:26px;height:26px;color:var(--petroleo)}
-.ft-slot.vazio b{font-size:14px}
-.ft-slot.vazio span{font-size:12px;color:var(--ink-2)}
-.ft-slot.cheio{display:grid;gap:6px}
-.ft-slot-img{position:relative;aspect-ratio:9/14;border-radius:14px;overflow:hidden;background:var(--canvas);box-shadow:inset 0 0 0 1px var(--line)}
+.ft-slot.vazio>svg{width:26px;height:26px;color:var(--petroleo);flex:none}
+.ft-slot-c{display:grid;gap:3px;min-width:0;flex:1}
+.ft-slot-c b{font-size:14px}
+.ft-slot.vazio .ft-slot-c span{font-size:12px;color:var(--ink-2)}
+.ft-slot.cheio{border:1px solid var(--line);background:var(--card)}
+.ft-slot-img{position:relative;width:56px;height:84px;flex:none;border-radius:10px;overflow:hidden;background:var(--canvas);box-shadow:inset 0 0 0 1px var(--line)}
 .ft-slot-img img{width:100%;height:100%;object-fit:cover;display:block}
-.ft-slot-p{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:30px;text-shadow:0 2px 12px rgba(0,0,0,.45);pointer-events:none}
-.ft-slot.cheio>b,.ft-slot-ti b{font-size:13.5px}
+.ft-slot-p{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:20px;text-shadow:0 2px 10px rgba(0,0,0,.5);pointer-events:none}
+.ft-slot-ti b{font-size:14px}
 .ft-slot-a{display:flex;flex-wrap:wrap;gap:4px}
 .ft-slot-b{border:0;background:var(--graf-s);color:var(--ink);border-radius:99px;padding:4px 11px;font:700 12px var(--ui);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
 .ft-slot-b:hover{background:var(--pet-s);color:var(--petroleo)}
-.ft-slot.arte{background:var(--canvas);border:1px solid var(--line);padding:12px}
-.ft-slot-ti{display:flex;align-items:center;gap:8px;margin:0 0 10px}
+.ft-slot.arte{display:block;background:var(--canvas);border:1px solid var(--line);padding:10px}
+.ft-slot-ti{display:flex;align-items:center;gap:8px;margin:0 0 8px}
 .ft-slot-ti .ft-slot-b{margin-left:auto}
+.ft-slot.arte .ft-ths{grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;margin:0}
 .ft-slot-d{margin:0;color:var(--ink-3);font-size:12.5px}
-.ft-outro{margin-top:10px}
+.ft-outro,.ft-vprev{margin-top:8px}
 .ft-outro .ft-add{margin-top:8px}
+.ft-vprev .ft-prev{margin-top:10px}
 /* Janela "Escolher da pasta do Drive" */
 .dp-barra{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 12px}
 .dp-barra select{min-height:38px;max-width:240px}
