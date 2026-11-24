@@ -1,16 +1,16 @@
-import { store } from '../store.js?v=204';
-import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=204';
-import { ic, flor } from '../icons.js?v=204';
-import { formulario, confirmar, abrirModal } from '../ui.js?v=204';
-import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas, pecasArquivadas } from '../conteudo.js?v=204';
-import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=204';
-import { feedPerfil } from '../feed-perfil.js?v=204';
-import { igApi } from '../instagram-api.js?v=204';
-import { lerPasta } from '../drive-pasta.js?v=204';
-import { lerTabela } from '../planejamento.js?v=204';
-import { config } from '../config.js?v=204';
-import { histCartao, histMontar, importarHistorico } from '../historico.js?v=204';
-import { abrirTarefa } from '../tarefa.js?v=204';
+import { store } from '../store.js?v=205';
+import { esc, toast, dataBR, urlSegura, hojeISO, mesNome, norm, slug } from '../util.js?v=205';
+import { ic, flor } from '../icons.js?v=205';
+import { formulario, confirmar, abrirModal } from '../ui.js?v=205';
+import { ETAPAS, FORMATOS, REDES, formatoDe, redeDe, etapaDe, atrasada, pecas, pecasArquivadas } from '../conteudo.js?v=205';
+import { idDrive, urlAbrir, urlImagem } from '../drive.js?v=205';
+import { feedPerfil } from '../feed-perfil.js?v=205';
+import { igApi } from '../instagram-api.js?v=205';
+import { lerPasta } from '../drive-pasta.js?v=205';
+import { lerTabela } from '../planejamento.js?v=205';
+import { config } from '../config.js?v=205';
+import { histCartao, histMontar, importarHistorico } from '../historico.js?v=205';
+import { abrirTarefa } from '../tarefa.js?v=205';
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 // Aprovação do planejamento (ideia e roteiro) pelo cliente, antes de a tarefa ser produzida.
@@ -46,6 +46,7 @@ let latRecolhida = lerLat();
 const lay = (lateral, corpo, atual = 'Todos') => latRecolhida
   ? `<div class="cont-lay recolhida"><div class="cont-main"><button type="button" class="btn sec sm lat-abrir" data-act="lat-alternar" aria-expanded="false" title="Mostrar a lista de clientes">${ic('users')}Clientes · ${esc(atual)}</button>${corpo}</div></div>`
   : `<div class="cont-lay"><aside class="cont-lat" aria-label="Clientes"><button type="button" class="lat-esconder" data-act="lat-alternar" aria-expanded="true" title="Esconder a lista de clientes"><span class="lat-ic">${ic('chev')}</span>Esconder clientes</button>${lateral}</aside><div class="cont-main">${corpo}</div></div>`;
+let etapaMovel = ''; // no celular o quadro mostra uma etapa por vez (a escolhida nos botões acima dele)
 let verArquivadas = false; // Filtros > Arquivadas: mostra só as tarefas arquivadas (para restaurar). Vale até recarregar a página.
 let nArqCli = 0; // quantas tarefas arquivadas tem o cliente escolhido (ou todos), para o número do botão Arquivadas
 let filtroRede = ''; // '', um código de REDES ou 'sem'
@@ -805,7 +806,7 @@ export default {
       <button class="tab ${aba === 'calendario' ? 'on' : ''}" role="tab" aria-selected="${aba === 'calendario'}" data-act="aba-conteudo" data-aba="calendario">${ic('calendar')}Calendário</button>
       <button class="tab ${aba === 'feed' ? 'on' : ''}" role="tab" aria-selected="${aba === 'feed'}" data-act="aba-conteudo" data-aba="feed">${ic('image')}Feed</button></div>`;
     // Cabeça igual nas duas abas, nesta ordem: clientes, números e, logo acima do conteúdo, as abas Status e Calendário.
-    const numeros = `<div class="grid" style="margin-bottom:16px">
+    const numeros = `<div class="grid grid-num" style="margin-bottom:16px">
         <div class="card stat tone-verde"><div><div class="lbl">Em produção</div><div class="big num">${em('briefing', 'criacao').length}</div><div class="hint">Planejamento e criação</div></div><span class="stat-ic">${ic('grid')}</span></div>
         <div class="card stat tone-creme"><div><div class="lbl">Aguardando aprovação</div><div class="big num">${em('aprovacao').length}</div><div class="hint">Com o cliente</div></div><span class="stat-ic">${ic('send')}</span></div>
         <div class="card stat tone-coral"><div><div class="lbl">Pedidos de ajuste</div><div class="big num">${em('ajustes').length}</div><div class="hint">Para refazer</div></div><span class="stat-ic">${ic('edit')}</span></div>
@@ -837,6 +838,8 @@ export default {
       return lay(lateral, cabecaFeed + feedPerfil({ cliente: cli, pecas: lista, seguidores: ultimo?.seguidores, filtro: feedFiltro, aba: feedAba, real: conectado ? igApi.perfilGuardado(filtro) : null, conectado }), nomeAtual);
     }
 
+    // Etapa mostrada no celular: a escolhida; senão a primeira que pede ação (ajustes, aprovação, criação, planejamento).
+    const ativaMovel = ETAPAS.some((e) => e.id === etapaMovel) ? etapaMovel : (['ajustes', 'aprovacao', 'criacao', 'briefing', 'aprovado', 'publicado'].find((id) => em(id).length) || 'briefing');
     const colunas = ETAPAS.map((e) => {
       let itens = e.id === 'publicado' ? ordenarPecas(em(e.id), true) : ordenarPecas(em(e.id));
       const total = itens.length;
@@ -852,7 +855,7 @@ export default {
     return lay(lateral, cabeca + `<div class="card">
         <div class="card-h"><div><h2>${filtro ? esc(store.obter('cliente', filtro).nome) : 'Todos os clientes'}</h2></div>
           ${botoesCabecalho(filtro)}</div>
-        ${lista.length ? `${seletorMes(ym)}<div class="kanban">${colunas}</div>` : `<div class="empty" style="padding:30px 10px">${flor()}<h2>Nenhuma tarefa ainda</h2><p>Use “Nova tarefa” para registrar o primeiro reels, carrossel, estático ou story.</p></div>`}
+        ${lista.length ? `${seletorMes(ym)}<div class="kol-chips" role="group" aria-label="Escolher a etapa">${ETAPAS.map((e) => `<button type="button" class="kol-ch${e.id === ativaMovel ? ' on' : ''}" data-act="kol-etapa" data-v="${e.id}" aria-pressed="${e.id === ativaMovel}">${esc(e.nome)} <b>${em(e.id).length}</b></button>`).join('')}</div><div class="kanban" data-ativa="${ativaMovel}">${colunas}</div>` : `<div class="empty" style="padding:30px 10px">${flor()}<h2>Nenhuma tarefa ainda</h2><p>Use “Nova tarefa” para registrar o primeiro reels, carrossel, estático ou story.</p></div>`}
       </div>`, nomeAtual);
   },
 
@@ -1025,6 +1028,7 @@ export default {
       }
       recarregarTela();
     },
+    'kol-etapa': (el) => { etapaMovel = el.dataset.v; recarregarTela(); },
     'lat-alternar': () => { latRecolhida = !latRecolhida; guardarLat(latRecolhida); recarregarTela(); },
     'filtro-pessoa': (el) => { filtroPessoa = el.dataset.v === filtroPessoa ? '' : el.dataset.v; guardarPessoa(filtroPessoa); recarregarTela(); },
     'nova-peca': (el) => abrirPeca(null, { ...(el.dataset.cliente ? { clienteId: el.dataset.cliente } : {}), ...(el.dataset.data ? { publicar: el.dataset.data } : {}) }),
