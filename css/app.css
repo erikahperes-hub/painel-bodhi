@@ -1423,3 +1423,44 @@ html[data-modo="noturno"] .chip.collab,html[data-modo="noturno"] .cal-collab{bac
 .ft-anx-x svg{width:14px;height:14px}
 .ft-anx-v{margin:8px 0 0;color:var(--ink-3);font-size:13px}
 .ft-add.ft-add-pc{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+/* Arquivos da tarefa: Vídeo, Capa e Arte cada um no seu quadro */
+.ft-slots{display:grid;grid-template-columns:1fr;gap:12px}
+.ft-slots.dois{grid-template-columns:repeat(2,minmax(0,1fr))}
+.ft-slot{border-radius:16px;min-width:0}
+.ft-slot.vazio{border:1.5px dashed var(--line);background:var(--canvas);padding:16px 10px;display:grid;justify-items:center;align-content:center;gap:4px;min-height:150px;text-align:center;cursor:pointer;font-family:inherit;color:var(--ink)}
+.ft-slot.vazio:hover{border-color:var(--petroleo);background:var(--pet-s)}
+.ft-slot.vazio svg{width:26px;height:26px;color:var(--petroleo)}
+.ft-slot.vazio b{font-size:14px}
+.ft-slot.vazio span{font-size:12px;color:var(--ink-2)}
+.ft-slot.cheio{display:grid;gap:6px}
+.ft-slot-img{position:relative;aspect-ratio:9/14;border-radius:14px;overflow:hidden;background:var(--canvas);box-shadow:inset 0 0 0 1px var(--line)}
+.ft-slot-img img{width:100%;height:100%;object-fit:cover;display:block}
+.ft-slot-p{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:30px;text-shadow:0 2px 12px rgba(0,0,0,.45);pointer-events:none}
+.ft-slot.cheio>b,.ft-slot-ti b{font-size:13.5px}
+.ft-slot-a{display:flex;flex-wrap:wrap;gap:4px}
+.ft-slot-b{border:0;background:var(--graf-s);color:var(--ink);border-radius:99px;padding:4px 11px;font:700 12px var(--ui);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
+.ft-slot-b:hover{background:var(--pet-s);color:var(--petroleo)}
+.ft-slot.arte{background:var(--canvas);border:1px solid var(--line);padding:12px}
+.ft-slot-ti{display:flex;align-items:center;gap:8px;margin:0 0 10px}
+.ft-slot-ti .ft-slot-b{margin-left:auto}
+.ft-slot-d{margin:0;color:var(--ink-3);font-size:12.5px}
+.ft-outro{margin-top:10px}
+.ft-outro .ft-add{margin-top:8px}
+/* Janela "Escolher da pasta do Drive" */
+.dp-barra{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 12px}
+.dp-barra select{min-height:38px;max-width:240px}
+.dp-barra input{flex:1;min-width:160px;min-height:38px}
+.dp-lista{max-height:52vh;overflow:auto}
+.dp-msg{margin:18px 4px;color:var(--ink-2);font-size:13.5px}
+.dp-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.dp-card{border:1.5px solid var(--line);border-radius:14px;background:var(--card);padding:6px;display:grid;gap:4px;text-align:left;cursor:pointer;font-family:inherit;color:var(--ink);align-content:start}
+.dp-card:hover{border-color:var(--petroleo)}
+.dp-card.on{border-color:var(--verde);box-shadow:0 0 0 2px var(--verde-s)}
+.dp-img{position:relative;aspect-ratio:4/5;border-radius:10px;overflow:hidden;background:var(--canvas);display:block}
+.dp-img img{width:100%;height:100%;object-fit:cover;display:block}
+.dp-play{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:26px;text-shadow:0 2px 10px rgba(0,0,0,.45);pointer-events:none;font-style:normal}
+.dp-ok{position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;background:var(--verde);color:#fff;display:grid;place-items:center;font:700 12px var(--ui);font-style:normal}
+.dp-ok svg{width:13px;height:13px}
+.dp-sug{position:absolute;left:6px;bottom:6px;background:rgba(7,63,86,.85);color:#fff;border-radius:99px;padding:2px 8px;font:700 10.5px var(--ui);font-style:normal}
+.dp-card b{font-size:12px;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
+.dp-card small{color:var(--ink-3);font-size:11px}

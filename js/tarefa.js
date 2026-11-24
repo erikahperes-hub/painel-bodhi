@@ -1,10 +1,11 @@
-import { store } from './store.js?v=202';
-import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=202';
-import { ic } from './icons.js?v=202';
-import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=202';
-import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=202';
-import { idDrive, avisoLinkDrive, urlAbrir, urlImagem } from './drive.js?v=202';
-import { prepararGoogle, tokenValido, entrarGoogle, pastaDestino, enviarArquivo, nomeDoArquivo } from './drive-envio.js?v=202';
+import { store } from './store.js?v=203';
+import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=203';
+import { ic } from './icons.js?v=203';
+import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=203';
+import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=203';
+import { idDrive, avisoLinkDrive, urlAbrir, urlImagem } from './drive.js?v=203';
+import { escolherDaPasta } from './drive-escolher.js?v=203';
+import { prepararGoogle, tokenValido, entrarGoogle, pastaDestino, enviarArquivo, nomeDoArquivo } from './drive-envio.js?v=203';
 
 // Ficha da tarefa de conteúdo. Pensada para o dia a dia de quem cria posts:
 //  - em cima, o caminho da tarefa (planejamento até publicado) com o próximo passo em destaque;
@@ -106,12 +107,32 @@ export function abrirTarefa(p = null, padrao = {}) {
 
   const miniatura = (m, i) => `<div class="ft-th" data-i="${i}"><img src="${esc(urlImagem(m.id, 320))}" data-id="${esc(m.id)}" alt="" loading="lazy"><span class="ft-th-t">${m.tipo === 'video' ? ic('play') : ''}${i + 1}</span><button type="button" class="ft-th-x" data-t="rm-midia" data-i="${i}" aria-label="Remover arquivo ${i + 1}">${ic('x')}</button><a class="ft-th-a" href="${esc(urlAbrir(m.id))}" target="_blank" rel="noopener noreferrer" aria-label="Abrir arquivo ${i + 1} no Drive"></a></div>`;
 
+  // Vídeo, capa e arte, cada um no seu lugar. Reels e story: vídeo e capa. Carrossel e estático: a arte.
   const arquivos = (t) => {
     const ms = t.midias || [];
-    return `${ms.length ? `<div class="ft-ths">${ms.map(miniatura).join('')}</div>` : ''}
-      <div class="ft-add"><select data-nova="tipo" aria-label="Tipo de arquivo"><option value="imagem">Imagem</option><option value="video">Vídeo</option></select><input data-nova="url" placeholder="Cole o link do arquivo no Drive e aperte Enter" aria-label="Link do arquivo no Drive"><button type="button" class="btn sec sm" data-t="add-midia">${ic('plus')}Adicionar</button></div>
-      <div class="ft-add ft-add-pc"><button type="button" class="btn sec sm" data-t="enviar-pc" title="Envia a arte ou o vídeo do computador para a pasta do cliente no Drive (pede login do Google)">${ic('upload')}Enviar arte ao Drive</button><input type="file" data-envio hidden multiple accept="image/*,video/*"><span class="ft-envio-st" data-envio-st aria-live="polite"></span></div>
-      <p class="ft-ajuda">Carrossel: um arquivo por slide, na ordem. Reels e story em vídeo: escolha “Vídeo”.</p>`;
+    const iv = ms.findIndex((m) => m.tipo === 'video');
+    const video = iv >= 0 ? ms[iv] : null;
+    const imagens = ms.map((m, i) => ({ ...m, i })).filter((m) => m.tipo !== 'video');
+    const vertical = t.formato === 'reels' || t.formato === 'story';
+    const carrossel = t.formato === 'carrossel';
+    const botao = (acao, rot, extra = '') => `<button type="button" class="ft-slot-b" data-t="${acao}" ${extra}>${rot}</button>`;
+    const abrir = (id) => `<a class="ft-slot-b" href="${esc(urlAbrir(id))}" target="_blank" rel="noopener noreferrer">Abrir</a>`;
+    const vazio = (slot, icone, rot, dica) => `<button type="button" class="ft-slot vazio" data-t="slot" data-slot="${slot}">${ic(icone)}<b>${rot}</b><span>${dica}</span></button>`;
+    const cheio = (id, rot, sobre, acoes) => `<div class="ft-slot cheio"><div class="ft-slot-img"><img src="${esc(urlImagem(id, 360))}" data-id="${esc(id)}" alt="" loading="lazy">${sobre}</div><b>${rot}</b><div class="ft-slot-a">${acoes}</div></div>`;
+    const slotVideo = video
+      ? cheio(video.id, 'Vídeo', `<span class="ft-slot-p">${ic('play')}</span>`, `${botao('slot', 'Trocar', 'data-slot="video"')}${abrir(video.id)}${botao('rm-midia', 'Tirar', `data-i="${iv}"`)}`)
+      : vazio('video', 'play', 'Vídeo', 'Escolher da pasta do Drive');
+    const slotCapa = t.capa
+      ? cheio(t.capa, 'Capa', '', `${botao('slot', 'Trocar', 'data-slot="capa"')}${abrir(t.capa)}${botao('rm-capa', 'Tirar')}`)
+      : vazio('capa', 'image', 'Capa', 'Escolher da pasta do Drive');
+    const miniArte = (m, k) => `<div class="ft-th" data-i="${m.i}"><img src="${esc(urlImagem(m.id, 320))}" data-id="${esc(m.id)}" alt="" loading="lazy"><span class="ft-th-t">${k + 1}</span><button type="button" class="ft-th-x" data-t="rm-midia" data-i="${m.i}" aria-label="Tirar a arte ${k + 1}">${ic('x')}</button><a class="ft-th-a" href="${esc(urlAbrir(m.id))}" target="_blank" rel="noopener noreferrer" aria-label="Abrir a arte ${k + 1} no Drive"></a></div>`;
+    const slotArte = `<div class="ft-slot arte"><div class="ft-slot-ti"><b>${carrossel ? 'Slides do carrossel' : 'Arte'}</b>${imagens.length ? `<span class="ft-n">${imagens.length}</span>` : ''}${botao('slot', imagens.length ? (carrossel ? 'Adicionar mais' : 'Trocar') : 'Escolher da pasta do Drive', 'data-slot="arte"')}</div>${imagens.length ? `<div class="ft-ths">${imagens.map(miniArte).join('')}</div>` : `<p class="ft-slot-d">${carrossel ? 'Um arquivo por slide, na ordem em que o cliente vai ver.' : 'A imagem do post.'}</p>`}</div>`;
+    const partes = vertical ? `${slotVideo}${slotCapa}${imagens.length ? slotArte : ''}` : `${video ? slotVideo : ''}${slotArte}`;
+    return `<div class="ft-slots${vertical && !imagens.length ? ' dois' : ''}">${partes}</div>
+      <details class="ft-mais ft-outro"><summary>Colar link ou enviar do computador</summary>
+        <div class="ft-add"><select data-nova="tipo" aria-label="O que é o arquivo">${vertical ? '<option value="video">Vídeo</option><option value="capa">Capa</option>' : '<option value="imagem">Arte</option><option value="video">Vídeo</option>'}</select><input data-nova="url" placeholder="Cole o link do arquivo no Drive e aperte Enter" aria-label="Link do arquivo no Drive"><button type="button" class="btn sec sm" data-t="add-midia">${ic('plus')}Adicionar</button></div>
+        <div class="ft-add ft-add-pc"><button type="button" class="btn sec sm" data-t="enviar-pc" title="Envia a arte ou o vídeo do computador para a pasta do cliente no Drive (pede login do Google)">${ic('upload')}Enviar do computador ao Drive</button><input type="file" data-envio hidden multiple accept="image/*,video/*"><button type="button" class="btn ghost sm" data-t="enviar-capa" title="Envia a capa do computador para o Drive (pede login do Google)">${ic('upload')}Enviar capa</button><input type="file" data-envio-capa hidden accept="image/*"><span class="ft-envio-st" data-envio-st aria-live="polite"></span></div>
+      </details>`;
   };
 
   // Anexos da equipe (briefing, referências, contrato, print, PDF...): vão para o armazenamento do próprio painel (Supabase Storage,
@@ -137,7 +158,7 @@ export function abrirTarefa(p = null, padrao = {}) {
     const vertical = t.formato === 'reels' || t.formato === 'story';
     const cli = store.obter('cliente', t.clienteId);
     return `<div class="ft-prev${vertical ? ' vert' : ''}">
-      <div class="ft-prev-arte">${capa ? `<img src="${esc(urlImagem(capa, 640))}" data-id="${esc(capa)}" alt="Prévia da arte">` : `<div class="ft-prev-vazio">${ic(f.icone)}<b>Sem arte ainda</b><span>Cole o link em “Arquivos”.</span></div>`}${ms.length > 1 ? `<span class="ft-prev-n">1/${ms.length}</span>` : ''}${t.formato === 'reels' && capa ? `<span class="ft-prev-p">${ic('play')}</span>` : ''}</div>
+      <div class="ft-prev-arte">${capa ? `<img src="${esc(urlImagem(capa, 640))}" data-id="${esc(capa)}" alt="Prévia da arte">` : `<div class="ft-prev-vazio">${ic(f.icone)}<b>Sem arte ainda</b><span>Escolha em “Arquivos”.</span></div>`}${ms.length > 1 ? `<span class="ft-prev-n">1/${ms.length}</span>` : ''}${t.formato === 'reels' && capa ? `<span class="ft-prev-p">${ic('play')}</span>` : ''}</div>
       <div class="ft-prev-leg"><b>${esc(cli?.nome || 'cliente')}</b> ${esc((t.legenda || '').slice(0, 140)) || '<em>Sem legenda ainda</em>'}${(t.legenda || '').length > 140 ? '…' : ''}</div>
     </div>`;
   };
@@ -178,10 +199,8 @@ export function abrirTarefa(p = null, padrao = {}) {
   };
 
   // Arte e arquivos num lugar só (lado direito): prévia do post, miniaturas, campo para adicionar e opções extras.
-  const arte = (t) => `<section class="ft-arte"><h3>Arte e arquivos</h3><div data-previa>${previa(t)}</div><div data-arquivos>${arquivos(t)}</div>
+  const arte = (t) => `<section class="ft-arte"><h3>Arquivos</h3><div data-previa>${previa(t)}</div><div data-arquivos>${arquivos(t)}</div>
     <details class="ft-mais"><summary>Mais opções</summary>
-      <label class="ft-lbl" for="ft_capa">Capa (imagem)</label><input id="ft_capa" data-campo="capa" value="${esc(t.capa ? urlAbrir(t.capa) : '')}" placeholder="Link da imagem de capa no Drive">
-      <div class="ft-add ft-add-pc"><button type="button" class="btn sec sm" data-t="enviar-capa" title="Envia a capa do computador para o Drive (pede login do Google)">${ic('upload')}Enviar capa ao Drive</button><input type="file" data-envio-capa hidden accept="image/*"></div>
       <label class="ft-lbl" for="ft_link">Arquivo editável (só a equipe vê)</label><input id="ft_link" data-campo="link" value="${esc(t.link || '')}" placeholder="Canva, Drive ou onde estiver">
       <label class="ft-lbl" for="ft_video">Vídeo no Drive (só a equipe vê)</label><input id="ft_video" data-campo="videoDrive" value="${esc(t.videoDrive || '')}" placeholder="Link do vídeo no Drive">
       <label class="ft-lbl" for="ft_ig">Link do post no Instagram</label><input id="ft_ig" data-campo="igLink" value="${esc(t.igLink || '')}" placeholder="https://www.instagram.com/p/…">
@@ -416,6 +435,25 @@ export function abrirTarefa(p = null, padrao = {}) {
     } catch (e) { statusEnvio(''); toast(e.message || 'Não consegui enviar o arquivo.', true); }
   };
 
+  // Escolher da pasta do Drive: vídeo, capa ou arte (slides). O arquivo só precisa estar salvo na pasta do cliente.
+  const escolherArquivo = async (slot) => {
+    const t = atual();
+    const cli = store.obter('cliente', t.clienteId);
+    if (!cli) { toast('Escolha o cliente da tarefa (à direita) antes de escolher arquivos.', true); return; }
+    const mes = (/^\d{4}-\d{2}/.test(t.publicar || '') ? t.publicar : new Date().toISOString()).slice(0, 7);
+    const palavras = new Set(norm(t.titulo).split(/[^a-z0-9]+/).filter((w) => w.length > 3));
+    const sugerir = (f) => (t.publicar && f.name.startsWith(t.publicar) ? 2 : 0) + ([...palavras].filter((w) => norm(f.name).includes(w)).length >= 2 ? 1 : 0);
+    const titulo = slot === 'video' ? 'Escolher o vídeo' : slot === 'capa' ? 'Escolher a capa' : t.formato === 'carrossel' ? 'Escolher os slides' : 'Escolher a arte';
+    const lista = await escolherDaPasta({ cliente: cli.nome, mes, titulo, tipo: slot === 'video' ? 'video' : 'imagem', multi: slot === 'arte' && t.formato === 'carrossel', sugerir });
+    if (!lista?.length) return;
+    const ms = atual().midias || [];
+    if (slot === 'video') await mudar({ midias: [{ tipo: 'video', id: lista[0].id }, ...ms.filter((m) => m.tipo !== 'video')] }, 'escolheu o vídeo da pasta do Drive');
+    else if (slot === 'capa') await mudar({ capa: lista[0].id }, 'escolheu a capa da pasta do Drive');
+    else if (t.formato === 'carrossel') await mudar({ midias: [...ms, ...lista.map((f) => ({ tipo: 'imagem', id: f.id }))] }, `escolheu ${lista.length} ${lista.length === 1 ? 'slide' : 'slides'} da pasta do Drive`);
+    else await mudar({ midias: [...ms.filter((m) => m.tipo === 'video'), { tipo: 'imagem', id: lista[0].id }] }, 'escolheu a arte da pasta do Drive');
+    pintarArquivos();
+  };
+
   const adicionarArquivo = async () => {
     const url = q('[data-nova=url]');
     const tipo = q('[data-nova=tipo]').value;
@@ -423,7 +461,9 @@ export function abrirTarefa(p = null, padrao = {}) {
     if (!texto) { url.focus(); return; }
     const fid = idDrive(texto);
     if (!fid) { toast(avisoLinkDrive(texto), true); return; }
-    await mudar({ midias: [...(atual().midias || []), { tipo, id: fid }] });
+    if (tipo === 'capa') await mudar({ capa: fid });
+    else if (tipo === 'video') await mudar({ midias: [{ tipo: 'video', id: fid }, ...(atual().midias || []).filter((m) => m.tipo !== 'video')] });
+    else await mudar({ midias: [...(atual().midias || []), { tipo, id: fid }] });
     pintarArquivos();
     q('[data-nova=url]')?.focus();
   };
@@ -542,7 +582,7 @@ Qualquer dúvida, é só chamar!`;
       const t = atual();
       const novo = t[n] === v && ['responsavel', 'funil', 'rede'].includes(n) ? '' : v;
       await mudar({ [n]: novo }, n === 'responsavel' ? (novo ? `atribuiu a tarefa a ${novo}` : 'tirou o responsável') : '');
-      pintarLado(); if (n === 'responsavel') pintarConversa();
+      pintarLado(); if (n === 'formato') pintarArquivos(); if (n === 'responsavel') pintarConversa();
       return;
     }
     if (a === 'copiar') {
@@ -552,6 +592,8 @@ Qualquer dúvida, é só chamar!`;
       return;
     }
     if (a === 'add-midia') return adicionarArquivo();
+    if (a === 'slot') return escolherArquivo(b.dataset.slot);
+    if (a === 'rm-capa') { await mudar({ capa: '' }, 'tirou a capa'); pintarArquivos(); return; }
     if (a === 'anexar') return q('[data-anexo-in]')?.click();
     if (a === 'abrir-anexo') return abrirAnexo(b.dataset.id);
     if (a === 'rm-anexo') return removerAnexo(b.dataset.id);
