@@ -1,11 +1,11 @@
-import { store } from './store.js?v=205';
-import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=205';
-import { ic } from './icons.js?v=205';
-import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=205';
-import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=205';
-import { idDrive, avisoLinkDrive, urlAbrir, urlImagem } from './drive.js?v=205';
-import { escolherDaPasta } from './drive-escolher.js?v=205';
-import { prepararGoogle, tokenValido, entrarGoogle, pastaDestino, enviarArquivo, nomeDoArquivo } from './drive-envio.js?v=205';
+import { store } from './store.js?v=206';
+import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=206';
+import { ic } from './icons.js?v=206';
+import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=206';
+import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=206';
+import { idDrive, avisoLinkDrive, urlAbrir, urlImagem } from './drive.js?v=206';
+import { escolherDaPasta } from './drive-escolher.js?v=206';
+import { prepararGoogle, tokenValido, entrarGoogle, pastaDestino, enviarArquivo, nomeDoArquivo } from './drive-envio.js?v=206';
 
 // Ficha da tarefa de conteúdo. Pensada para o dia a dia de quem cria posts:
 //  - em cima, o caminho da tarefa (planejamento até publicado) com o próximo passo em destaque;
@@ -17,6 +17,8 @@ import { prepararGoogle, tokenValido, entrarGoogle, pastaDestino, enviarArquivo,
 
 const RESPONSAVEIS = ['Érika', 'Milena'];
 const FUNIL = { topo: 'Topo de funil', meio: 'Meio de funil', fundo: 'Fundo de funil' };
+// Mostra o quadro de ajuste só enquanto há o que fazer: na etapa Ajustes, ou com pedido antigo em etapa de trabalho.
+const mostraAjuste = (t) => t.etapa === 'ajustes' || !!(t.ajuste && !['aprovacao', 'aprovado', 'publicado'].includes(t.etapa));
 const PLANO = { '': 'Não enviado ao cliente', aprovacao: 'Aguardando aprovação do cliente', ajustes: 'Alteração pedida pelo cliente', aprovado: 'Aprovado pelo cliente' };
 const LIMITE_LEGENDA = 2200; // limite de caracteres da legenda no Instagram
 // Próximo passo em cada etapa: [etapa de destino, texto do botão, estilo].
@@ -219,8 +221,8 @@ export function abrirTarefa(p = null, padrao = {}) {
   };
 
   const esquerda = (t) => {
-    const ajustes = t.etapa === 'ajustes' || t.ajuste;
-    const ajustesPlano = t.planejamento === 'ajustes' || t.ajustePlano;
+    const ajustes = mostraAjuste(t);
+    const ajustesPlano = t.planejamento === 'ajustes' || (t.ajustePlano && !['aprovacao', 'aprovado'].includes(t.planejamento || ''));
     return `
       ${ajustes ? `<section class="ft-s ft-alerta"><h3>${ic('alert')}O cliente pediu ajuste</h3><textarea data-campo="ajuste" rows="2" placeholder="O que o cliente pediu para mudar">${esc(t.ajuste || '')}</textarea></section>` : ''}
       ${ajustesPlano ? `<section class="ft-s ft-alerta"><h3>${ic('alert')}Alteração pedida no planejamento</h3><textarea data-campo="ajustePlano" rows="2" placeholder="O que o cliente pediu para mudar na ideia ou no roteiro">${esc(t.ajustePlano || '')}</textarea></section>` : ''}
@@ -320,9 +322,9 @@ export function abrirTarefa(p = null, padrao = {}) {
     if (para === 'publicado' && !t.concluida) { patch.concluida = true; patch.concluidaEm = new Date().toISOString(); }
     await mudar(patch, `mudou a etapa para ${nomeEtapa(para)}`);
     pintarTopo(); pintarConversa();
-    // O quadro "O cliente pediu ajuste" só aparece nas etapas de ajuste ou quando já há pedido.
+    // O quadro "O cliente pediu ajuste" some quando o cliente reaprova ou a peça é aprovada/publicada (o pedido fica no Histórico).
     const t2 = atual();
-    const precisa = !!(t2.etapa === 'ajustes' || t2.ajuste);
+    const precisa = !!mostraAjuste(t2);
     if (precisa !== !!q('[data-campo="ajuste"]')) await recarregarEsquerda();
   };
 
