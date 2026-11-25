@@ -27,4 +27,5 @@ export const urlImagem = (id, largura = 1080, tentativa = 0) => (tentativa % 2
   ? `https://lh3.googleusercontent.com/d/${encodeURIComponent(id)}=w${largura}`
   : `https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w${largura}${tentativa ? `&t=${tentativa}` : ''}`);
 export const urlPlayer = (id) => `https://drive.google.com/file/d/${encodeURIComponent(id)}/preview`;
+export const urlBaixar = (id) => `https://drive.google.com/uc?export=download&id=${encodeURIComponent(id)}`;
 export const urlAbrir = (id) => `https://drive.google.com/file/d/${encodeURIComponent(id)}/view`;

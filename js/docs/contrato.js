@@ -1,8 +1,8 @@
-import { store } from '../store.js?v=206';
-import { logo } from '../logo.js?v=206';
-import { esc, brl, extenso, dataBR, dataExtenso, parseData } from '../util.js?v=206';
-import { documento, abrirDocumento } from './base.js?v=206';
-import { CLAUSULAS_PADRAO, PREAMBULO_PADRAO } from './modeloContrato.js?v=206';
+import { store } from '../store.js?v=207';
+import { logo } from '../logo.js?v=207';
+import { esc, brl, extenso, dataBR, dataExtenso, parseData } from '../util.js?v=207';
+import { documento, abrirDocumento } from './base.js?v=207';
+import { CLAUSULAS_PADRAO, PREAMBULO_PADRAO } from './modeloContrato.js?v=207';
 
 const CSS = `
 @page{size:A4;margin:20mm 20mm 22mm}

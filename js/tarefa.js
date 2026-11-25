@@ -1,11 +1,11 @@
-import { store } from './store.js?v=206';
-import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=206';
-import { ic } from './icons.js?v=206';
-import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=206';
-import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=206';
-import { idDrive, avisoLinkDrive, urlAbrir, urlImagem } from './drive.js?v=206';
-import { escolherDaPasta } from './drive-escolher.js?v=206';
-import { prepararGoogle, tokenValido, entrarGoogle, pastaDestino, enviarArquivo, nomeDoArquivo } from './drive-envio.js?v=206';
+import { store } from './store.js?v=207';
+import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=207';
+import { ic } from './icons.js?v=207';
+import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=207';
+import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=207';
+import { idDrive, avisoLinkDrive, urlAbrir, urlBaixar, urlImagem } from './drive.js?v=207';
+import { escolherDaPasta } from './drive-escolher.js?v=207';
+import { prepararGoogle, tokenValido, entrarGoogle, pastaDestino, enviarArquivo, nomeDoArquivo } from './drive-envio.js?v=207';
 
 // Ficha da tarefa de conteúdo. Pensada para o dia a dia de quem cria posts:
 //  - em cima, o caminho da tarefa (planejamento até publicado) com o próximo passo em destaque;
@@ -119,21 +119,23 @@ export function abrirTarefa(p = null, padrao = {}) {
     const carrossel = t.formato === 'carrossel';
     const botao = (acao, rot, extra = '') => `<button type="button" class="ft-slot-b" data-t="${acao}" ${extra}>${rot}</button>`;
     const abrir = (id) => `<a class="ft-slot-b" href="${esc(urlAbrir(id))}" target="_blank" rel="noopener noreferrer">Abrir</a>`;
-    const vazio = (slot, icone, rot, dica) => `<button type="button" class="ft-slot vazio" data-t="slot" data-slot="${slot}">${ic(icone)}<span class="ft-slot-c"><b>${rot}</b><span>${dica}</span></span></button>`;
+    const baixar = (id) => `<a class="ft-slot-b" href="${esc(urlBaixar(id))}" target="_blank" rel="noopener noreferrer">Baixar</a>`;
+    const vazio = (slot, icone, rot, dica) => `<div class="ft-slot vazio">${ic(icone)}<span class="ft-slot-c"><b>${rot}</b><span>${dica}</span><span class="ft-slot-a"><button type="button" class="ft-slot-b pri" data-t="enviar-slot" data-slot="${slot}">${ic('upload')}Enviar arquivo</button><button type="button" class="ft-slot-b" data-t="slot" data-slot="${slot}">Escolher do Drive</button></span></span></div>`;
     const cheio = (id, rot, sobre, acoes) => `<div class="ft-slot cheio"><div class="ft-slot-img"><img src="${esc(urlImagem(id, 240))}" data-id="${esc(id)}" alt="" loading="lazy">${sobre}</div><div class="ft-slot-c"><b>${rot}</b><div class="ft-slot-a">${acoes}</div></div></div>`;
     const slotVideo = video
-      ? cheio(video.id, 'Vídeo', `<span class="ft-slot-p">${ic('play')}</span>`, `${botao('slot', 'Trocar', 'data-slot="video"')}${abrir(video.id)}${botao('rm-midia', 'Tirar', `data-i="${iv}"`)}`)
-      : vazio('video', 'play', 'Vídeo', 'Escolher da pasta do Drive');
+      ? cheio(video.id, 'Vídeo', `<span class="ft-slot-p">${ic('play')}</span>`, `${botao('slot', 'Trocar', 'data-slot="video"')}${abrir(video.id)}${baixar(video.id)}${botao('rm-midia', 'Tirar', `data-i="${iv}"`)}`)
+      : vazio('video', 'play', 'Vídeo', 'Envie do celular ou do computador, ou escolha da pasta do cliente');
     const slotCapa = t.capa
-      ? cheio(t.capa, 'Capa', '', `${botao('slot', 'Trocar', 'data-slot="capa"')}${abrir(t.capa)}${botao('rm-capa', 'Tirar')}`)
-      : vazio('capa', 'image', 'Capa', 'Escolher da pasta do Drive');
+      ? cheio(t.capa, 'Capa', '', `${botao('slot', 'Trocar', 'data-slot="capa"')}${abrir(t.capa)}${baixar(t.capa)}${botao('rm-capa', 'Tirar')}`)
+      : vazio('capa', 'image', 'Capa', 'Envie do celular ou do computador, ou escolha da pasta do cliente');
     const miniArte = (m, k) => `<div class="ft-th" data-i="${m.i}"><img src="${esc(urlImagem(m.id, 320))}" data-id="${esc(m.id)}" alt="" loading="lazy"><span class="ft-th-t">${k + 1}</span><button type="button" class="ft-th-x" data-t="rm-midia" data-i="${m.i}" aria-label="Tirar a arte ${k + 1}">${ic('x')}</button><a class="ft-th-a" href="${esc(urlAbrir(m.id))}" target="_blank" rel="noopener noreferrer" aria-label="Abrir a arte ${k + 1} no Drive"></a></div>`;
-    const slotArte = `<div class="ft-slot arte"><div class="ft-slot-ti"><b>${carrossel ? 'Slides do carrossel' : 'Arte'}</b>${imagens.length ? `<span class="ft-n">${imagens.length}</span>` : ''}${botao('slot', imagens.length ? (carrossel ? 'Adicionar mais' : 'Trocar') : 'Escolher da pasta do Drive', 'data-slot="arte"')}</div>${imagens.length ? `<div class="ft-ths">${imagens.map(miniArte).join('')}</div>` : `<p class="ft-slot-d">${carrossel ? 'Um arquivo por slide, na ordem em que o cliente vai ver.' : 'A imagem do post.'}</p>`}</div>`;
+    const slotArte = `<div class="ft-slot arte"><div class="ft-slot-ti"><b>${carrossel ? 'Slides do carrossel' : 'Arte'}</b>${imagens.length ? `<span class="ft-n">${imagens.length}</span>` : ''}<span class="ft-slot-a ft-slot-ml">${botao('enviar-slot', 'Enviar arquivo', 'data-slot="arte"')}${botao('slot', imagens.length ? (carrossel ? 'Adicionar do Drive' : 'Trocar') : 'Escolher do Drive', 'data-slot="arte"')}</span></div>${imagens.length ? `<div class="ft-ths">${imagens.map(miniArte).join('')}</div>` : `<p class="ft-slot-d">${carrossel ? 'Um arquivo por slide, na ordem em que o cliente vai ver.' : 'A imagem do post.'}</p>`}</div>`;
     const partes = vertical ? `${slotVideo}${slotCapa}${imagens.length ? slotArte : ''}` : `${video ? slotVideo : ''}${slotArte}`;
     return `<div class="ft-slots">${partes}</div>
-      <details class="ft-mais ft-outro"><summary>Colar link ou enviar do computador</summary>
+      <div class="ft-envio-st" data-envio-st aria-live="polite"></div>
+      <input type="file" data-envio-slot hidden>
+      <details class="ft-mais ft-outro"><summary>Colar link de um arquivo do Drive</summary>
         <div class="ft-add"><select data-nova="tipo" aria-label="O que é o arquivo">${vertical ? '<option value="video">Vídeo</option><option value="capa">Capa</option>' : '<option value="imagem">Arte</option><option value="video">Vídeo</option>'}</select><input data-nova="url" placeholder="Cole o link do arquivo no Drive e aperte Enter" aria-label="Link do arquivo no Drive"><button type="button" class="btn sec sm" data-t="add-midia">${ic('plus')}Adicionar</button></div>
-        <div class="ft-add ft-add-pc"><button type="button" class="btn sec sm" data-t="enviar-pc" title="Envia a arte ou o vídeo do computador para a pasta do cliente no Drive (pede login do Google)">${ic('upload')}Enviar do computador ao Drive</button><input type="file" data-envio hidden multiple accept="image/*,video/*"><button type="button" class="btn ghost sm" data-t="enviar-capa" title="Envia a capa do computador para o Drive (pede login do Google)">${ic('upload')}Enviar capa</button><input type="file" data-envio-capa hidden accept="image/*"><span class="ft-envio-st" data-envio-st aria-live="polite"></span></div>
       </details>`;
   };
 
@@ -409,13 +411,30 @@ export function abrirTarefa(p = null, padrao = {}) {
     toast('Anexo removido');
   };
 
-  const statusEnvio = (txt) => { const s = q('[data-envio-st]'); if (s) s.textContent = txt; };
-  const botaoEnviar = async (capa) => {
-    if (!tokenValido()) {
-      try { await entrarGoogle(); toast('Google conectado. Clique de novo para escolher o arquivo.'); } catch (e) { toast(e.message || 'Não consegui entrar no Google.', true); }
-      return;
-    }
-    q(capa ? '[data-envio-capa]' : '[data-envio]').click();
+  const statusEnvio = (txt, html = false) => { const s = q('[data-envio-st]'); if (!s) return; if (html) s.innerHTML = txt; else s.textContent = txt; };
+  // Escolher o arquivo vem primeiro (o toque abre a galeria direto); o login do Google só é pedido depois, se precisar.
+  let pendente = null;
+  const escolherNoCelular = (slot) => {
+    const inp = q('[data-envio-slot]');
+    if (!inp) return;
+    inp.dataset.slot = slot;
+    inp.accept = slot === 'video' ? 'video/*' : 'image/*';
+    inp.multiple = slot === 'arte';
+    inp.click();
+  };
+  const receberEnvio = (lista, slot) => {
+    const f = slot === 'video' ? lista.filter((x) => x.type.startsWith('video') || /\.(mov|mp4|m4v)$/i.test(x.name)) : lista.filter((x) => x.type.startsWith('image'));
+    if (!f.length) { toast(slot === 'video' ? 'Escolha um arquivo de vídeo.' : 'Escolha uma imagem.', true); return; }
+    const arq = slot === 'capa' ? [f[0]] : f;
+    if (tokenValido()) { enviarDoComputador(arq, slot === 'capa'); return; }
+    pendente = { arq, capa: slot === 'capa' };
+    statusEnvio(`<div class="ft-envio-ped"><p><b>${arq.length > 1 ? arq.length + ' arquivos prontos' : esc(arq[0].name) + ' pronto'} para enviar.</b> Falta entrar no Google. Vai aparecer o aviso <i>“O Google não verificou este app”</i>: toque em <b>Continuar</b> e depois em <b>Permitir</b>. É o nosso painel.</p><button type="button" class="btn pri sm" data-t="enviar-pendente">${ic('upload')}Entrar no Google e enviar</button></div>`, true);
+  };
+  const enviarPendente = async () => {
+    if (!pendente) return;
+    try { await entrarGoogle(); } catch (e) { toast(e.message || 'Não consegui entrar no Google.', true); return; }
+    const p = pendente; pendente = null;
+    enviarDoComputador(p.arq, p.capa);
   };
   const enviarDoComputador = async (lista, comoCapa) => {
     const t0 = atual();
@@ -425,7 +444,6 @@ export function abrirTarefa(p = null, padrao = {}) {
       statusEnvio('Preparando a pasta no Drive…');
       const pasta = await pastaDestino(cli.nome, (/^\d{4}-\d{2}/.test(t0.publicar || '') ? t0.publicar : new Date().toISOString()).slice(0, 7));
       for (const f of lista) {
-        if (/\.mov$/i.test(f.name)) toast('Dica: vídeo .mov do iPhone pode não tocar no celular do cliente. Se der problema, exporte em MP4.');
         const n = (atual().midias || []).length + 1;
         const nome = nomeDoArquivo(atual(), f, n, comoCapa);
         const r = await enviarArquivo(f, { nome, pasta, aoProgredir: (p) => statusEnvio(`Enviando ${f.name}… ${Math.round(p * 100)}%`) });
@@ -599,8 +617,8 @@ Qualquer dúvida, é só chamar!`;
     if (a === 'anexar') return q('[data-anexo-in]')?.click();
     if (a === 'abrir-anexo') return abrirAnexo(b.dataset.id);
     if (a === 'rm-anexo') return removerAnexo(b.dataset.id);
-    if (a === 'enviar-pc') return botaoEnviar(false);
-    if (a === 'enviar-capa') return botaoEnviar(true);
+    if (a === 'enviar-slot') return escolherNoCelular(b.dataset.slot);
+    if (a === 'enviar-pendente') return enviarPendente();
     if (a === 'rm-midia') {
       const i = Number(b.dataset.i);
       await mudar({ midias: (atual().midias || []).filter((_, k) => k !== i) });
@@ -671,10 +689,11 @@ Qualquer dúvida, é só chamar!`;
       if (lista.length) enviarAnexos(lista);
       return;
     }
-    if (el.matches('[data-envio], [data-envio-capa]')) {
+    if (el.matches('[data-envio-slot]')) {
       const lista = [...(el.files || [])];
+      const slot = el.dataset.slot;
       el.value = '';
-      if (lista.length) enviarDoComputador(lista, el.matches('[data-envio-capa]'));
+      if (lista.length) receberEnvio(lista, slot);
       return;
     }
     const campo = el.dataset.campo;
