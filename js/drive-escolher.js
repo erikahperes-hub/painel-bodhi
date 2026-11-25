@@ -2,11 +2,11 @@
 // para a pessoa clicar no vídeo, na capa ou na arte da tarefa. Não pede login do Google e não tem limite de tamanho:
 // o arquivo só precisa estar salvo na pasta (no PC, a pasta do Drive sincronizada). Lê as pastas compartilhadas como
 // "qualquer pessoa com o link" pela chave pública do Drive (a mesma de js/config.js).
-import { config } from './config.js?v=207';
-import { esc } from './util.js?v=207';
-import { ic } from './icons.js?v=207';
-import { abrirModal } from './ui.js?v=207';
-import { urlImagem } from './drive.js?v=207';
+import { config } from './config.js?v=208';
+import { esc } from './util.js?v=208';
+import { ic } from './icons.js?v=208';
+import { abrirModal } from './ui.js?v=208';
+import { urlImagem } from './drive.js?v=208';
 
 const API = 'https://www.googleapis.com/drive/v3';
 const PASTA = 'application/vnd.google-apps.folder';

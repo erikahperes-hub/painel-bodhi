@@ -1,7 +1,7 @@
 // Envio de arquivos do computador direto para o Drive: pasta Aprovação / nome do cliente / AAAA-MM.
 // Entra com o Google da pessoa (Érika ou Milena, listadas como usuárias de teste no Google Cloud). Nada é guardado no painel:
 // o login vale por cerca de 1 hora e só existe nesta aba. O código do arquivo enviado é o que fica na tarefa.
-import { config } from './config.js?v=207';
+import { config } from './config.js?v=208';
 
 const GIS = 'https://accounts.google.com/gsi/client';
 const ESCOPO = 'https://www.googleapis.com/auth/drive';
@@ -94,6 +94,11 @@ export async function enviarArquivo(arquivo, { nome, pasta, aoProgredir }) {
   });
   await api(`/files/${encodeURIComponent(enviado.id)}/permissions?fields=id`, { method: 'POST', body: JSON.stringify({ role: 'reader', type: 'anyone' }) }).catch(() => {});
   return enviado;
+}
+
+// Deixa o arquivo "qualquer pessoa com o link pode ver": é o que faz o cliente e a prévia do painel abrirem o vídeo ou a imagem.
+export async function compartilharPublico(id) {
+  await api(`/files/${encodeURIComponent(id)}/permissions?fields=id&supportsAllDrives=true`, { method: 'POST', body: JSON.stringify({ role: 'reader', type: 'anyone' }) });
 }
 
 // Nome padrão da skill painel-conteudo: AAAA-MM-DD_formato_titulo-curto[_NN | _capa].extensão

@@ -1,11 +1,12 @@
-import { store } from './store.js?v=207';
-import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=207';
-import { ic } from './icons.js?v=207';
-import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=207';
-import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=207';
-import { idDrive, avisoLinkDrive, urlAbrir, urlBaixar, urlImagem } from './drive.js?v=207';
-import { escolherDaPasta } from './drive-escolher.js?v=207';
-import { prepararGoogle, tokenValido, entrarGoogle, pastaDestino, enviarArquivo, nomeDoArquivo } from './drive-envio.js?v=207';
+import { store } from './store.js?v=208';
+import { esc, toast, dataBR, urlSegura, diasAte } from './util.js?v=208';
+import { ic } from './icons.js?v=208';
+import { confirmar, abrirGaveta, abrirModal } from './ui.js?v=208';
+import { ETAPAS, FORMATOS, REDES, atrasada } from './conteudo.js?v=208';
+import { idDrive, avisoLinkDrive, urlAbrir, urlBaixar, urlImagem } from './drive.js?v=208';
+import { escolherDaPasta } from './drive-escolher.js?v=208';
+import { prepararGoogle, tokenValido, entrarGoogle, pastaDestino, enviarArquivo, nomeDoArquivo, compartilharPublico } from './drive-envio.js?v=208';
+import { config } from './config.js?v=208';
 
 // Ficha da tarefa de conteúdo. Pensada para o dia a dia de quem cria posts:
 //  - em cima, o caminho da tarefa (planejamento até publicado) com o próximo passo em destaque;
@@ -133,6 +134,7 @@ export function abrirTarefa(p = null, padrao = {}) {
     const partes = vertical ? `${slotVideo}${slotCapa}${imagens.length ? slotArte : ''}` : `${video ? slotVideo : ''}${slotArte}`;
     return `<div class="ft-slots">${partes}</div>
       <div class="ft-envio-st" data-envio-st aria-live="polite"></div>
+      <div data-acesso aria-live="polite"></div>
       <input type="file" data-envio-slot hidden>
       <details class="ft-mais ft-outro"><summary>Colar link de um arquivo do Drive</summary>
         <div class="ft-add"><select data-nova="tipo" aria-label="O que é o arquivo">${vertical ? '<option value="video">Vídeo</option><option value="capa">Capa</option>' : '<option value="imagem">Arte</option><option value="video">Vídeo</option>'}</select><input data-nova="url" placeholder="Cole o link do arquivo no Drive e aperte Enter" aria-label="Link do arquivo no Drive"><button type="button" class="btn sec sm" data-t="add-midia">${ic('plus')}Adicionar</button></div>
@@ -314,7 +316,46 @@ export function abrirTarefa(p = null, padrao = {}) {
   };
   const pintarLado = () => { q('[data-previa]').innerHTML = previa(atual()); q('[data-detalhes]').innerHTML = detalhes(atual()); pintarTopo(); };
   const pintarConversa = () => { const el = q('[data-conversa]'); if (el) el.innerHTML = id ? conversa(atual()) : ''; };
-  const pintarArquivos = () => { q('[data-arquivos]').innerHTML = arquivos(atual()); q('[data-previa]').innerHTML = previa(atual()); };
+  const pintarArquivos = () => { q('[data-arquivos]').innerHTML = arquivos(atual()); q('[data-previa]').innerHTML = previa(atual()); verificarAcesso(); };
+
+  // Arquivo privado no Drive = o cliente e a prévia não conseguem abrir (era a causa de "não visualiza"). Aqui o painel avisa
+  // e oferece liberar com um toque. Só vale para arquivos que ficaram fora da pasta Aprovação, que já é aberta por link.
+  const acessoCache = new Map();
+  let privados = [];
+  const driveAcessivel = async (arq) => {
+    if (acessoCache.has(arq)) return acessoCache.get(arq);
+    let ok = true;
+    try {
+      const r = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(arq)}?fields=id&supportsAllDrives=true&key=${encodeURIComponent(config.driveKey)}`);
+      ok = r.status !== 404; // sem login, o Drive responde 404 para arquivo que não está aberto por link
+    } catch { ok = true; }
+    acessoCache.set(arq, ok);
+    return ok;
+  };
+  async function verificarAcesso() {
+    const t = atual();
+    const ids = [...new Set([t.capa, ...(t.midias || []).map((m) => m.id)].filter(Boolean))];
+    const ruins = [];
+    for (const arq of ids) if (!(await driveAcessivel(arq))) ruins.push(arq);
+    const caixa = q('[data-acesso]');
+    if (!caixa) return;
+    privados = ruins;
+    caixa.innerHTML = ruins.length
+      ? `<div class="ft-acesso"><p><b>${ruins.length > 1 ? `${ruins.length} arquivos estão privados` : 'Um arquivo está privado'} no Drive.</b> O cliente e a prévia do painel não conseguem abrir. Acontece quando o arquivo fica fora da pasta Aprovação.</p><button type="button" class="btn pri sm" data-t="liberar">${ic('link')}Deixar visível por link</button></div>`
+      : '';
+  }
+  const liberarArquivos = async () => {
+    const lista = privados.slice();
+    if (!lista.length) return;
+    if (!tokenValido()) {
+      try { await entrarGoogle(); } catch (e) { toast(e.message || 'Não consegui entrar no Google.', true); return; }
+    }
+    try {
+      for (const arq of lista) { await compartilharPublico(arq); acessoCache.delete(arq); }
+      toast(lista.length > 1 ? 'Arquivos liberados. Já abrem para o cliente.' : 'Arquivo liberado. Já abre para o cliente.');
+    } catch (e) { toast(e.message || 'Não consegui liberar o arquivo.', true); }
+    pintarArquivos();
+  };
   const recarregarEsquerda = async () => { descarregar(); await fila; q('[data-esq]').innerHTML = esquerda(atual()); q('[data-esq]').querySelectorAll('textarea').forEach(crescer); };
 
   const trocarEtapa = async (para) => {
@@ -619,6 +660,7 @@ Qualquer dúvida, é só chamar!`;
     if (a === 'rm-anexo') return removerAnexo(b.dataset.id);
     if (a === 'enviar-slot') return escolherNoCelular(b.dataset.slot);
     if (a === 'enviar-pendente') return enviarPendente();
+    if (a === 'liberar') return liberarArquivos();
     if (a === 'rm-midia') {
       const i = Number(b.dataset.i);
       await mudar({ midias: (atual().midias || []).filter((_, k) => k !== i) });
@@ -665,6 +707,7 @@ Qualquer dúvida, é só chamar!`;
     aoFechar: descarregar,
   });
   g.el.addEventListener('click', aoClicar);
+  verificarAcesso();
   g.el.addEventListener('toggle', (e) => { if (e.target.matches('[data-ativ]')) ativAberta = e.target.open; }, true);
   // Arrastar arquivos para a caixa de Anexos.
   g.el.addEventListener('dragover', (e) => { const s = e.target.closest?.('[data-anexos]'); if (s && [...(e.dataTransfer?.types || [])].includes('Files')) { e.preventDefault(); s.classList.add('arrastando-arq'); } });

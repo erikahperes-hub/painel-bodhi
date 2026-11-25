@@ -1448,6 +1448,8 @@ html[data-modo="noturno"] .chip.collab,html[data-modo="noturno"] .cal-collab{bac
 .ft-slot-b svg{width:13px;height:13px;margin-right:5px}
 .ft-slot.vazio .ft-slot-a{margin-top:6px}
 .ft-envio-st:empty{display:none}
+.ft-acesso{display:grid;gap:8px;margin:8px 0 0;padding:12px;border-radius:14px;background:var(--coral-s);color:#6d2424}
+.ft-acesso p{margin:0;line-height:1.45;font-size:13px}
 .ft-envio-st{margin:8px 0 0;font-size:13px;color:var(--ink-2)}
 .ft-envio-ped{display:grid;gap:8px;background:var(--pet-s);border-radius:14px;padding:12px}
 .ft-envio-ped p{margin:0;line-height:1.45}
